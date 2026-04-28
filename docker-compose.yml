@@ -1,0 +1,68 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      sh -lc "mkdir -p
+      storage/framework/cache/data
+      storage/framework/sessions
+      storage/framework/testing
+      storage/framework/views
+      storage/logs
+      storage/temp
+      bootstrap/cache
+      && chown -R www-data:www-data storage bootstrap/cache
+      && php-fpm"
+    ports:
+      - "5173:5173"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      VITE_HOST: 0.0.0.0
+    volumes:
+      - .:/var/www
+      - vendor_data:/var/www/vendor
+      - node_modules_data:/var/www/node_modules
+      - storage_framework_data:/var/www/storage/framework
+      - bootstrap_cache_data:/var/www/bootstrap/cache
+    networks:
+      - shareplattr
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - shareplattr
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shareplattr
+      MYSQL_USER: shareplattr
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - shareplattr
+
+volumes:
+  db_data:
+  vendor_data:
+  node_modules_data:
+  storage_framework_data:
+  bootstrap_cache_data:
+
+networks:
+  shareplattr:
