@@ -27,6 +27,5 @@ Thumbs.db
 !/docs/
 /docs/*
 !/docs/digitalocean-deployment.md
-/figma
 web-doc.md
 docs/

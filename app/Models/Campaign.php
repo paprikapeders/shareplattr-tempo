@@ -110,9 +110,9 @@ class Campaign extends Model
         return $this->hasMany(Reward::class);
     }
 
-    public static function uniqueSlug(string $title, ?int $ignoreId = null): string
+    public static function uniqueSlug(?string $title, ?int $ignoreId = null): string
     {
-        $base = Str::slug($title) ?: 'campaign';
+        $base = Str::slug($title ?? '') ?: 'campaign';
         $slug = $base;
         $suffix = 2;
 

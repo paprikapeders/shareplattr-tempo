@@ -20,6 +20,7 @@ class CampaignController extends Controller
         $campaigns = Campaign::query()
             ->with('brand:id,name,logo,description,business_type,website_url')
             ->with(['referralTokens' => fn ($query) => $query->where('user_id', $user->id)])
+            ->withCount(['referralTokens', 'clicks', 'conversions'])
             ->available()
             ->latest()
             ->get()
@@ -55,6 +56,7 @@ class CampaignController extends Controller
             'brand:id,name,logo,description,business_type,website_url',
             'referralTokens' => fn ($query) => $query->where('user_id', $request->user()->id),
         ]);
+        $campaign->loadCount(['referralTokens', 'clicks', 'conversions']);
 
         return Inertia::render('Campaigns/Show', [
             'campaign' => $this->campaignPayload($campaign),
@@ -78,6 +80,11 @@ class CampaignController extends Controller
             'description' => $campaign->description,
             'category' => $campaign->category,
             'reward_amount' => $campaign->reward_amount,
+            'status' => $campaign->status,
+            'expires_at' => $campaign->expires_at?->toIso8601String(),
+            'click_count' => (int) ($campaign->clicks_count ?? $campaign->click_count ?? 0),
+            'conversion_count' => (int) ($campaign->conversions_count ?? $campaign->conversion_count ?? 0),
+            'participants_count' => (int) ($campaign->referral_tokens_count ?? 0),
             'destination_url' => $campaign->destination_url,
             'campaign_banner_url' => $campaign->campaign_banner ? Storage::disk('public')->url($campaign->campaign_banner) : null,
             'referral_url' => $token ? route('referrals.show', $token->token) : null,
