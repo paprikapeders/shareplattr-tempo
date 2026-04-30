@@ -86,9 +86,25 @@ class CampaignController extends Controller
             'conversion_count' => (int) ($campaign->conversions_count ?? $campaign->conversion_count ?? 0),
             'participants_count' => (int) ($campaign->referral_tokens_count ?? 0),
             'destination_url' => $campaign->destination_url,
-            'campaign_banner_url' => $campaign->campaign_banner ? Storage::disk('public')->url($campaign->campaign_banner) : null,
+            'campaign_banner' => $campaign->campaign_banner,
+            'campaign_banner_url' => $this->publicStorageUrl($campaign->campaign_banner, $campaign->updated_at?->timestamp),
             'referral_url' => $token ? route('referrals.show', $token->token) : null,
         ];
+    }
+
+    private function publicStorageUrl(?string $path, ?int $version = null): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        $url = Storage::disk('public')->url($path);
+
+        if (! $version) {
+            return $url;
+        }
+
+        return $url.(str_contains($url, '?') ? '&' : '?').'v='.$version;
     }
 
     private function resolveCampaign(string $value): array

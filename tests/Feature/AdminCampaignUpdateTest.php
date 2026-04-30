@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AdminCampaignUpdateTest extends TestCase
@@ -109,5 +110,46 @@ class AdminCampaignUpdateTest extends TestCase
 
         Storage::disk('public')->assertExists($newBannerPath);
         Storage::disk('public')->assertMissing($oldBannerPath);
+    }
+
+    public function test_campaign_pages_expose_campaign_banner_column_and_cache_busted_public_url(): void
+    {
+        $user = User::factory()->create();
+        $brand = Brand::create([
+            'name' => 'Northstar Coffee',
+        ]);
+        $campaign = Campaign::create([
+            'brand_id' => $brand->id,
+            'brand_name' => $brand->name,
+            'title' => 'Cold Brew Starter Pack',
+            'description' => 'A public campaign with a banner.',
+            'category' => 'Food & Drink',
+            'reward_amount' => 1200,
+            'destination_url' => 'https://example.com/cold-brew',
+            'campaign_banner' => 'campaign-banners/current-banner.jpg',
+            'status' => 'active',
+            'expires_at' => null,
+        ]);
+        $expectedUrl = Storage::disk('public')->url($campaign->campaign_banner).'?v='.$campaign->updated_at->timestamp;
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->where('campaigns.0.campaign_banner', $campaign->campaign_banner)
+                ->where('campaigns.0.campaign_banner_url', $expectedUrl)
+            );
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.show', $campaign->slug))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns/Show')
+                ->where('campaign.campaign_banner', $campaign->campaign_banner)
+                ->where('campaign.campaign_banner_url', $expectedUrl)
+            );
     }
 }

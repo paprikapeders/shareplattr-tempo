@@ -26,7 +26,7 @@ class DashboardController extends Controller
             ->keyBy('campaign_id');
 
         $referralLinks = $user->referralTokens()
-            ->with('campaign:id,brand_id,brand_name,title,slug,description,status,campaign_banner')
+            ->with('campaign:id,brand_id,brand_name,title,slug,description,status,campaign_banner,updated_at')
             ->with('campaign.brand:id,name,logo')
             ->withCount('clicks')
             ->withCount('conversions')
@@ -51,7 +51,8 @@ class DashboardController extends Controller
                     'campaign_title' => $campaign->title,
                     'campaign_description' => $campaign->description,
                     'campaign_status' => $campaign->status,
-                    'campaign_banner_url' => $campaign->campaign_banner ? Storage::disk('public')->url($campaign->campaign_banner) : null,
+                    'campaign_banner' => $campaign->campaign_banner,
+                    'campaign_banner_url' => $this->publicStorageUrl($campaign->campaign_banner, $campaign->updated_at?->timestamp),
                     'brand_name' => $campaign->brand?->name ?? $campaign->brand_name,
                     'brand_logo_url' => $campaign->brand?->logo ? Storage::disk('public')->url($campaign->brand->logo) : null,
                     'url' => route('referrals.show', $referralToken->token),
@@ -162,5 +163,20 @@ class DashboardController extends Controller
                 ]
                 : null,
         ]);
+    }
+
+    private function publicStorageUrl(?string $path, ?int $version = null): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        $url = Storage::disk('public')->url($path);
+
+        if (! $version) {
+            return $url;
+        }
+
+        return $url.(str_contains($url, '?') ? '&' : '?').'v='.$version;
     }
 }
