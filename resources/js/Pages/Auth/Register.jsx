@@ -8,6 +8,7 @@ export default function Register() {
         email: '',
         password: '',
         password_confirmation: '',
+        account_type: 'participant',
     });
 
     const submit = (event) => {
@@ -18,6 +19,23 @@ export default function Register() {
     return (
         <AuthLayout title="Shareplattr" backHref="/login">
             <form onSubmit={submit} className="mx-auto mt-8 flex w-full max-w-[320px] flex-col gap-4 sm:mt-10">
+                <div className="grid grid-cols-2 gap-2 rounded-full bg-white/60 p-1 shadow-sm">
+                    {[
+                        ['participant', 'Participant'],
+                        ['business_owner', 'Business'],
+                    ].map(([value, label]) => (
+                        <button
+                            key={value}
+                            type="button"
+                            onClick={() => setData('account_type', value)}
+                            className={`rounded-full px-3 py-2 text-sm font-semibold transition ${data.account_type === value ? 'bg-[#111111] text-white' : 'text-[#3b3d45]'}`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+                {errors.account_type && <p className="-mt-2 text-sm text-red-600">{errors.account_type}</p>}
+
                 <input
                     type="text"
                     placeholder="First Name"

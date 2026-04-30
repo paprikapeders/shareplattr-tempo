@@ -8,6 +8,9 @@ use App\Http\Controllers\AdminBrandController;
 use App\Http\Controllers\AdminPayoutRequestController;
 use App\Http\Controllers\AdminRewardController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BusinessCampaignController;
+use App\Http\Controllers\BusinessDashboardController;
+use App\Http\Controllers\BusinessProfileController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
@@ -70,6 +73,22 @@ Route::middleware(['auth', 'admin'])
         Route::patch('/payout-requests/{payoutRequest}/paid', [AdminPayoutRequestController::class, 'markPaid'])->name('payout-requests.paid');
         Route::patch('/payout-requests/{payoutRequest}/rejected', [AdminPayoutRequestController::class, 'reject'])->name('payout-requests.rejected');
         Route::get('/activity', [AdminActivityController::class, 'index'])->name('activity.index');
+    });
+
+Route::middleware(['auth', 'business_owner'])
+    ->prefix('business')
+    ->name('business.')
+    ->group(function () {
+        Route::get('/dashboard', BusinessDashboardController::class)->name('dashboard');
+        Route::get('/profile', [BusinessProfileController::class, 'edit'])->name('profile.edit');
+        Route::post('/profile', [BusinessProfileController::class, 'update'])->name('profile.update');
+        Route::get('/campaigns', [BusinessCampaignController::class, 'index'])->name('campaigns.index');
+        Route::get('/campaigns/create', [BusinessCampaignController::class, 'create'])->name('campaigns.create');
+        Route::post('/campaigns', [BusinessCampaignController::class, 'store'])->name('campaigns.store');
+        Route::get('/campaigns/{campaign}', [BusinessCampaignController::class, 'show'])->name('campaigns.show');
+        Route::get('/campaigns/{campaign}/edit', [BusinessCampaignController::class, 'edit'])->name('campaigns.edit');
+        Route::match(['post', 'put'], '/campaigns/{campaign}', [BusinessCampaignController::class, 'update'])->name('campaigns.update');
+        Route::get('/campaigns/{campaign}/stats', [BusinessCampaignController::class, 'stats'])->name('campaigns.stats');
     });
 
 Route::get('/r/{token}', [ReferralLinkController::class, 'show'])->name('referrals.show');

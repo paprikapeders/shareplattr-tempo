@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Brand;
 use App\Models\Campaign;
+use App\Models\Click;
+use App\Models\Conversion;
+use App\Models\Reward;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -14,42 +16,32 @@ use Illuminate\Validation\Rules\File;
 use Inertia\Inertia;
 use RuntimeException;
 
-class AdminCampaignController extends Controller
+class BusinessCampaignController extends Controller
 {
-    /**
-     * Show all campaigns for admin management.
-     */
-    public function index()
+    public function index(Request $request)
     {
         $campaigns = Campaign::query()
-            ->with('brand:id,name,logo')
+            ->where('business_owner_id', $request->user()->id)
             ->latest()
             ->get()
             ->map(fn (Campaign $campaign) => $this->campaignPayload($campaign));
 
-        return Inertia::render('Admin/Campaigns/Index', [
+        return Inertia::render('Business/Campaigns/Index', [
             'campaigns' => $campaigns,
         ]);
     }
 
-    /**
-     * Show the campaign creation form.
-     */
     public function create()
     {
-        return Inertia::render('Admin/Campaigns/Create', [
+        return Inertia::render('Business/Campaigns/Create', [
             'statuses' => $this->statuses(),
-            'brands' => $this->brandOptions(),
         ]);
     }
 
-    /**
-     * Store a newly created campaign.
-     */
     public function store(Request $request): RedirectResponse
     {
+        $profile = $request->user()->businessProfile;
         $validated = $this->validatedCampaign($request);
-        $brand = Brand::query()->findOrFail($validated['brand_id']);
         $bannerPath = $request->hasFile('campaign_banner')
             ? $this->storeCampaignBanner($request->file('campaign_banner'))
             : null;
@@ -57,39 +49,44 @@ class AdminCampaignController extends Controller
         Campaign::create([
             ...$validated,
             'created_by' => $request->user()->id,
-            'brand_name' => $brand->name,
+            'business_owner_id' => $request->user()->id,
+            'brand_id' => $profile->brand_id,
+            'brand_name' => $profile->company_name,
             'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
             'campaign_banner' => $bannerPath,
         ]);
 
-        return redirect()->route('admin.campaigns.index')->with('success', 'Campaign created.');
+        return redirect()->route('business.campaigns.index')->with('success', 'Campaign created.');
     }
 
-    /**
-     * Show the campaign edit form.
-     */
-    public function edit(Campaign $campaign)
+    public function show(Request $request, Campaign $campaign)
     {
-        $campaign->load('brand:id,name,logo');
+        $this->authorizeOwner($request, $campaign);
 
-        return Inertia::render('Admin/Campaigns/Edit', [
+        return Inertia::render('Business/Campaigns/Show', [
+            'campaign' => $this->campaignPayload($campaign),
+        ]);
+    }
+
+    public function edit(Request $request, Campaign $campaign)
+    {
+        $this->authorizeOwner($request, $campaign);
+
+        return Inertia::render('Business/Campaigns/Edit', [
             'campaign' => [
                 ...$this->campaignPayload($campaign),
                 'reward_amount_dollars' => number_format($campaign->reward_amount / 100, 2, '.', ''),
                 'expires_at' => $campaign->expires_at?->format('Y-m-d'),
             ],
             'statuses' => $this->statuses(),
-            'brands' => $this->brandOptions(),
         ]);
     }
 
-    /**
-     * Update a campaign without touching aggregate counts.
-     */
     public function update(Request $request, Campaign $campaign): RedirectResponse
     {
+        $this->authorizeOwner($request, $campaign);
+
         $validated = $this->validatedCampaign($request);
-        $brand = Brand::query()->findOrFail($validated['brand_id']);
         $oldBannerPath = $campaign->campaign_banner;
         $bannerPath = $campaign->campaign_banner;
 
@@ -99,7 +96,7 @@ class AdminCampaignController extends Controller
 
         $campaign->update([
             ...$validated,
-            'brand_name' => $brand->name,
+            'business_owner_id' => $request->user()->id,
             'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
             'campaign_banner' => $bannerPath,
         ]);
@@ -108,13 +105,61 @@ class AdminCampaignController extends Controller
             Storage::disk('public')->delete($oldBannerPath);
         }
 
-        return redirect()->route('admin.campaigns.index')->with('success', 'Campaign updated.');
+        return redirect()->route('business.campaigns.index')->with('success', 'Campaign updated.');
+    }
+
+    public function stats(Request $request, Campaign $campaign)
+    {
+        $this->authorizeOwner($request, $campaign);
+
+        $clicks = Click::query()->where('campaign_id', $campaign->id);
+        $conversions = Conversion::query()->where('campaign_id', $campaign->id);
+        $totalClicks = (clone $clicks)->count();
+        $totalConversions = (clone $conversions)->count();
+
+        return Inertia::render('Business/Campaigns/Stats', [
+            'campaign' => $this->campaignPayload($campaign),
+            'stats' => [
+                'total_clicks' => $totalClicks,
+                'unique_clicks' => (clone $clicks)->where('is_flagged', false)->count(),
+                'flagged_clicks' => (clone $clicks)->where('is_flagged', true)->count(),
+                'conversions' => $totalConversions,
+                'conversion_rate' => $totalClicks > 0 ? round(($totalConversions / $totalClicks) * 100, 2) : 0,
+                'reward_amount' => $campaign->reward_amount,
+                'total_rewards_generated' => Reward::query()->where('campaign_id', $campaign->id)->sum('amount'),
+            ],
+            'recentClicks' => (clone $clicks)
+                ->latest()
+                ->limit(10)
+                ->get()
+                ->map(fn (Click $click) => [
+                    'id' => $click->id,
+                    'ip_address' => $click->ip_address,
+                    'is_flagged' => $click->is_flagged,
+                    'flag_reason' => $click->flag_reason,
+                    'created_at' => $click->created_at->toDateTimeString(),
+                ]),
+            'recentConversions' => (clone $conversions)
+                ->latest()
+                ->limit(10)
+                ->get()
+                ->map(fn (Conversion $conversion) => [
+                    'id' => $conversion->id,
+                    'amount' => $conversion->amount,
+                    'status' => $conversion->status,
+                    'created_at' => $conversion->created_at->toDateTimeString(),
+                ]),
+        ]);
+    }
+
+    private function authorizeOwner(Request $request, Campaign $campaign): void
+    {
+        abort_unless((int) $campaign->business_owner_id === (int) $request->user()->id, 403);
     }
 
     private function validatedCampaign(Request $request): array
     {
         return $request->validate([
-            'brand_id' => ['required', 'exists:brands,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:2000'],
             'category' => ['required', 'string', 'max:255'],
@@ -124,11 +169,6 @@ class AdminCampaignController extends Controller
             'status' => ['required', Rule::in($this->statuses())],
             'expires_at' => ['nullable', 'date'],
         ]);
-    }
-
-    private function dollarsToCents(string|int|float $amount): int
-    {
-        return (int) round(((float) $amount) * 100);
     }
 
     private function storeCampaignBanner(UploadedFile $file): string
@@ -155,25 +195,23 @@ class AdminCampaignController extends Controller
 
         $url = Storage::disk('public')->url($path);
 
-        if (! $version) {
-            return $url;
-        }
+        return $version ? $url.(str_contains($url, '?') ? '&' : '?').'v='.$version : $url;
+    }
 
-        return $url.(str_contains($url, '?') ? '&' : '?').'v='.$version;
+    private function dollarsToCents(string|int|float $amount): int
+    {
+        return (int) round(((float) $amount) * 100);
     }
 
     private function statuses(): array
     {
-        return ['active', 'inactive', 'draft', 'paused'];
+        return ['draft', 'active', 'paused'];
     }
 
     private function campaignPayload(Campaign $campaign): array
     {
         return [
             'id' => $campaign->id,
-            'brand_id' => $campaign->brand_id,
-            'brand_name' => $campaign->brand?->name ?? $campaign->brand_name,
-            'brand_logo_url' => $campaign->brand?->logo ? Storage::disk('public')->url($campaign->brand->logo) : null,
             'title' => $campaign->title,
             'description' => $campaign->description,
             'category' => $campaign->category,
@@ -185,17 +223,5 @@ class AdminCampaignController extends Controller
             'conversion_count' => $campaign->conversion_count,
             'expires_at' => $campaign->expires_at?->toDateString(),
         ];
-    }
-
-    private function brandOptions(): array
-    {
-        return Brand::query()
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(fn (Brand $brand) => [
-                'id' => $brand->id,
-                'name' => $brand->name,
-            ])
-            ->all();
     }
 }

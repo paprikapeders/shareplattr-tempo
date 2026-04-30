@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,6 +29,7 @@ class RegisterController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
+            'account_type' => ['nullable', Rule::in(['participant', 'business_owner'])],
         ]);
 
         [$user, $plainCode] = DB::transaction(function () use ($validated) {
@@ -35,6 +37,7 @@ class RegisterController extends Controller
                 'name' => trim($validated['first_name'].' '.$validated['last_name']),
                 'email' => $validated['email'],
                 'password' => $validated['password'],
+                'user_type' => $validated['account_type'] ?? 'participant',
             ]);
 
             $plainCode = $this->issueVerificationCode($user);

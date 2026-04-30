@@ -26,6 +26,6 @@ Thumbs.db
 /docs
 !/docs/
 /docs/*
-!/docs/digitalocean-deployment.md
+!/docs/website-features.md
 web-doc.md
 docs/

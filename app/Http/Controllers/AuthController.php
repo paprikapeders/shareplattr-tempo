@@ -67,11 +67,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(
-            $request->user()->is_admin
-                ? route('admin.dashboard')
-                : route('dashboard')
-        );
+        return redirect()->intended($this->redirectRouteFor($request->user()));
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -82,5 +78,20 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    private function redirectRouteFor($user): string
+    {
+        if ($user->isAdmin()) {
+            return route('admin.dashboard');
+        }
+
+        if ($user->isBusinessOwner()) {
+            return $user->hasCompleteBusinessProfile()
+                ? route('business.dashboard')
+                : route('business.profile.edit');
+        }
+
+        return route('dashboard');
     }
 }

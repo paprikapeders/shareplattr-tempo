@@ -62,6 +62,7 @@ class DemoUserSeeder extends Seeder
             'email_verified_at' => now(),
             'password' => Hash::make('password123'),
             'is_admin' => false,
+            'user_type' => 'participant',
         ];
 
         if (Schema::hasColumn('users', 'role')) {

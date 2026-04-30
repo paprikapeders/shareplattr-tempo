@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_admin'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'user_type'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -85,5 +85,37 @@ class User extends Authenticatable
     public function emailVerificationCodes()
     {
         return $this->hasMany(EmailVerificationCode::class);
+    }
+
+    public function businessProfile()
+    {
+        return $this->hasOne(BusinessProfile::class);
+    }
+
+    public function ownedCampaigns()
+    {
+        return $this->hasMany(Campaign::class, 'business_owner_id');
+    }
+
+    public function isAdmin(): bool
+    {
+        return (bool) $this->is_admin || $this->user_type === 'admin';
+    }
+
+    public function isBusinessOwner(): bool
+    {
+        return ! $this->isAdmin() && $this->user_type === 'business_owner';
+    }
+
+    public function isParticipant(): bool
+    {
+        return ! $this->isAdmin() && $this->user_type === 'participant';
+    }
+
+    public function hasCompleteBusinessProfile(): bool
+    {
+        return $this->businessProfile
+            && filled($this->businessProfile->company_name)
+            && filled($this->businessProfile->contact_person_name);
     }
 }

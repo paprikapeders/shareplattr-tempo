@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 
 #[Fillable([
     'created_by',
+    'business_owner_id',
     'brand_id',
     'brand_name',
     'title',
@@ -54,6 +55,11 @@ class Campaign extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function businessOwner()
+    {
+        return $this->belongsTo(User::class, 'business_owner_id');
     }
 
     /**

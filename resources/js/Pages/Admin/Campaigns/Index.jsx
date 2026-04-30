@@ -17,6 +17,7 @@ function statusClasses(status) {
         active: 'bg-emerald-50 text-emerald-700',
         inactive: 'bg-slate-100 text-slate-700',
         draft: 'bg-amber-50 text-amber-700',
+        paused: 'bg-cyan-50 text-cyan-700',
     };
 
     return classes[status] ?? classes.inactive;
