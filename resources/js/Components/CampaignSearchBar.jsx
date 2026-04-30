@@ -15,21 +15,21 @@ export default function CampaignSearchBar({
     onKeywordChange,
 }) {
     return (
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 rounded-[24px] border border-slate-200/80 bg-white p-2.5 shadow-[0_14px_35px_rgba(15,23,42,0.10)] sm:flex-row sm:items-center sm:gap-0 sm:rounded-full sm:p-2">
-            <div className="sm:min-w-[42%]">
+        <div className="mx-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] sm:h-12 sm:flex-row sm:items-center sm:rounded-full">
+            <div className="sm:w-[170px]">
                 <select
                     value={category}
                     onChange={(event) => onCategoryChange(event.target.value)}
-                    className="h-11 w-full appearance-none rounded-full border border-slate-200 bg-slate-50/70 px-4 text-sm font-medium text-slate-700 outline-none sm:h-14 sm:border-0 sm:bg-transparent sm:px-5"
+                    className="h-12 w-full appearance-none border-0 bg-white px-5 text-sm font-medium text-slate-600 outline-none"
                 >
-                    <option value="all">Choose a platform</option>
+                    <option value="all">Choose a category</option>
                     {categories.map((item) => (
                         <option key={item} value={item}>{item}</option>
                     ))}
                 </select>
             </div>
 
-            <div className="hidden h-9 w-px bg-slate-200 sm:block" />
+            <div className="hidden h-12 w-px bg-slate-200 sm:block" />
 
             <div className="flex-1">
                 <input
@@ -37,13 +37,13 @@ export default function CampaignSearchBar({
                     value={keyword}
                     onChange={(event) => onKeywordChange(event.target.value)}
                     placeholder="Enter keywords, niche or category"
-                    className="h-11 w-full rounded-full border border-slate-200 bg-slate-50/70 px-4 text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400 sm:h-14 sm:border-0 sm:bg-transparent sm:px-5"
+                    className="h-12 w-full border-0 bg-white px-5 text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400"
                 />
             </div>
 
             <button
                 type="button"
-                className="flex h-11 w-full shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 via-blue-500 to-blue-600 text-white shadow-[0_10px_20px_rgba(59,130,246,0.28)] transition hover:bg-blue-500 sm:h-12 sm:w-12"
+                className="flex h-12 w-full shrink-0 items-center justify-center bg-[#08c4c4] text-white transition hover:bg-[#08b4b4] sm:w-16"
                 aria-label="Search campaigns"
             >
                 <SearchIcon />

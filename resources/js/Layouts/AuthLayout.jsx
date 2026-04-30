@@ -11,52 +11,43 @@ function BackIcon() {
 export default function AuthLayout({
     children,
     title = 'Shareplattr',
-    mobileTitleClassName = '',
-    desktopTitleClassName = '',
     backHref = null,
-    showMobileHero = false,
-    align = 'center',
+    showHero = true,
+    subtitle = null,
 }) {
-    const alignmentClass = align === 'top' || showMobileHero
-        ? 'justify-start pt-14 sm:pt-16 lg:justify-center lg:pt-0'
-        : 'justify-center';
-
     return (
-        <main className="min-h-screen overflow-hidden bg-[#b3e1e7] text-[#111111] lg:grid lg:grid-cols-[1.08fr_0.92fr]">
-            <section
-                className="relative hidden min-h-screen bg-cover bg-left-top lg:block"
-                style={{
-                    backgroundImage: `url(${mainBg})`,
-                }}
-                aria-hidden="true"
-            />
+        <main className="min-h-screen overflow-hidden bg-[#b3e1e7] text-[#111111] lg:flex">
+            {showHero && (
+                <section className="relative h-[50vh] min-h-[320px] overflow-hidden lg:h-screen lg:min-h-screen lg:w-[55vw] lg:shrink-0" aria-hidden="true">
+                    <img
+                        src={mainBg}
+                        alt=""
+                        className="h-full w-full object-cover object-[18%_center] sm:object-[22%_center] lg:w-auto lg:max-w-none lg:translate-x-[2.5vw] lg:object-contain"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#b3e1e7]/40 to-[#b3e1e7] lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-[#b3e1e7]" />
+                </section>
+            )}
 
-            <section className={`relative flex min-h-screen flex-col items-center px-6 py-8 sm:px-10 lg:px-16 ${alignmentClass}`}>
+            <section className={`relative flex min-h-screen flex-1 flex-col items-center justify-center px-6 py-10 sm:px-10 lg:px-16 ${showHero ? '-mt-16 lg:mt-0' : ''}`}>
                 {backHref && (
                     <a
                         href={backHref}
-                        className="absolute left-6 top-8 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.10)] sm:left-10 lg:hidden"
+                        className="absolute left-6 top-8 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.14)] sm:left-10"
+                        aria-label="Go back"
                     >
                         <BackIcon />
                     </a>
                 )}
 
-                {showMobileHero && (
-                    <div className="-mx-6 -mt-8 mb-8 sm:-mx-10 lg:hidden">
-                        <div
-                            className="h-[46vh] min-h-[310px] w-full bg-cover bg-center"
-                            style={{
-                                backgroundImage: `linear-gradient(180deg, rgba(179,225,231,0) 58%, #b3e1e7 100%), url(${mainBg})`,
-                            }}
-                            aria-hidden="true"
-                        />
-                    </div>
-                )}
-
-                <div className="mx-auto flex w-full max-w-md flex-col">
-                    <h1 className={`text-center font-bold tracking-tight text-[#111111] ${showMobileHero ? 'text-[54px] leading-none sm:text-[62px] lg:text-[64px]' : 'text-[38px] sm:text-[48px] lg:text-[64px]'} ${mobileTitleClassName} ${desktopTitleClassName}`}>
+                <div className="relative z-10 mx-auto flex w-full max-w-[400px] flex-col">
+                    <h1 className="text-center text-4xl font-extrabold tracking-normal text-[#111111] sm:text-5xl">
                         {title}
                     </h1>
+                    {subtitle && (
+                        <p className="mt-3 text-center text-sm leading-6 text-[#1f2933]/80">
+                            {subtitle}
+                        </p>
+                    )}
 
                     {children}
                 </div>

@@ -56,11 +56,13 @@ export default function Verify({ email, expiresInSeconds }) {
     };
 
     return (
-        <AuthLayout title="Shareplattr" align="top" backHref="/login">
-            <form onSubmit={submit} className="mx-auto mt-7 flex w-full max-w-[340px] flex-1 flex-col items-center sm:mt-10 lg:mt-12">
-                <VerificationIcon />
+        <AuthLayout title="Shareplattr" backHref="/login" showHero={false}>
+            <form onSubmit={submit} className="mx-auto mt-8 flex w-full max-w-[340px] flex-col items-center sm:mt-10">
+                <div className="sr-only">
+                    <VerificationIcon />
+                </div>
 
-                <h2 className="mt-6 text-center text-[20px] font-bold text-[#111111] sm:text-[22px]">
+                <h2 className="text-center text-[20px] font-bold text-[#111111] sm:text-[22px]">
                     Verify Your Account
                 </h2>
                 <p className="mt-2 max-w-[300px] text-center text-[15px] leading-6 text-[#101010]">
@@ -105,7 +107,7 @@ export default function Verify({ email, expiresInSeconds }) {
                 <button
                     type="submit"
                     disabled={processing || data.code.length !== 6}
-                    className="mt-8 h-[49px] w-full rounded-[18px] bg-[linear-gradient(90deg,#9284e4_0%,#564e86_100%)] text-[16px] font-bold text-white disabled:opacity-50"
+                    className="mt-8 h-12 w-full rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:opacity-50"
                 >
                     {processing ? 'Verifying...' : 'Verify'}
                 </button>

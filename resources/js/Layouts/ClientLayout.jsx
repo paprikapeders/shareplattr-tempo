@@ -24,8 +24,8 @@ function DashboardIconGrid() {
 function DashboardIconCampaigns() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-            <rect x="3" y="5" width="18" height="14" rx="3" />
-            <path d="M7 9h10M7 13h6" />
+            <rect x="5" y="4" width="14" height="16" rx="2" />
+            <path d="M8 4V2M16 4V2M8 9h8M8 13h5" />
         </svg>
     );
 }
@@ -44,10 +44,8 @@ function DashboardIconWallet() {
 function DashboardIconReferrals() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-            <circle cx="8" cy="8" r="3" />
-            <circle cx="17" cy="16" r="3" />
-            <path d="M10.7 9.5l3.6 4" />
-            <path d="M5.5 14.5a3.8 3.8 0 0 0-2 3.4V19h6" />
+            <path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" />
+            <path d="M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1" />
         </svg>
     );
 }
@@ -62,11 +60,11 @@ function DashboardIconLogout() {
     );
 }
 
-function DashboardIconTheme() {
+function DashboardIconClock() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-            <path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
-            <circle cx="12" cy="12" r="4" />
+            <circle cx="12" cy="12" r="8" />
+            <path d="M12 8v4l2.5 2" />
         </svg>
     );
 }
@@ -80,33 +78,36 @@ function DashboardIconBell() {
     );
 }
 
-function MenuIcon() {
+function ChatIcon() {
     return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-5 w-5">
-            <path d="M4 7h16M4 12h16M4 17h16" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+            <path d="M5 17.5 3.8 21l3.7-1.1A8 8 0 1 0 5 17.5Z" />
+            <path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01" />
         </svg>
     );
 }
 
-function CloseIcon() {
+function ChevronLeftIcon() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-5 w-5">
-            <path d="M6 6l12 12M18 6L6 18" />
+            <path d="m15 18-6-6 6-6" />
         </svg>
     );
 }
 
-function navItemClasses(active) {
-    return [
-        'flex h-12 w-12 items-center justify-center rounded-2xl transition focus:outline-none focus:ring-2 focus:ring-[#26338c]/25',
-        active ? 'bg-[#eef2ff] text-[#26338c] shadow-sm shadow-[#26338c]/10' : 'text-slate-400 hover:bg-slate-50 hover:text-[#26338c]',
-    ].join(' ');
+function ChevronDownIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-4 w-4">
+            <path d="m6 9 6 6 6-6" />
+        </svg>
+    );
 }
 
-function topbarNavClasses(active) {
+function navItemClasses(active, collapsed) {
     return [
-        'rounded-full px-3.5 py-2 text-sm font-semibold transition',
-        active ? 'bg-[#eef2ff] text-[#26338c]' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900',
+        'group flex h-10 items-center rounded-xl text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/25',
+        collapsed ? 'w-10 justify-center' : 'w-full justify-start gap-3 px-3',
+        active ? 'bg-slate-700 text-white shadow-sm shadow-black/10' : 'text-slate-400 hover:bg-slate-800/70 hover:text-white',
     ].join(' ');
 }
 
@@ -121,23 +122,39 @@ function getInitials(name = '') {
     return initials || 'SP';
 }
 
-function SidebarContent({ url, onNavigate = () => {} }) {
+function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
     const items = [
         { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
         { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
         { href: '/dashboard#referrals', label: 'Referrals', active: url === '/dashboard#referrals', icon: DashboardIconReferrals },
         { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts'), icon: DashboardIconWallet },
+        { href: '/dashboard#activity', label: 'Messages', active: url === '/dashboard#activity', icon: ChatIcon },
     ];
 
     return (
         <div className="flex h-full flex-col">
-            <Link href="/dashboard" className="flex justify-center rounded-2xl text-[#26338c]" onClick={onNavigate} aria-label="SharePlattr dashboard" title="SharePlattr">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50">
-                    <LogoIcon />
-                </span>
-            </Link>
+            <div className={`flex items-center ${collapsed ? 'flex-col gap-3' : 'justify-between gap-3'}`}>
+                <Link href="/dashboard" className="flex min-w-0 items-center gap-3 text-white" onClick={onNavigate} aria-label="SharePlattr dashboard" title="SharePlattr">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#08c4c4] text-white">
+                        <LogoIcon />
+                    </span>
+                    {!collapsed && <span className="truncate text-sm font-semibold">SharePlattr</span>}
+                </Link>
 
-            <nav className="mt-7 flex flex-1 flex-col items-center gap-2">
+                <button
+                    type="button"
+                    onClick={onToggle}
+                    className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-800 text-slate-300 transition hover:bg-slate-700 hover:text-white lg:flex"
+                    aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                    <span className={`transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`}>
+                        <ChevronLeftIcon />
+                    </span>
+                </button>
+            </div>
+
+            <nav className={`mt-7 flex flex-1 flex-col gap-2 ${collapsed ? 'items-center' : 'items-stretch'}`}>
                 {items.map((item) => {
                     const Icon = item.icon;
 
@@ -145,7 +162,59 @@ function SidebarContent({ url, onNavigate = () => {} }) {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={navItemClasses(item.active)}
+                            className={navItemClasses(item.active, collapsed)}
+                            onClick={onNavigate}
+                            aria-label={item.label}
+                            title={collapsed ? item.label : undefined}
+                        >
+                            <Icon />
+                            {!collapsed && <span className="truncate">{item.label}</span>}
+                        </Link>
+                    );
+                })}
+            </nav>
+
+            <div className={`mt-6 flex ${collapsed ? 'justify-center' : 'justify-start'}`}>
+                <Link
+                    href="/logout"
+                    method="post"
+                    as="button"
+                    className={navItemClasses(false, collapsed)}
+                    aria-label="Logout"
+                    title={collapsed ? 'Logout' : undefined}
+                >
+                    <DashboardIconLogout />
+                    {!collapsed && <span>Logout</span>}
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+function MobileSidebarContent({ url, onNavigate = () => {} }) {
+    return (
+        <div className="flex h-full flex-col">
+            <Link href="/dashboard" className="flex justify-center rounded-2xl text-white" onClick={onNavigate} aria-label="SharePlattr dashboard" title="SharePlattr">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#08c4c4]">
+                    <LogoIcon />
+                </span>
+            </Link>
+
+            <nav className="mt-7 flex flex-1 flex-col items-center gap-2">
+                {[
+                    { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
+                    { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
+                    { href: '/dashboard#referrals', label: 'Referrals', active: url === '/dashboard#referrals', icon: DashboardIconReferrals },
+                    { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts'), icon: DashboardIconWallet },
+                    { href: '/dashboard#activity', label: 'Messages', active: url === '/dashboard#activity', icon: ChatIcon },
+                ].map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={navItemClasses(item.active, true)}
                             onClick={onNavigate}
                             aria-label={item.label}
                             title={item.label}
@@ -160,7 +229,7 @@ function SidebarContent({ url, onNavigate = () => {} }) {
                 href="/logout"
                 method="post"
                 as="button"
-                className="mt-6 flex h-12 w-12 items-center justify-center self-center rounded-2xl text-slate-400 transition hover:bg-slate-50 hover:text-[#26338c] focus:outline-none focus:ring-2 focus:ring-[#26338c]/25"
+                className="mt-6 flex h-10 w-10 items-center justify-center self-center rounded-xl text-slate-400 transition hover:bg-slate-800/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/25"
                 aria-label="Logout"
                 title="Logout"
             >
@@ -171,46 +240,40 @@ function SidebarContent({ url, onNavigate = () => {} }) {
 }
 
 function ClientTopBar({ url, user }) {
-    const navItems = [
-        { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard') },
-        { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns') },
-        { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts') },
-    ];
     const name = user?.name || 'SharePlattr user';
 
     return (
-        <div className="rounded-[24px] bg-white px-4 py-3 shadow-[0_16px_45px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <nav className="flex min-w-0 flex-wrap items-center gap-1.5" aria-label="Dashboard sections">
-                    {navItems.map((item) => (
-                        <Link key={item.href} href={item.href} className={topbarNavClasses(item.active)}>
-                            {item.label}
-                        </Link>
-                    ))}
-                </nav>
+        <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white px-4 py-3 shadow-sm sm:px-6">
+            <div className="flex items-center justify-between gap-4">
+                <Link href="/dashboard" className="flex items-center gap-3 text-[#08bcbc]" aria-label="SharePlattr dashboard">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#08c4c4] text-white shadow-sm">
+                        <LogoIcon />
+                    </span>
+                    <span className="hidden text-sm font-bold text-slate-900 sm:inline">SharePlattr</span>
+                </Link>
 
-                <div className="flex items-center justify-between gap-4 sm:justify-end">
-                    <div className="flex items-center gap-2 text-[#26338c]">
-                        <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl transition hover:bg-slate-100" aria-label="Toggle theme" title="Theme">
-                            <DashboardIconTheme />
-                        </button>
-                        <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl transition hover:bg-slate-100" aria-label="Notifications" title="Notifications">
-                            <DashboardIconBell />
-                        </button>
-                    </div>
+                <div className="flex items-center justify-end gap-3">
+                    <button type="button" className="hidden h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 sm:flex" aria-label="Recent activity" title="Recent activity">
+                        <DashboardIconClock />
+                    </button>
+                    <button type="button" className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800" aria-label="Notifications" title="Notifications">
+                        <DashboardIconBell />
+                        <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
+                    </button>
 
-                    <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#f7ba7d_0%,#ff8a7c_100%)] text-sm font-bold uppercase text-white">
+                    <button type="button" className="flex min-w-0 items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 shadow-sm transition hover:border-slate-300 hover:bg-slate-50" aria-label="Open user menu">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-400 text-sm font-bold uppercase text-white">
                             {getInitials(name)}
                         </div>
-                        <div className="min-w-0 leading-tight">
-                            <p className="text-xs text-slate-500">Welcome back,</p>
-                            <p className="truncate text-[15px] font-semibold text-[#293249]">{name}</p>
+                        <div className="hidden min-w-0 text-left leading-tight sm:block">
+                            <p className="text-[10px] text-slate-400">Welcome back,</p>
+                            <p className="truncate text-xs font-semibold text-slate-950">{name}</p>
                         </div>
-                    </div>
+                        <ChevronDownIcon />
+                    </button>
                 </div>
             </div>
-        </div>
+        </header>
     );
 }
 
@@ -218,43 +281,28 @@ export default function ClientLayout({ children }) {
     const page = usePage();
     const { auth = {} } = page.props;
     const url = page.url;
-    const [mobileOpen, setMobileOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
     return (
-        <div className="min-h-screen bg-[#f7f8fb] text-slate-900">
-            <div className="mx-auto max-w-[1500px] px-4 py-4 sm:px-5 lg:px-6 lg:py-5">
-                <div className="mb-4 flex items-center justify-between lg:hidden">
-                    <Link href="/dashboard" className="flex items-center gap-3 text-[#26338c]">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[0_16px_35px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
-                            <LogoIcon />
-                        </span>
-                        <span className="text-lg font-semibold text-slate-900">SharePlattr</span>
-                    </Link>
-
-                    <button
-                        type="button"
-                        onClick={() => setMobileOpen((current) => !current)}
-                        className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-[0_16px_35px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70"
-                    >
-                        {mobileOpen ? <CloseIcon /> : <MenuIcon />}
-                    </button>
-                </div>
-
-                {mobileOpen && (
-                    <div className="mb-4 rounded-[28px] bg-white p-4 shadow-[0_22px_55px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 lg:hidden">
-                        <SidebarContent url={url} onNavigate={() => setMobileOpen(false)} />
+        <div className="min-h-screen bg-[#f8fafc] text-slate-900">
+            <div className="flex min-h-screen">
+                <aside className="hidden bg-slate-900 lg:block">
+                    <div className={`sticky top-0 flex min-h-screen flex-col px-3 py-5 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-[220px]'}`}>
+                        <SidebarContent
+                            url={url}
+                            collapsed={sidebarCollapsed}
+                            onToggle={() => setSidebarCollapsed((current) => !current)}
+                        />
                     </div>
-                )}
+                </aside>
 
-                <div className="grid gap-4 lg:grid-cols-[76px_minmax(0,1fr)] lg:gap-5">
-                    <aside className="hidden lg:block">
-                        <div className="sticky top-5 flex min-h-[calc(100vh-40px)] flex-col rounded-[28px] bg-white px-2 py-5 shadow-[0_22px_55px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
-                            <SidebarContent url={url} />
-                        </div>
-                    </aside>
+                <aside className="fixed inset-y-0 left-0 z-40 w-16 bg-slate-900 px-3 py-5 lg:hidden">
+                    <MobileSidebarContent url={url} />
+                </aside>
 
-                    <main className="space-y-4 lg:space-y-5">
-                        <ClientTopBar url={url} user={auth.user} />
+                <div className="min-w-0 flex-1 pl-16 lg:pl-0">
+                    <ClientTopBar url={url} user={auth.user} />
+                    <main className="mx-auto max-w-[1500px] space-y-5 px-4 py-6 sm:px-6 lg:px-8">
                         <FlashMessages />
                         {children}
                     </main>
