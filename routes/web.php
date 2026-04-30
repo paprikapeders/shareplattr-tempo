@@ -60,7 +60,7 @@ Route::middleware(['auth', 'admin'])
         Route::get('/campaigns/create', [AdminCampaignController::class, 'create'])->name('campaigns.create');
         Route::post('/campaigns', [AdminCampaignController::class, 'store'])->name('campaigns.store');
         Route::get('/campaigns/{campaign}/edit', [AdminCampaignController::class, 'edit'])->name('campaigns.edit');
-        Route::post('/campaigns/{campaign}', [AdminCampaignController::class, 'update'])->name('campaigns.update');
+        Route::match(['post', 'put'], '/campaigns/{campaign}', [AdminCampaignController::class, 'update'])->name('campaigns.update');
         Route::get('/conversions/create', [AdminConversionController::class, 'create'])->name('conversions.create');
         Route::post('/conversions', [AdminConversionController::class, 'store'])->name('conversions.store');
         Route::get('/rewards', [AdminRewardController::class, 'index'])->name('rewards.index');
