@@ -2,6 +2,7 @@ import { useForm } from '@inertiajs/react';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
+import FileUpload from '../../../Components/FileUpload';
 import Input from '../../../Components/Input';
 import PageHeader from '../../../Components/PageHeader';
 
@@ -65,10 +66,14 @@ export default function Edit({ profile }) {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">Logo</label>
-                        <Input type="file" accept="image/*" onChange={(event) => setData('logo', event.target.files[0] ?? null)} className="mt-1" />
-                        {errors.logo && <p className="mt-1 text-sm text-rose-600">{errors.logo}</p>}
-                        {profile.logo_url && <img src={profile.logo_url} alt="" className="mt-3 h-20 w-20 rounded-lg object-cover" />}
+                        <FileUpload
+                            label="Logo"
+                            name="logo"
+                            currentImageUrl={profile.logo_url}
+                            currentImageLabel="Current logo"
+                            onChange={(file) => setData('logo', file)}
+                            error={errors.logo}
+                        />
                     </div>
 
                     <Button type="submit" disabled={processing}>{processing ? 'Saving...' : 'Save Profile'}</Button>

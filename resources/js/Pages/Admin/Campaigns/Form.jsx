@@ -1,5 +1,6 @@
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
+import FileUpload from '../../../Components/FileUpload';
 import Input from '../../../Components/Input';
 import Select from '../../../Components/Select';
 
@@ -110,19 +111,14 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700">Campaign Banner</label>
-                    <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(event) => setData('campaign_banner', event.target.files[0] ?? null)}
-                        className="mt-1"
+                    <FileUpload
+                        label="Campaign Banner"
+                        name="campaign_banner"
+                        currentImageUrl={data.campaign_banner_url}
+                        currentImageLabel="Current campaign banner"
+                        onChange={(file) => setData('campaign_banner', file)}
+                        error={errors.campaign_banner}
                     />
-                    <p className="mt-1 text-xs text-slate-500">Image files only, up to 4 MB.</p>
-                    {errors.campaign_banner && <p className="mt-1 text-sm text-rose-600">{errors.campaign_banner}</p>}
-
-                    {data.campaign_banner_url && (
-                        <img src={data.campaign_banner_url} alt="" className="mt-3 h-36 w-full rounded-xl object-cover" />
-                    )}
                 </div>
 
                 <Button type="submit" disabled={processing}>

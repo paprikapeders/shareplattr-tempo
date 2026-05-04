@@ -1,5 +1,6 @@
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
+import FileUpload from '../../../Components/FileUpload';
 import Input from '../../../Components/Input';
 import Select from '../../../Components/Select';
 
@@ -70,22 +71,14 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700">Logo</label>
-                    <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(event) => setData('logo', event.target.files[0] ?? null)}
-                        className="mt-1"
+                    <FileUpload
+                        label="Logo"
+                        name="logo"
+                        currentImageUrl={logoUrl}
+                        currentImageLabel="Current logo"
+                        onChange={(file) => setData('logo', file)}
+                        error={errors.logo}
                     />
-                    <p className="mt-1 text-xs text-slate-500">Image files only, up to 2 MB.</p>
-                    {errors.logo && <p className="mt-1 text-sm text-rose-600">{errors.logo}</p>}
-
-                    {logoUrl && (
-                        <div className="mt-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                            <img src={logoUrl} alt="" className="h-12 w-12 rounded-lg object-cover" />
-                            <p className="text-sm text-slate-600">Current logo</p>
-                        </div>
-                    )}
                 </div>
 
                 <Button type="submit" disabled={processing}>

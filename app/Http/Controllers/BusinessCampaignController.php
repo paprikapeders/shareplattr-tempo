@@ -12,7 +12,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\File;
 use Inertia\Inertia;
 use RuntimeException;
 
@@ -108,6 +107,23 @@ class BusinessCampaignController extends Controller
         return redirect()->route('business.campaigns.index')->with('success', 'Campaign updated.');
     }
 
+    public function updateStatus(Request $request, Campaign $campaign): RedirectResponse
+    {
+        $this->authorizeOwner($request, $campaign);
+
+        $validated = $request->validate([
+            'status' => ['required', Rule::in(['active', 'paused'])],
+        ]);
+
+        abort_unless(in_array($campaign->status, ['active', 'paused'], true), 422);
+
+        $campaign->update([
+            'status' => $validated['status'],
+        ]);
+
+        return back()->with('success', 'Campaign status updated.');
+    }
+
     public function stats(Request $request, Campaign $campaign)
     {
         $this->authorizeOwner($request, $campaign);
@@ -165,7 +181,7 @@ class BusinessCampaignController extends Controller
             'category' => ['required', 'string', 'max:255'],
             'reward_amount' => ['required', 'numeric', 'min:0.01'],
             'destination_url' => ['required', 'url', 'max:2048'],
-            'campaign_banner' => ['nullable', File::image()->max(4096)],
+            'campaign_banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
             'status' => ['required', Rule::in($this->statuses())],
             'expires_at' => ['nullable', 'date'],
         ]);
@@ -214,6 +230,7 @@ class BusinessCampaignController extends Controller
             'id' => $campaign->id,
             'title' => $campaign->title,
             'description' => $campaign->description,
+            'brand_name' => $campaign->brand_name,
             'category' => $campaign->category,
             'reward_amount' => $campaign->reward_amount,
             'destination_url' => $campaign->destination_url,
@@ -221,6 +238,7 @@ class BusinessCampaignController extends Controller
             'status' => $campaign->status,
             'click_count' => $campaign->click_count,
             'conversion_count' => $campaign->conversion_count,
+            'created_at' => $campaign->created_at?->toDateString(),
             'expires_at' => $campaign->expires_at?->toDateString(),
         ];
     }

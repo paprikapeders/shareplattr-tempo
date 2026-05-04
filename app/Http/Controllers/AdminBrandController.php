@@ -7,7 +7,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\File;
 use Inertia\Inertia;
 
 class AdminBrandController extends Controller
@@ -134,7 +133,7 @@ class AdminBrandController extends Controller
             'business_type' => ['nullable', 'string', 'max:255'],
             'website_url' => ['nullable', 'url', 'max:2048'],
             'status' => ['required', Rule::in($this->statuses())],
-            'logo' => ['nullable', File::image()->max(2048)],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
     }
 

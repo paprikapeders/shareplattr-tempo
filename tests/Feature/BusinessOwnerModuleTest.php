@@ -142,6 +142,69 @@ class BusinessOwnerModuleTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_business_owner_can_pause_and_resume_own_campaign(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        $campaign = $this->campaignForOwner($owner, $profile);
+
+        $this
+            ->actingAs($owner)
+            ->patch(route('business.campaigns.status.update', $campaign), [
+                'status' => 'paused',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('campaigns', [
+            'id' => $campaign->id,
+            'status' => 'paused',
+        ]);
+
+        $this
+            ->actingAs($owner)
+            ->patch(route('business.campaigns.status.update', $campaign), [
+                'status' => 'active',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('campaigns', [
+            'id' => $campaign->id,
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_business_owner_cannot_update_another_owners_campaign_status(): void
+    {
+        [$owner] = $this->businessOwnerWithProfile('Owner One', 'One Co');
+        [$otherOwner, $otherProfile] = $this->businessOwnerWithProfile('Owner Two', 'Two Co');
+        $campaign = $this->campaignForOwner($otherOwner, $otherProfile);
+
+        $this
+            ->actingAs($owner)
+            ->patch(route('business.campaigns.status.update', $campaign), [
+                'status' => 'paused',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_business_owner_cannot_resume_draft_campaign_from_status_action(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        $campaign = $this->campaignForOwner($owner, $profile);
+        $campaign->update(['status' => 'draft']);
+
+        $this
+            ->actingAs($owner)
+            ->patch(route('business.campaigns.status.update', $campaign), [
+                'status' => 'active',
+            ])
+            ->assertStatus(422);
+
+        $this->assertDatabaseHas('campaigns', [
+            'id' => $campaign->id,
+            'status' => 'draft',
+        ]);
+    }
+
     public function test_participant_cannot_access_business_routes(): void
     {
         $participant = User::factory()->create();

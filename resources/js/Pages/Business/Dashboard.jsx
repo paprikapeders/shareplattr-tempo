@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import BusinessLayout from '../../Layouts/BusinessLayout';
 
@@ -7,9 +7,27 @@ function dollars(cents) {
 }
 
 function statusClass(status) {
-    return status === 'active'
-        ? 'bg-emerald-50 text-emerald-700'
-        : 'bg-slate-100 text-slate-500';
+    if (status === 'active') {
+        return 'bg-emerald-50 text-emerald-700';
+    }
+
+    if (status === 'paused') {
+        return 'bg-amber-50 text-amber-700';
+    }
+
+    return 'bg-slate-100 text-slate-500';
+}
+
+function statusLabel(status) {
+    if (status === 'active') {
+        return 'Active';
+    }
+
+    if (status === 'paused') {
+        return 'Paused';
+    }
+
+    return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Inactive';
 }
 
 function progressColor(index) {
@@ -49,14 +67,32 @@ function CampaignRow({ campaign, index, maxClicks }) {
     const progress = campaign.conversions > 0
         ? Math.min(100, Math.max(5, Math.round(campaign.conversion_rate)))
         : (maxClicks > 0 ? Math.max(5, Math.round((campaign.clicks / maxClicks) * 100)) : 0);
+    const nextStatus = campaign.status === 'active' ? 'paused' : 'active';
+    const canToggleStatus = ['active', 'paused'].includes(campaign.status);
+
+    function updateStatus(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        router.patch(`/business/campaigns/${campaign.id}/status`, {
+            status: nextStatus,
+        }, {
+            preserveScroll: true,
+        });
+    }
 
     return (
-        <div className="grid min-h-[76px] grid-cols-[40px_minmax(0,1fr)_56px_56px_64px_92px_70px] items-center gap-3 border-b border-slate-100 px-5 py-2.5 last:border-b-0 xl:grid-cols-[40px_minmax(0,1fr)_62px_62px_64px_104px_72px]">
+        <div className="group relative grid min-h-[76px] grid-cols-[40px_minmax(0,1fr)_56px_56px_64px_92px_78px_80px] items-center gap-3 border-b border-slate-100 px-5 py-2.5 transition hover:bg-slate-50 last:border-b-0 xl:grid-cols-[40px_minmax(0,1fr)_62px_62px_64px_104px_82px_84px]">
+            <Link
+                href={`/business/campaigns/${campaign.id}`}
+                className="absolute inset-0 z-10"
+                aria-label={`View ${campaign.title}`}
+            />
             <CampaignThumb campaign={campaign} index={index} />
 
             <div className="min-w-0">
                 <div className="flex min-w-0 items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-slate-950">{campaign.title}</p>
+                    <p className="truncate text-sm font-semibold text-slate-950 transition group-hover:text-cyan-700">{campaign.title}</p>
                     <span className="hidden text-xs text-slate-400 sm:inline">{campaign.brand_name || 'Business'}</span>
                     <span className="hidden text-xs text-slate-400 md:inline">- {campaign.category || 'Uncategorized'}</span>
                     <span className="hidden text-xs text-slate-400 lg:inline">- Created {campaign.created_at}</span>
@@ -90,8 +126,19 @@ function CampaignRow({ campaign, index, maxClicks }) {
             </div>
             <div className="text-right">
                 <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(campaign.status)}`}>
-                    {campaign.status === 'active' ? 'Active' : 'Ended'}
+                    {statusLabel(campaign.status)}
                 </span>
+            </div>
+            <div className="relative z-20 flex justify-end">
+                {canToggleStatus && (
+                    <button
+                        type="button"
+                        onClick={updateStatus}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950"
+                    >
+                        {campaign.status === 'active' ? 'Pause' : 'Resume'}
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -272,7 +319,7 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
                                             <td className="px-5 py-4 text-right text-slate-700">{campaign.conversion_rate}%</td>
                                             <td className="px-5 py-4 text-right text-slate-700">{dollars(campaign.reward_amount)}</td>
                                             <td className="px-5 py-4 text-right font-medium text-slate-700">{dollars(campaign.rewards_generated)}</td>
-                                            <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(campaign.status)}`}>{campaign.status === 'active' ? 'Active' : 'Inactive'}</span></td>
+                                            <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(campaign.status)}`}>{statusLabel(campaign.status)}</span></td>
                                             <td className="px-5 py-4"><Actions campaign={campaign} /></td>
                                         </tr>
                                     ))}
@@ -314,7 +361,7 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
                                     <tr className="text-left text-[11px] font-bold uppercase text-slate-400">
                                         <th className="px-5 py-3">Campaign</th>
                                         <th className="px-5 py-3">Referrer</th>
-                                        <th className="px-5 py-3 text-right">Pending</th>
+                                        <th className="px-5 py-3 text-right">Payout</th>
                                         <th className="px-5 py-3 text-right">Paid</th>
                                         <th className="px-5 py-3 text-right">Total Rewards</th>
                                         <th className="px-5 py-3 text-right">Status</th>

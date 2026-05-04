@@ -6,7 +6,6 @@ use App\Models\Brand;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rules\File;
 use Inertia\Inertia;
 
 class BusinessProfileController extends Controller
@@ -45,7 +44,7 @@ class BusinessProfileController extends Controller
             'phone' => ['nullable', 'string', 'max:50'],
             'industry' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'logo' => ['nullable', File::image()->max(2048)],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
 
         $profileData = collect($validated)->except('logo')->all();

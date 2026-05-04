@@ -10,7 +10,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\File;
 use Inertia\Inertia;
 use RuntimeException;
 
@@ -120,7 +119,7 @@ class AdminCampaignController extends Controller
             'category' => ['required', 'string', 'max:255'],
             'reward_amount' => ['required', 'numeric', 'min:0.01'],
             'destination_url' => ['required', 'url', 'max:2048'],
-            'campaign_banner' => ['nullable', File::image()->max(4096)],
+            'campaign_banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
             'status' => ['required', Rule::in($this->statuses())],
             'expires_at' => ['nullable', 'date'],
         ]);

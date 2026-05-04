@@ -112,6 +112,33 @@ class AdminCampaignUpdateTest extends TestCase
         Storage::disk('public')->assertMissing($oldBannerPath);
     }
 
+    public function test_campaign_banner_rejects_files_over_two_megabytes(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $brand = Brand::create([
+            'name' => 'Northstar Coffee',
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->post(route('admin.campaigns.store'), [
+                'brand_id' => $brand->id,
+                'title' => 'Large Banner Campaign',
+                'description' => 'A campaign with an oversized banner.',
+                'category' => 'Food & Drink',
+                'reward_amount' => '15.50',
+                'destination_url' => 'https://example.com/large-banner',
+                'campaign_banner' => UploadedFile::fake()->createWithContent(
+                    'large-banner.png',
+                    base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=')
+                        .str_repeat('a', 2049 * 1024),
+                ),
+                'status' => 'active',
+                'expires_at' => null,
+            ])
+            ->assertSessionHasErrors('campaign_banner');
+    }
+
     public function test_campaign_pages_expose_campaign_banner_column_and_cache_busted_public_url(): void
     {
         $user = User::factory()->create();
