@@ -173,105 +173,42 @@ function Step({ number, title, children }) {
 }
 
 function FacebookIcon({ className = 'h-4 w-4' }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-            <path d="M14.2 8.1V6.7c0-.7.5-1.1 1.2-1.1h1.6V2.7c-.8-.1-1.7-.2-2.6-.2-2.6 0-4.4 1.6-4.4 4.5v1.1H7.2v3.2H10v8.2h3.4v-8.2h2.7l.4-3.2h-2.3Z" />
-        </svg>
-    );
+    return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M14.2 8.1V6.7c0-.7.5-1.1 1.2-1.1h1.6V2.7c-.8-.1-1.7-.2-2.6-.2-2.6 0-4.4 1.6-4.4 4.5v1.1H7.2v3.2H10v8.2h3.4v-8.2h2.7l.4-3.2h-2.3Z" /></svg>;
 }
 
 function XIcon({ className = 'h-4 w-4' }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-            <path d="M14.7 10.6 21.4 3h-1.7l-5.8 6.6L9.3 3H4l7 10-7 8h1.7l6.1-7 4.9 7H22l-7.3-10.4Zm-2.1 2.4-.7-1L6.2 4.2h2.4l4.5 6.4.7 1 6 8.3h-2.4L12.6 13Z" />
-        </svg>
-    );
-}
-
-function TiktokIcon({ className = 'h-4 w-4' }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-            <path d="M16.2 3c.3 2.4 1.7 4.1 4 4.3v3.1a7.2 7.2 0 0 1-4-1.2v5.8c0 3.6-2.5 6-5.8 6-3 0-5.4-2-5.4-5 0-3.4 2.8-5.4 6.3-5v3.3c-1.5-.4-3 .3-3 1.7 0 1.1.9 1.9 2.1 1.9 1.3 0 2.3-.8 2.3-2.7V3h3.5Z" />
-        </svg>
-    );
+    return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M14.7 10.6 21.4 3h-1.7l-5.8 6.6L9.3 3H4l7 10-7 8h1.7l6.1-7 4.9 7H22l-7.3-10.4Zm-2.1 2.4-.7-1L6.2 4.2h2.4l4.5 6.4.7 1 6 8.3h-2.4L12.6 13Z" /></svg>;
 }
 
 function InstagramIcon({ className = 'h-4 w-4' }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
-            <rect x="4" y="4" width="16" height="16" rx="5" />
-            <circle cx="12" cy="12" r="3.4" />
-            <circle cx="16.8" cy="7.2" r="0.7" fill="currentColor" stroke="none" />
-        </svg>
-    );
+    return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5" /><circle cx="12" cy="12" r="3.4" /><circle cx="16.8" cy="7.2" r="0.7" fill="currentColor" stroke="none" /></svg>;
 }
 
-function WhatsappIcon({ className = 'h-4 w-4' }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-            <path d="M19.1 4.9A9.8 9.8 0 0 0 3.7 16.7L2.4 21.5l4.9-1.3a9.8 9.8 0 0 0 4.7 1.2h.1a9.8 9.8 0 0 0 7-16.5Zm-7 14.8H12a8.1 8.1 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8.1 8.1 0 1 1 12.1 19.7Zm4.4-6.1c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.8-.9 2s.9 2.3 1 2.5c.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.1 1.6.1.5-.1 1.4-.6 1.6-1.1.2-.5.2-1 .2-1.1-.1-.2-.3-.3-.5-.4Z" />
-        </svg>
-    );
+function TiktokIcon({ className = 'h-4 w-4' }) {
+    return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M16.2 3c.3 2.4 1.7 4.1 4 4.3v3.1a7.2 7.2 0 0 1-4-1.2v5.8c0 3.6-2.5 6-5.8 6-3 0-5.4-2-5.4-5 0-3.4 2.8-5.4 6.3-5v3.3c-1.5-.4-3 .3-3 1.7 0 1.1.9 1.9 2.1 1.9 1.3 0 2.3-.8 2.3-2.7V3h3.5Z" /></svg>;
 }
 
 function MessengerIcon({ className = 'h-4 w-4' }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-            <path d="M12 3C6.9 3 3 6.6 3 11.4c0 2.7 1.3 5 3.4 6.5v3.1l3.1-1.7c.8.2 1.6.3 2.5.3 5.1 0 9-3.6 9-8.4S17.1 3 12 3Zm1 11.3-2.3-2.5-4.6 2.5 5.1-5.5 2.2 2.5 4.5-2.5-4.9 5.5Z" />
-        </svg>
-    );
+    return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M12 3C6.9 3 3 6.6 3 11.4c0 2.7 1.3 5 3.4 6.5v3.1l3.1-1.7c.8.2 1.6.3 2.5.3 5.1 0 9-3.6 9-8.4S17.1 3 12 3Zm1 11.3-2.3-2.5-4.6 2.5 5.1-5.5 2.2 2.5 4.5-2.5-4.9 5.5Z" /></svg>;
+}
+
+function WhatsappIcon({ className = 'h-4 w-4' }) {
+    return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M19.1 4.9A9.8 9.8 0 0 0 3.7 16.7L2.4 21.5l4.9-1.3a9.8 9.8 0 0 0 4.7 1.2h.1a9.8 9.8 0 0 0 7-16.5Zm-7 14.8H12a8.1 8.1 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8.1 8.1 0 1 1 12.1 19.7Zm4.4-6.1c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.8-.9 2s.9 2.3 1 2.5c.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.1 1.6.1.5-.1 1.4-.6 1.6-1.1.2-.5.2-1 .2-1.1-.1-.2-.3-.3-.5-.4Z" /></svg>;
 }
 
 function TelegramIcon({ className = 'h-4 w-4' }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-            <path d="M20.9 4.2 3.8 10.8c-1.1.4-1.1 1.1-.2 1.4l4.4 1.4 1.7 5.2c.2.6.4.8.7.8s.6-.1.9-.4l2.1-2 4.4 3.2c.8.5 1.4.2 1.6-.8L22 6.5c.3-1.3-.4-1.8-1.1-1.4ZM8.8 13.1l9.9-6.2c.5-.3.9-.1.5.2l-8.5 7.7-.3 3.2-1.6-4.9Z" />
-        </svg>
-    );
+    return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M20.9 4.2 3.8 10.8c-1.1.4-1.1 1.1-.2 1.4l4.4 1.4 1.7 5.2c.2.6.4.8.7.8s.6-.1.9-.4l2.1-2 4.4 3.2c.8.5 1.4.2 1.6-.8L22 6.5c.3-1.3-.4-1.8-1.1-1.4ZM8.8 13.1l9.9-6.2c.5-.3.9-.1.5.2l-8.5 7.7-.3 3.2-1.6-4.9Z" /></svg>;
 }
 
-function CopyIcon({ className = 'h-4 w-4' }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
-            <rect x="8" y="8" width="11" height="11" rx="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" />
-        </svg>
-    );
+function DiscordIcon({ className = 'h-4 w-4' }) {
+    return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M19.5 5.3A16 16 0 0 0 15.6 4l-.2.4c1.4.4 2.1 1 2.1 1s-1.9-1-5.5-1-5.5 1-5.5 1 .7-.6 2.1-1L8.4 4a16 16 0 0 0-3.9 1.3C2 9.1 1.4 12.8 1.7 16.5A15.7 15.7 0 0 0 6.6 19l.9-1.2c-.5-.2-1-.5-1.5-.8l.4-.3c2.9 1.3 6.1 1.3 9.1 0l.4.3c-.5.3-1 .6-1.5.8l.9 1.2a15.7 15.7 0 0 0 4.9-2.5c.4-4.3-.7-7.9-2.7-11.2ZM8.5 14.2c-.9 0-1.6-.8-1.6-1.7s.7-1.7 1.6-1.7 1.6.8 1.6 1.7-.7 1.7-1.6 1.7Zm7 0c-.9 0-1.6-.8-1.6-1.7s.7-1.7 1.6-1.7 1.6.8 1.6 1.7-.7 1.7-1.6 1.7Z" /></svg>;
 }
 
-const SHARE_ICONS = {
-    facebook: FacebookIcon,
-    x: XIcon,
-    tiktok: TiktokIcon,
-    instagram: InstagramIcon,
-    whatsapp: WhatsappIcon,
-    messenger: MessengerIcon,
-    telegram: TelegramIcon,
-    copy: CopyIcon,
-};
-
-function ShareButton({ type, label, onClick }) {
-    const Icon = SHARE_ICONS[type] ?? CopyIcon;
-    const tones = {
-        facebook: 'text-[#1877f2] hover:border-[#1877f2]/35 hover:bg-[#1877f2]/5',
-        x: 'text-slate-950 hover:border-slate-400 hover:bg-slate-100',
-        tiktok: 'text-slate-950 hover:border-slate-400 hover:bg-slate-100',
-        instagram: 'text-pink-600 hover:border-pink-200 hover:bg-pink-50',
-        whatsapp: 'text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50',
-        messenger: 'text-sky-600 hover:border-sky-200 hover:bg-sky-50',
-        telegram: 'text-blue-500 hover:border-blue-200 hover:bg-blue-50',
-        copy: 'text-violet-600 hover:border-violet-200 hover:bg-violet-50',
-    };
-
+function ShareButton({ label, source, icon: Icon, onClick }) {
     return (
-        <button
-            type="button"
-            onClick={onClick}
-            title={label}
-            aria-label={label}
-            className={`flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm shadow-slate-950/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-slate-950/10 focus:ring-offset-2 ${tones[type] ?? tones.copy}`}
-        >
+        <button type="button" onClick={onClick} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm shadow-slate-950/5 transition hover:-translate-y-0.5 hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-400/25" aria-label={label} title={label}>
             <Icon />
+            <span>{source}</span>
         </button>
     );
 }
@@ -283,15 +220,21 @@ export default function Show({ campaign }) {
 
     const reward = useMemo(() => currency(campaign.reward_amount), [campaign.reward_amount]);
     const remainingDays = daysLeft(campaign.expires_at) ?? DEMO_FALLBACKS.daysLeft;
-    const shareMessage = useMemo(
-        () => `Check out this campaign: ${campaign.title}. Join here: ${campaign.referral_url ?? ''}`.trim(),
-        [campaign.referral_url, campaign.title],
-    );
-
     const metrics = {
         participants: campaign.participants_count ?? DEMO_FALLBACKS.participants,
         clicks: campaign.click_count ?? DEMO_FALLBACKS.clicks,
         conversions: campaign.conversion_count ?? DEMO_FALLBACKS.conversions,
+    };
+
+    const referralUrl = (source = 'copy') => {
+        if (!campaign.referral_url) {
+            return '';
+        }
+
+        const url = new URL(campaign.referral_url, window.location.origin);
+        url.searchParams.set('source', source);
+
+        return url.toString();
     };
 
     const showToast = (message) => {
@@ -301,7 +244,7 @@ export default function Show({ campaign }) {
 
     const generateLink = () => {
         if (campaign.referral_url) {
-            copyLink(campaign.referral_url);
+            copyLink(referralUrl('copy'));
             return;
         }
 
@@ -320,57 +263,68 @@ export default function Show({ campaign }) {
         window.setTimeout(() => setCopied(false), 1800);
     };
 
-    const copyShareMessage = async (message) => {
-        await navigator.clipboard.writeText(shareMessage);
-        showToast(message);
+    const copySourceLink = async (source, label) => {
+        await navigator.clipboard.writeText(referralUrl(source));
+        showToast(`${label} link copied. Paste it into your post, story, or DM.`);
     };
 
     const openShare = (url) => {
         window.open(url, '_blank', 'noopener,noreferrer');
     };
 
-    const shareActions = campaign.referral_url ? [
+    const shareMessage = (source) => `Check out this campaign: ${campaign.title}. Join here: ${referralUrl(source)}`;
+    const socialShares = [
         {
-            type: 'facebook',
             label: 'Share on Facebook',
-            onClick: () => openShare(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(campaign.referral_url)}`),
+            source: 'Facebook',
+            icon: FacebookIcon,
+            onClick: () => openShare(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralUrl('facebook'))}`),
         },
         {
-            type: 'x',
             label: 'Share on X',
-            onClick: () => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`),
+            source: 'X',
+            icon: XIcon,
+            onClick: () => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage('x'))}`),
         },
         {
-            type: 'tiktok',
-            label: 'Share on TikTok',
-            onClick: () => copyShareMessage('Copied for TikTok'),
+            label: 'Copy Instagram link',
+            source: 'Instagram',
+            icon: InstagramIcon,
+            onClick: () => copySourceLink('instagram', 'Instagram'),
         },
         {
-            type: 'instagram',
-            label: 'Share on Instagram',
-            onClick: () => copyShareMessage('Copied for Instagram'),
+            label: 'Copy TikTok link',
+            source: 'TikTok',
+            icon: TiktokIcon,
+            onClick: () => copySourceLink('tiktok', 'TikTok'),
+        },
+    ];
+    const messageShares = [
+        {
+            label: 'Copy Messenger link',
+            source: 'Messenger',
+            icon: MessengerIcon,
+            onClick: () => copySourceLink('messenger', 'Messenger'),
         },
         {
-            type: 'whatsapp',
             label: 'Share on WhatsApp',
-            onClick: () => openShare(`https://wa.me/?text=${encodeURIComponent(shareMessage)}`),
+            source: 'WhatsApp',
+            icon: WhatsappIcon,
+            onClick: () => openShare(`https://wa.me/?text=${encodeURIComponent(shareMessage('whatsapp'))}`),
         },
         {
-            type: 'messenger',
-            label: 'Share on Messenger',
-            onClick: () => copyShareMessage('Copied for Messenger'),
-        },
-        {
-            type: 'telegram',
             label: 'Share on Telegram',
-            onClick: () => openShare(`https://t.me/share/url?url=${encodeURIComponent(campaign.referral_url)}&text=${encodeURIComponent(shareMessage)}`),
+            source: 'Telegram',
+            icon: TelegramIcon,
+            onClick: () => openShare(`https://t.me/share/url?url=${encodeURIComponent(referralUrl('telegram'))}&text=${encodeURIComponent(`Check out this campaign: ${campaign.title}`)}`),
         },
         {
-            type: 'copy',
-            label: 'Copy share message',
-            onClick: () => copyShareMessage('Share message copied'),
+            label: 'Copy Discord link',
+            source: 'Discord',
+            icon: DiscordIcon,
+            onClick: () => copySourceLink('discord', 'Discord'),
         },
-    ] : [];
+    ];
 
     return (
         <ClientLayout>
@@ -454,12 +408,12 @@ export default function Show({ campaign }) {
                                             <div className="mt-2 flex gap-2">
                                                 <input
                                                     readOnly
-                                                    value={campaign.referral_url}
+                                                    value={referralUrl('copy')}
                                                     className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-xs text-slate-700 outline-none"
                                                 />
                                                 <button
                                                     type="button"
-                                                    onClick={() => copyLink(campaign.referral_url)}
+                                                    onClick={() => copyLink(referralUrl('copy'))}
                                                     className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
                                                 >
                                                     Copy
@@ -468,25 +422,28 @@ export default function Show({ campaign }) {
                                         </div>
 
                                         <div className="rounded-xl border border-slate-200 bg-white p-4 text-left">
-                                            <div className="flex items-start justify-between gap-3">
+                                            <p className="text-sm font-extrabold text-slate-950">Share this campaign</p>
+                                            <div className="mt-4 space-y-4">
                                                 <div>
-                                                    <p className="text-sm font-extrabold text-slate-950">Share this campaign</p>
-                                                    <p className="mt-1 text-xs leading-5 text-slate-400">
-                                                        Copy-ready message for TikTok, Instagram, and Messenger.
-                                                    </p>
+                                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Social</p>
+                                                    <div className="mt-2 grid grid-cols-2 gap-2">
+                                                        {socialShares.map((action) => (
+                                                            <ShareButton key={action.source} {...action} />
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Messaging</p>
+                                                    <div className="mt-2 grid grid-cols-2 gap-2">
+                                                        {messageShares.map((action) => (
+                                                            <ShareButton key={action.source} {...action} />
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="mt-4 flex flex-wrap gap-2">
-                                                {shareActions.map((action) => (
-                                                    <ShareButton
-                                                        key={action.type}
-                                                        type={action.type}
-                                                        label={action.label}
-                                                        onClick={action.onClick}
-                                                    />
-                                                ))}
-                                            </div>
                                         </div>
+
                                     </div>
                                 )}
 

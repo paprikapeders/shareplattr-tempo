@@ -17,6 +17,19 @@ use RuntimeException;
 
 class BusinessCampaignController extends Controller
 {
+    private const CLICK_SOURCES = [
+        'facebook' => 'Facebook',
+        'x' => 'X',
+        'instagram' => 'Instagram',
+        'tiktok' => 'TikTok',
+        'messenger' => 'Messenger',
+        'whatsapp' => 'WhatsApp',
+        'telegram' => 'Telegram',
+        'discord' => 'Discord',
+        'copy' => 'Copy',
+        'direct' => 'Direct',
+    ];
+
     public function index(Request $request)
     {
         $campaigns = Campaign::query()
@@ -63,7 +76,10 @@ class BusinessCampaignController extends Controller
         $this->authorizeOwner($request, $campaign);
 
         return Inertia::render('Business/Campaigns/Show', [
-            'campaign' => $this->campaignPayload($campaign),
+            'campaign' => [
+                ...$this->campaignPayload($campaign),
+                'source_breakdown' => $this->sourceBreakdown($campaign),
+            ],
         ]);
     }
 
@@ -241,5 +257,23 @@ class BusinessCampaignController extends Controller
             'created_at' => $campaign->created_at?->toDateString(),
             'expires_at' => $campaign->expires_at?->toDateString(),
         ];
+    }
+
+    private function sourceBreakdown(Campaign $campaign): array
+    {
+        $counts = Click::query()
+            ->where('campaign_id', $campaign->id)
+            ->selectRaw('COALESCE(source, ?) as source, COUNT(*) as clicks', ['direct'])
+            ->groupByRaw('COALESCE(source, ?)', ['direct'])
+            ->pluck('clicks', 'source');
+
+        return collect(self::CLICK_SOURCES)
+            ->map(fn (string $label, string $source) => [
+                'source' => $source,
+                'label' => $label,
+                'clicks' => (int) ($counts[$source] ?? 0),
+            ])
+            ->values()
+            ->all();
     }
 }

@@ -13,6 +13,19 @@ use Illuminate\Support\Str;
 
 class ReferralLinkController extends Controller
 {
+    private const ALLOWED_SOURCES = [
+        'facebook',
+        'x',
+        'instagram',
+        'tiktok',
+        'messenger',
+        'whatsapp',
+        'telegram',
+        'discord',
+        'copy',
+        'direct',
+    ];
+
     /**
      * Generate or return the current user's referral link for a campaign.
      */
@@ -72,14 +85,16 @@ class ReferralLinkController extends Controller
         }
 
         $isDuplicate = $this->isDuplicateClick($referralToken, $request);
+        $source = $this->sourceFromRequest($request);
 
-        DB::transaction(function () use ($referralToken, $request, $isDuplicate) {
+        DB::transaction(function () use ($referralToken, $request, $isDuplicate, $source) {
             Click::create([
                 'referral_token_id' => $referralToken->id,
                 'campaign_id' => $referralToken->campaign_id,
                 'user_id' => $referralToken->user_id,
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
+                'source' => $source,
                 'is_flagged' => $isDuplicate,
                 'flag_reason' => $isDuplicate ? 'duplicate' : null,
             ]);
@@ -90,6 +105,13 @@ class ReferralLinkController extends Controller
         });
 
         return redirect()->away($referralToken->campaign->destination_url);
+    }
+
+    private function sourceFromRequest(Request $request): string
+    {
+        $source = Str::lower((string) $request->query('source', 'direct'));
+
+        return in_array($source, self::ALLOWED_SOURCES, true) ? $source : 'direct';
     }
 
     private function isDuplicateClick(ReferralToken $referralToken, Request $request): bool

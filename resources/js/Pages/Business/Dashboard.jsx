@@ -144,40 +144,6 @@ function CampaignRow({ campaign, index, maxClicks }) {
     );
 }
 
-function ChannelBars({ totalClicks }) {
-    const channels = [
-        { name: 'WhatsApp', color: 'bg-emerald-400' },
-        { name: 'Telegram', color: 'bg-sky-400' },
-        { name: 'Messenger', color: 'bg-blue-400' },
-        { name: 'Direct / Other', color: 'bg-slate-300' },
-    ];
-
-    return (
-        <div className="border-t border-slate-100 px-5 py-5">
-            <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-slate-950">Clicks by Channel</h2>
-                <span className="rounded-full bg-slate-50 px-3 py-1 text-xs text-slate-400">{totalClicks} total clicks</span>
-            </div>
-
-            <div className="space-y-3">
-                {channels.map((channel) => (
-                    <div key={channel.name} className="grid grid-cols-[110px_minmax(0,1fr)_36px] items-center gap-3">
-                        <p className="text-xs font-medium text-slate-600">{channel.name}</p>
-                        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                            <div className={`h-full rounded-full ${channel.color} opacity-30`} style={{ width: '0%' }} />
-                        </div>
-                        <p className="text-right text-xs font-semibold text-slate-400">-</p>
-                    </div>
-                ))}
-            </div>
-
-            <p className="mt-5 text-xs text-slate-400">
-                Channel attribution is not available yet. Future tracking can separate clicks from WhatsApp, Telegram, Messenger, Direct, and other sources.
-            </p>
-        </div>
-    );
-}
-
 function SummaryMetric({ label, value }) {
     return (
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
@@ -251,8 +217,6 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
                         </div>
                     )}
                 </div>
-
-                <ChannelBars totalClicks={stats.total_clicks} />
 
                 <div className="border-t border-slate-100 px-5 py-4 text-center">
                     <Link href="/business/campaigns" className="text-sm font-semibold text-cyan-600">

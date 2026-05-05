@@ -1,8 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import ActivityFeed from '../Components/ActivityFeed';
-import CampaignPostsList from '../Components/CampaignPostsList';
-import DashboardLayout, { DashboardChannelTabs } from '../Components/DashboardLayout';
+import DashboardLayout from '../Components/DashboardLayout';
 import GeneratedLinksTable from '../Components/GeneratedLinksTable';
 import MetricsCards from '../Components/MetricsCards';
 import ReferralsTable from '../Components/ReferralsTable';
@@ -37,7 +36,7 @@ function paginate(items, page, pageSize) {
     return items.slice(start, start + pageSize);
 }
 
-export default function Dashboard({ stats, referralLinks, campaignPosts, activities }) {
+export default function Dashboard({ stats, referralLinks, activities }) {
     const [referralFilters, setReferralFilters] = useState({
         role: 'all',
         plan: 'all',
@@ -83,9 +82,7 @@ export default function Dashboard({ stats, referralLinks, campaignPosts, activit
         <DashboardLayout>
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
                 <div className="space-y-6">
-                    <DashboardChannelTabs />
                     <MetricsCards stats={stats} />
-                    <CampaignPostsList latestPosts={campaignPosts} scheduledPosts={[]} />
                 </div>
 
                 <ActivityFeed activities={activities} />

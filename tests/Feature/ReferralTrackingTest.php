@@ -83,6 +83,44 @@ class ReferralTrackingTest extends TestCase
         $this->assertSame('duplicate', $flaggedClick->flag_reason);
     }
 
+    public function test_referral_click_source_is_tracked_and_sanitized(): void
+    {
+        [$campaign, $token] = $this->createReferralToken();
+
+        $this
+            ->withServerVariables(['REMOTE_ADDR' => '203.0.113.31'])
+            ->get(route('referrals.show', ['token' => $token->token, 'source' => 'facebook']))
+            ->assertRedirect($campaign->destination_url);
+
+        $this
+            ->withServerVariables(['REMOTE_ADDR' => '203.0.113.32'])
+            ->get(route('referrals.show', ['token' => $token->token, 'source' => 'not-real']))
+            ->assertRedirect($campaign->destination_url);
+
+        $this
+            ->withServerVariables(['REMOTE_ADDR' => '203.0.113.33'])
+            ->get(route('referrals.show', $token->token))
+            ->assertRedirect($campaign->destination_url);
+
+        $this->assertDatabaseHas('clicks', [
+            'referral_token_id' => $token->id,
+            'ip_address' => '203.0.113.31',
+            'source' => 'facebook',
+        ]);
+
+        $this->assertDatabaseHas('clicks', [
+            'referral_token_id' => $token->id,
+            'ip_address' => '203.0.113.32',
+            'source' => 'direct',
+        ]);
+
+        $this->assertDatabaseHas('clicks', [
+            'referral_token_id' => $token->id,
+            'ip_address' => '203.0.113.33',
+            'source' => 'direct',
+        ]);
+    }
+
     public function test_unavailable_campaign_referral_redirect_does_not_log_click(): void
     {
         [$campaign, $token] = $this->createReferralToken([

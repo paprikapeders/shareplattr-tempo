@@ -41,48 +41,12 @@ function DashboardIconWallet() {
     );
 }
 
-function DashboardIconReferrals() {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-            <path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" />
-            <path d="M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1" />
-        </svg>
-    );
-}
-
 function DashboardIconLogout() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
             <path d="M10 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1" />
             <path d="M15 16l5-4-5-4" />
             <path d="M20 12H9" />
-        </svg>
-    );
-}
-
-function DashboardIconClock() {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-            <circle cx="12" cy="12" r="8" />
-            <path d="M12 8v4l2.5 2" />
-        </svg>
-    );
-}
-
-function DashboardIconBell() {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-            <path d="M15 17H5l1.6-2.2a4 4 0 0 0 .7-2.3V10a4.7 4.7 0 1 1 9.4 0v2.5c0 .8.2 1.6.7 2.3L19 17h-4Z" />
-            <path d="M10 19a2 2 0 0 0 4 0" />
-        </svg>
-    );
-}
-
-function ChatIcon() {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-            <path d="M5 17.5 3.8 21l3.7-1.1A8 8 0 1 0 5 17.5Z" />
-            <path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01" />
         </svg>
     );
 }
@@ -126,9 +90,7 @@ function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
     const items = [
         { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
         { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
-        { href: '/dashboard#referrals', label: 'Referrals', active: url === '/dashboard#referrals', icon: DashboardIconReferrals },
         { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts'), icon: DashboardIconWallet },
-        { href: '/dashboard#activity', label: 'Messages', active: url === '/dashboard#activity', icon: ChatIcon },
     ];
 
     return (
@@ -204,9 +166,7 @@ function MobileSidebarContent({ url, onNavigate = () => {} }) {
                 {[
                     { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
                     { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
-                    { href: '/dashboard#referrals', label: 'Referrals', active: url === '/dashboard#referrals', icon: DashboardIconReferrals },
                     { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts'), icon: DashboardIconWallet },
-                    { href: '/dashboard#activity', label: 'Messages', active: url === '/dashboard#activity', icon: ChatIcon },
                 ].map((item) => {
                     const Icon = item.icon;
 
@@ -241,26 +201,33 @@ function MobileSidebarContent({ url, onNavigate = () => {} }) {
 
 function ClientTopBar({ url, user }) {
     const name = user?.name || 'SharePlattr user';
+    const activityFeedActive = url === '/dashboard#activity';
 
     return (
         <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white px-4 py-3 shadow-sm sm:px-6">
             <div className="flex items-center justify-between gap-4">
-                <Link href="/dashboard" className="flex items-center gap-3 text-[#08bcbc]" aria-label="SharePlattr dashboard">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#08c4c4] text-white shadow-sm">
-                        <LogoIcon />
-                    </span>
-                    <span className="hidden text-sm font-bold text-slate-900 sm:inline">SharePlattr</span>
-                </Link>
+                <div className="flex min-w-0 items-center gap-4">
+                    <Link href="/dashboard" className="flex items-center gap-3 text-[#08bcbc]" aria-label="SharePlattr dashboard">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#08c4c4] text-white shadow-sm">
+                            <LogoIcon />
+                        </span>
+                        <span className="hidden text-sm font-bold text-slate-900 sm:inline">SharePlattr</span>
+                    </Link>
+
+                    <nav className="flex items-center" aria-label="Main navigation">
+                        <Link
+                            href="/dashboard#activity"
+                            className={[
+                                'rounded-full px-3 py-2 text-sm font-semibold transition',
+                                activityFeedActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950',
+                            ].join(' ')}
+                        >
+                            Activity Feed
+                        </Link>
+                    </nav>
+                </div>
 
                 <div className="flex items-center justify-end gap-3">
-                    <button type="button" className="hidden h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 sm:flex" aria-label="Recent activity" title="Recent activity">
-                        <DashboardIconClock />
-                    </button>
-                    <button type="button" className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800" aria-label="Notifications" title="Notifications">
-                        <DashboardIconBell />
-                        <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
-                    </button>
-
                     <button type="button" className="flex min-w-0 items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 shadow-sm transition hover:border-slate-300 hover:bg-slate-50" aria-label="Open user menu">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-400 text-sm font-bold uppercase text-white">
                             {getInitials(name)}

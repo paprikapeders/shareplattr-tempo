@@ -48,7 +48,6 @@ function AdminSidebar({ url, onNavigate = () => {} }) {
         {
             title: 'Payouts',
             items: [
-                { href: '/admin/rewards', label: 'Rewards', active: url?.startsWith('/admin/rewards') },
                 { href: '/admin/payout-requests', label: 'Payout Requests', active: url?.startsWith('/admin/payout-requests') },
             ],
         },
@@ -93,14 +92,11 @@ function AdminSidebar({ url, onNavigate = () => {} }) {
             </nav>
 
             <div className="border-t border-slate-200 pt-4">
-                <Link href="/dashboard" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-950" onClick={onNavigate}>
-                    Client Dashboard
-                </Link>
                 <Link
                     href="/logout"
                     method="post"
                     as="button"
-                    className="mt-1 block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
                 >
                     Logout
                 </Link>

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['referral_token_id', 'campaign_id', 'user_id', 'ip_address', 'user_agent', 'is_flagged', 'flag_reason'])]
+#[Fillable(['referral_token_id', 'campaign_id', 'user_id', 'ip_address', 'user_agent', 'source', 'is_flagged', 'flag_reason'])]
 class Click extends Model
 {
     /** @use HasFactory */

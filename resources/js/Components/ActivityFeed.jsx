@@ -21,14 +21,11 @@ function toneClasses(tone) {
 
 export default function ActivityFeed({ activities }) {
     return (
-        <aside className="rounded-[28px] bg-white p-4 shadow-[0_22px_55px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 sm:p-5 lg:sticky lg:top-24 lg:max-h-[760px] lg:overflow-hidden">
-            <div className="flex items-center gap-8 border-b border-slate-200 px-2 pb-4 text-sm">
-                <button type="button" className="border-b border-[#25338c] pb-2 font-semibold text-[#25338c]">
+        <aside id="activity" className="scroll-mt-24 rounded-[28px] bg-white p-4 shadow-[0_22px_55px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 sm:p-5 lg:sticky lg:top-24 lg:max-h-[760px] lg:overflow-hidden">
+            <div className="border-b border-slate-200 px-2 pb-4 text-sm">
+                <div className="border-b border-[#25338c] pb-2 font-semibold text-[#25338c]">
                     Activity feed
-                </button>
-                <button type="button" className="pb-2 text-slate-400">
-                    Mentions
-                </button>
+                </div>
             </div>
 
             <div className="mt-4 space-y-4 lg:max-h-[660px] lg:overflow-y-auto lg:pr-1">

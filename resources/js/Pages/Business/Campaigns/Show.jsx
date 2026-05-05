@@ -61,40 +61,21 @@ function DetailItem({ label, children, wide = false }) {
     );
 }
 
-function ChannelBreakdown({ totalClicks }) {
-    const channels = [
-        { name: 'WhatsApp', count: 0 },
-        { name: 'Telegram', count: 0 },
-        { name: 'Messenger', count: 0 },
-        { name: 'Direct / Unknown', count: totalClicks ?? 0 },
-    ];
-    const maxCount = Math.max(...channels.map((channel) => channel.count), 0);
-
+function ReferralSources({ sources = [] }) {
     return (
         <Card className="p-0">
             <div className="border-b border-slate-100 px-5 py-4">
-                <h2 className="text-sm font-bold text-slate-950">Clicks by Channel</h2>
+                <h2 className="text-sm font-bold text-slate-950">Referral Sources</h2>
             </div>
 
-            <div className="space-y-4 px-5 py-5">
-                {channels.map((channel) => {
-                    const width = maxCount > 0 ? Math.max(4, Math.round((channel.count / maxCount) * 100)) : 0;
-
-                    return (
-                        <div key={channel.name} className="grid grid-cols-[minmax(96px,140px)_minmax(0,1fr)_44px] items-center gap-3">
-                            <p className="truncate text-sm font-medium text-slate-700">{channel.name}</p>
-                            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                                <div className="h-full rounded-full bg-cyan-500" style={{ width: `${width}%` }} />
-                            </div>
-                            <p className="text-right text-sm font-semibold text-slate-700">{channel.count}</p>
-                        </div>
-                    );
-                })}
+            <div className="divide-y divide-slate-100">
+                {sources.map((source) => (
+                    <div key={source.source} className="flex items-center justify-between px-5 py-3 text-sm">
+                        <span className="font-medium text-slate-700">{source.label}</span>
+                        <span className="font-bold text-slate-950">{source.clicks}</span>
+                    </div>
+                ))}
             </div>
-
-            <p className="border-t border-slate-100 px-5 py-4 text-xs leading-5 text-slate-500">
-                Channel attribution is estimated/unavailable until tracking data is available.
-            </p>
         </Card>
     );
 }
@@ -144,7 +125,7 @@ export default function Show({ campaign }) {
                     <MetricCard label="Conversions" value={campaign.conversion_count ?? 0} />
                 </div>
 
-                <ChannelBreakdown totalClicks={campaign.click_count ?? 0} />
+                <ReferralSources sources={campaign.source_breakdown} />
 
                 <Card>
                     <h2 className="text-sm font-bold text-slate-950">Campaign Details</h2>
