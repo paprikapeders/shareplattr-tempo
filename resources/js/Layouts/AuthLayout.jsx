@@ -29,11 +29,17 @@ export default function AuthLayout({
                         <img
                             src={peopleImage}
                             alt=""
+                            loading="eager"
+                            fetchPriority="high"
+                            decoding="sync"
                             className="absolute left-1/2 top-2 h-[52dvh] max-w-none -translate-x-1/2 object-contain object-bottom lg:hidden"
                         />
                         <img
                             src={peopleImage}
                             alt=""
+                            loading="eager"
+                            fetchPriority="high"
+                            decoding="sync"
                             className="hidden h-[100vh] w-auto max-w-none object-contain lg:block lg:translate-x-0 xl:h-[104vh] xl:translate-x-4 2xl:h-[106vh] 2xl:translate-x-8"
                         />
                     </section>
