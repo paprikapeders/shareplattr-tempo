@@ -1,4 +1,4 @@
-const peopleImage = '/storage/resources/people.png';
+const peopleImage = '/images/people.png';
 
 function BackIcon() {
     return (
