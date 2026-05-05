@@ -1,62 +1,80 @@
 import BusinessLayout from '../../../Layouts/BusinessLayout';
-import Card from '../../../Components/Card';
-import PageHeader from '../../../Components/PageHeader';
 
 function dollars(cents) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((cents ?? 0) / 100);
 }
 
 function Stat({ label, value }) {
-    return <Card><p className="text-sm text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p></Card>;
+    return (
+        <div className="min-h-[120px] rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-sm font-medium text-slate-500">{label}</p>
+            <p className="mt-3 text-3xl font-bold text-slate-950">{value}</p>
+        </div>
+    );
+}
+
+function RecentCard({ title, children, empty }) {
+    return (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-base font-semibold text-slate-950">{title}</h2>
+            {empty ? (
+                <div className="border-t border-slate-100 pt-5 text-sm text-slate-500">{empty}</div>
+            ) : (
+                <div className="overflow-hidden border-t border-slate-100">{children}</div>
+            )}
+        </section>
+    );
 }
 
 export default function Stats({ campaign, stats, recentClicks, recentConversions }) {
     return (
         <BusinessLayout>
-            <PageHeader title={`${campaign.title} Stats`} eyebrow="Business Campaign" description="Campaign performance scoped to your business only." />
+            <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
+                <header className="mb-6">
+                    <p className="text-xs font-bold uppercase text-slate-500">Business Campaign</p>
+                    <h1 className="mt-1 text-3xl font-bold text-slate-950">{campaign.title} Stats</h1>
+                    <p className="mt-2 text-sm text-slate-500">Campaign performance scoped to your business only.</p>
+                </header>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Stat label="Total Clicks" value={stats.total_clicks} />
-                <Stat label="Unique Clicks" value={stats.unique_clicks} />
-                <Stat label="Flagged Clicks" value={stats.flagged_clicks} />
-                <Stat label="Conversions" value={stats.conversions} />
-                <Stat label="Conversion Rate" value={`${stats.conversion_rate}%`} />
-                <Stat label="Reward Amount" value={dollars(stats.reward_amount)} />
-                <Stat label="Rewards Generated" value={dollars(stats.total_rewards_generated)} />
-            </div>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                    <Stat label="Total Clicks" value={stats.total_clicks} />
+                    <Stat label="Unique Clicks" value={stats.unique_clicks} />
+                    <Stat label="Flagged Clicks" value={stats.flagged_clicks} />
+                    <Stat label="Conversions" value={stats.conversions} />
+                    <Stat label="Conversion Rate" value={`${stats.conversion_rate}%`} />
+                    <Stat label="Reward Amount" value={dollars(stats.reward_amount)} />
+                    <Stat label="Rewards Generated" value={dollars(stats.total_rewards_generated)} />
+                </div>
 
-            <div className="grid gap-5 lg:grid-cols-2">
-                <Card className="overflow-hidden p-0">
-                    <div className="border-b border-slate-100 px-5 py-4"><h2 className="font-semibold text-slate-950">Recent Clicks</h2></div>
-                    <table className="min-w-full divide-y divide-slate-100">
-                        <tbody className="divide-y divide-slate-100">
-                            {recentClicks.map((click) => (
-                                <tr key={click.id}>
-                                    <td className="px-5 py-3 text-sm text-slate-600">{click.ip_address}</td>
-                                    <td className="px-5 py-3 text-sm text-slate-600">{click.is_flagged ? click.flag_reason || 'flagged' : 'unique'}</td>
-                                    <td className="px-5 py-3 text-right text-sm text-slate-500">{click.created_at}</td>
-                                </tr>
-                            ))}
-                            {recentClicks.length === 0 && <tr><td className="px-5 py-6 text-sm text-slate-500" colSpan="3">No clicks yet.</td></tr>}
-                        </tbody>
-                    </table>
-                </Card>
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                    <RecentCard title="Recent Clicks" empty={recentClicks.length === 0 ? 'No clicks yet.' : null}>
+                        <table className="w-full table-auto divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100">
+                                {recentClicks.map((click) => (
+                                    <tr key={click.id}>
+                                        <td className="py-4 pr-3 text-sm text-slate-600">{click.ip_address}</td>
+                                        <td className="px-3 py-4 text-sm text-slate-600">{click.is_flagged ? click.flag_reason || 'flagged' : 'unique'}</td>
+                                        <td className="py-4 pl-3 text-right text-sm text-slate-500">{click.created_at}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </RecentCard>
 
-                <Card className="overflow-hidden p-0">
-                    <div className="border-b border-slate-100 px-5 py-4"><h2 className="font-semibold text-slate-950">Recent Conversions</h2></div>
-                    <table className="min-w-full divide-y divide-slate-100">
-                        <tbody className="divide-y divide-slate-100">
-                            {recentConversions.map((conversion) => (
-                                <tr key={conversion.id}>
-                                    <td className="px-5 py-3 text-sm font-semibold text-slate-950">{dollars(conversion.amount)}</td>
-                                    <td className="px-5 py-3 text-sm text-slate-600">{conversion.status}</td>
-                                    <td className="px-5 py-3 text-right text-sm text-slate-500">{conversion.created_at}</td>
-                                </tr>
-                            ))}
-                            {recentConversions.length === 0 && <tr><td className="px-5 py-6 text-sm text-slate-500" colSpan="3">No conversions yet.</td></tr>}
-                        </tbody>
-                    </table>
-                </Card>
+                    <RecentCard title="Recent Conversions" empty={recentConversions.length === 0 ? 'No conversions yet.' : null}>
+                        <table className="w-full table-auto divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100">
+                                {recentConversions.map((conversion) => (
+                                    <tr key={conversion.id}>
+                                        <td className="py-4 pr-3 text-sm font-semibold text-slate-950">{dollars(conversion.amount)}</td>
+                                        <td className="px-3 py-4 text-sm text-slate-600">{conversion.status}</td>
+                                        <td className="py-4 pl-3 text-right text-sm text-slate-500">{conversion.created_at}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </RecentCard>
+                </div>
             </div>
         </BusinessLayout>
     );
