@@ -1,40 +1,54 @@
 import { Link } from '@inertiajs/react';
-import Button from '../Components/Button';
+import AuthLayout from '../Layouts/AuthLayout';
+
+function SocialButton({ label, icon }) {
+    return (
+        <button
+            type="button"
+            className="flex h-10 w-full items-center justify-center gap-3 whitespace-nowrap rounded-full bg-white text-[12px] font-semibold text-[#111111] shadow-[0_10px_22px_rgba(15,23,42,0.10)] transition hover:scale-[1.01] lg:h-11"
+        >
+            {icon}
+            <span>{label}</span>
+        </button>
+    );
+}
 
 export default function Home() {
     return (
-        <main className="min-h-screen bg-slate-950 text-white">
-            <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
-                <header className="flex items-center justify-between">
-                    <Link href="/" className="text-xl font-bold">
-                        SharePlattr
-                    </Link>
-                    <nav className="flex items-center gap-2">
-                        <Link href="/login" className="rounded-md px-3 py-2 text-sm font-medium text-slate-200 hover:bg-white/10">
-                            Login
-                        </Link>
-                    </nav>
-                </header>
+        <AuthLayout
+            title="Shareplattr"
+            subtitle="Hello, we will help you find your specialist!"
+            contentClassName="justify-start pt-0 pb-5 lg:justify-center lg:py-10"
+        >
+            <div className="mx-auto mt-6 flex w-full max-w-[320px] flex-col items-center gap-4 lg:mt-7">
+                <Link
+                    href="/login"
+                    className="flex h-12 w-full items-center justify-center whitespace-nowrap rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95"
+                >
+                    Sign In
+                </Link>
 
-                <section className="flex flex-1 items-center py-16">
-                    <div className="max-w-3xl">
-                        <p className="text-sm font-semibold uppercase text-cyan-300">
-                            Referral campaigns made simple
-                        </p>
-                        <h1 className="mt-4 text-4xl font-semibold sm:text-6xl">
-                            Share campaigns, track clicks, and reward real conversions.
-                        </h1>
-                        <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-                            SharePlattr gives brands and participants a clean way to generate referral links, measure engagement, and manage rewards from one lightweight dashboard.
-                        </p>
-                        <div className="mt-8 flex flex-wrap gap-3">
-                            <Button as={Link} href="/login" className="border-white/20 bg-cyan-400 text-slate-950 hover:bg-cyan-300">
-                                Login
-                            </Button>
-                        </div>
-                    </div>
-                </section>
+                <Link href="/register" className="text-[15px] font-medium text-[#101010]">
+                    Sign Up
+                </Link>
+
+                <div className="flex w-full items-center gap-4 text-[13px] text-[#777777]">
+                    <span className="h-px flex-1 bg-white/80" />
+                    <span>Or</span>
+                    <span className="h-px flex-1 bg-white/80" />
+                </div>
+
+                <div className="flex w-full flex-col gap-2.5">
+                    <SocialButton
+                        label="Continue with Google"
+                        icon={<span className="text-[18px] font-bold text-[#4285f4]">G</span>}
+                    />
+                    <SocialButton
+                        label="Continue with Facebook"
+                        icon={<span className="flex h-[17px] w-[17px] items-center justify-center rounded-full bg-[#1877f2] text-[13px] font-bold leading-none text-white">f</span>}
+                    />
+                </div>
             </div>
-        </main>
+        </AuthLayout>
     );
 }

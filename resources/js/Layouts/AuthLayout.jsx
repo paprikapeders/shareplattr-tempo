@@ -1,4 +1,4 @@
-import mainBg from '../../../figma/main_reso/main_bg.png';
+const peopleImage = '/storage/resources/people.png';
 
 function BackIcon() {
     return (
@@ -13,45 +13,57 @@ export default function AuthLayout({
     title = 'Shareplattr',
     backHref = null,
     showHero = true,
+    showMobileHero = showHero,
     subtitle = null,
+    contentClassName = '',
+    heroClassName = '',
 }) {
     return (
-        <main className="min-h-screen overflow-hidden bg-[#b3e1e7] text-[#111111] lg:flex">
-            {showHero && (
-                <section className="relative h-[50vh] min-h-[320px] overflow-hidden lg:h-screen lg:min-h-screen lg:w-[55vw] lg:shrink-0" aria-hidden="true">
-                    <img
-                        src={mainBg}
-                        alt=""
-                        className="h-full w-full object-cover object-[18%_center] sm:object-[22%_center] lg:w-auto lg:max-w-none lg:translate-x-[2.5vw] lg:object-contain"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#b3e1e7]/40 to-[#b3e1e7] lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-[#b3e1e7]" />
-                </section>
-            )}
-
-            <section className={`relative flex min-h-screen flex-1 flex-col items-center justify-center px-6 py-10 sm:px-10 lg:px-16 ${showHero ? '-mt-16 lg:mt-0' : ''}`}>
-                {backHref && (
-                    <a
-                        href={backHref}
-                        className="absolute left-6 top-8 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.14)] sm:left-10"
-                        aria-label="Go back"
+        <main className="h-dvh min-h-screen overflow-hidden bg-[#B8E7EA] text-[#111111] lg:h-auto lg:min-h-dvh lg:overflow-x-hidden lg:overflow-y-visible">
+            <div className="mx-auto flex h-full min-h-0 w-full max-w-[1320px] flex-col lg:grid lg:h-auto lg:min-h-dvh lg:max-w-none lg:grid-cols-[52%_48%] lg:items-stretch lg:px-0 lg:py-0">
+                {showHero && (
+                    <section
+                        className={`relative h-[48dvh] min-h-[280px] shrink-0 overflow-hidden lg:flex lg:min-h-dvh lg:items-end lg:justify-center lg:overflow-visible ${showMobileHero ? '' : 'hidden'} ${heroClassName}`}
+                        aria-hidden="true"
                     >
-                        <BackIcon />
-                    </a>
+                        <img
+                            src={peopleImage}
+                            alt=""
+                            className="absolute left-1/2 top-2 h-[52dvh] max-w-none -translate-x-1/2 object-contain object-bottom lg:hidden"
+                        />
+                        <img
+                            src={peopleImage}
+                            alt=""
+                            className="hidden h-[100vh] w-auto max-w-none object-contain lg:block lg:translate-x-0 xl:h-[104vh] xl:translate-x-4 2xl:h-[106vh] 2xl:translate-x-8"
+                        />
+                    </section>
                 )}
 
-                <div className="relative z-10 mx-auto flex w-full max-w-[400px] flex-col">
-                    <h1 className="text-center text-4xl font-extrabold tracking-normal text-[#111111] sm:text-5xl">
-                        {title}
-                    </h1>
-                    {subtitle && (
-                        <p className="mt-3 text-center text-sm leading-6 text-[#1f2933]/80">
-                            {subtitle}
-                        </p>
+                <section className={`relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-8 py-5 sm:px-10 lg:min-h-dvh lg:px-10 ${showHero && showMobileHero ? '-mt-14 lg:mt-0' : ''} ${contentClassName}`}>
+                    {backHref && (
+                        <a
+                            href={backHref}
+                            className="absolute left-9 top-7 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.14)] sm:left-10 lg:h-10 lg:w-10"
+                            aria-label="Go back"
+                        >
+                            <BackIcon />
+                        </a>
                     )}
 
-                    {children}
-                </div>
-            </section>
+                    <div className="relative z-10 mx-auto flex w-full max-w-[320px] flex-col lg:max-w-[340px] xl:max-w-[360px]">
+                        <h1 className="text-center text-[38px] font-extrabold leading-none tracking-normal text-[#111111] lg:text-[42px] lg:font-black xl:text-[48px]">
+                            {title}
+                        </h1>
+                        {subtitle && (
+                            <p className="mt-4 text-center text-[15px] leading-6 text-[#1f2933]/90">
+                                {subtitle}
+                            </p>
+                        )}
+
+                        {children}
+                    </div>
+                </section>
+            </div>
         </main>
     );
 }

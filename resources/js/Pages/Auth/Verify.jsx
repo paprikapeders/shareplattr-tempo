@@ -56,17 +56,17 @@ export default function Verify({ email, expiresInSeconds }) {
     };
 
     return (
-        <AuthLayout title="Shareplattr" backHref="/login" showHero={false}>
+        <AuthLayout title="Shareplattr" backHref="/login" showMobileHero={false} contentClassName="pt-24 lg:py-10">
             <form onSubmit={submit} className="mx-auto mt-8 flex w-full max-w-[340px] flex-col items-center sm:mt-10">
-                <div className="sr-only">
+                <div className="mb-4 hidden lg:block">
                     <VerificationIcon />
                 </div>
 
                 <h2 className="text-center text-[20px] font-bold text-[#111111] sm:text-[22px]">
                     Verify Your Account
                 </h2>
-                <p className="mt-2 max-w-[300px] text-center text-[15px] leading-6 text-[#101010]">
-                    A six digit code has been sent to your email{email ? `, ${email}` : ''}.
+                <p className="mt-2 max-w-[330px] text-center text-[14px] leading-6 text-[#101010] sm:text-[15px]">
+                    A six digit code has been sent to your email.
                 </p>
 
                 <div className="mt-8">
@@ -95,7 +95,7 @@ export default function Verify({ email, expiresInSeconds }) {
                         type="button"
                         onClick={resend}
                         disabled={resendForm.processing}
-                        className="mt-1 text-[15px] font-medium text-[#7a6cf2] disabled:opacity-60"
+                        className="mt-1 whitespace-nowrap text-[15px] font-medium text-[#7a6cf2] disabled:opacity-60"
                     >
                         {resendForm.processing ? 'Sending...' : 'Resend code'}
                     </button>
@@ -107,7 +107,7 @@ export default function Verify({ email, expiresInSeconds }) {
                 <button
                     type="submit"
                     disabled={processing || data.code.length !== 6}
-                    className="mt-8 h-12 w-full rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:opacity-50"
+                    className="mt-8 h-12 w-full whitespace-nowrap rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:opacity-50"
                 >
                     {processing ? 'Verifying...' : 'Verify'}
                 </button>
