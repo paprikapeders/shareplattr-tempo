@@ -16,6 +16,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\PayoutMethodController;
 use App\Http\Controllers\PayoutRequestController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ReferralLinkController;
 use Illuminate\Support\Facades\Route;
@@ -25,9 +26,15 @@ Route::get('/', function () {
     return Inertia::render('Home');
 });
 
+Route::get('/register/success', [RegisterController::class, 'success'])->name('register.success');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store']);
+    Route::get('/forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'store'])->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'update'])->name('password.update');
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
     Route::post('/register', [RegisterController::class, 'store']);
     Route::get('/verify', [EmailVerificationController::class, 'create'])->name('verify.notice');

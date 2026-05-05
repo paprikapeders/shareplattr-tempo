@@ -54,14 +54,28 @@ export default function Register() {
                 />
                 {errors.last_name && <p className="-mt-2 text-sm text-red-600">{errors.last_name}</p>}
 
-                <input
-                    type="email"
-                    placeholder="E-mail"
-                    value={data.email}
-                    onChange={(event) => setData('email', event.target.value)}
-                    className="h-12 w-full rounded-full border-0 bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280]"
-                />
-                {errors.email && <p className="-mt-2 text-sm text-red-600">{errors.email}</p>}
+                <div className="flex flex-col">
+                    <input
+                        type="email"
+                        placeholder="E-mail"
+                        value={data.email}
+                        onChange={(event) => setData('email', event.target.value)}
+                        className={`h-12 w-full rounded-full bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280] ${errors.email ? 'border border-red-400' : 'border-0'}`}
+                    />
+                    {errors.email && (
+                        <p className="mt-1.5 text-sm leading-5 text-red-500 transition-opacity">
+                            {errors.email}{' '}
+                            <Link href="/login" className="font-medium text-red-600 underline underline-offset-4 hover:text-red-700">
+                                sign in
+                            </Link>
+                            <span> or </span>
+                            <Link href="/forgot-password" className="font-medium text-red-600 underline underline-offset-4 hover:text-red-700">
+                                reset your password
+                            </Link>
+                            <span>.</span>
+                        </p>
+                    )}
+                </div>
 
                 <input
                     type="password"

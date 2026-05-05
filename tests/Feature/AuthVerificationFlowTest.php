@@ -45,7 +45,7 @@ class AuthVerificationFlowTest extends TestCase
             'pending_verification_email' => $user->email,
         ])->post(route('verify.store'), [
             'code' => $sentCode,
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect(route('register.success'));
 
         $this->assertAuthenticatedAs($user->fresh());
         $this->assertNotNull($user->fresh()->email_verified_at);
@@ -72,5 +72,63 @@ class AuthVerificationFlowTest extends TestCase
         $this->assertGuest();
         $this->assertDatabaseCount('email_verification_codes', 1);
         Mail::assertSent(VerifyEmailCode::class);
+    }
+
+    public function test_unverified_user_can_verify_with_existing_registration_code_after_later_login(): void
+    {
+        Mail::fake();
+
+        $this->post(route('register'), [
+            'first_name' => 'Casey',
+            'last_name' => 'Jones',
+            'email' => 'casey@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect(route('verify.notice'));
+
+        $user = User::where('email', 'casey@example.com')->firstOrFail();
+        $sentCode = null;
+
+        Mail::assertSent(VerifyEmailCode::class, function (VerifyEmailCode $mail) use ($user, &$sentCode) {
+            $sentCode = $mail->code;
+
+            return $mail->hasTo($user->email);
+        });
+
+        $this->flushSession();
+        Mail::fake();
+
+        $this->post(route('login'), [
+            'email' => $user->email,
+            'password' => 'password123',
+        ])->assertRedirect(route('verify.notice'));
+
+        Mail::assertNothingSent();
+
+        $this->post(route('verify.store'), [
+            'code' => $sentCode,
+        ])->assertRedirect(route('register.success'));
+
+        $this->assertAuthenticatedAs($user->fresh());
+        $this->assertNotNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_registration_with_existing_email_shows_custom_validation_error(): void
+    {
+        User::factory()->create([
+            'email' => 'taken@example.com',
+        ]);
+
+        $this->post(route('register'), [
+            'first_name' => 'Taylor',
+            'last_name' => 'Smith',
+            'email' => 'taken@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertSessionHasErrors([
+            'email' => 'This email is already registered. Please sign in or reset your password.',
+        ]);
+
+        $this->assertDatabaseCount('users', 1);
     }
 }

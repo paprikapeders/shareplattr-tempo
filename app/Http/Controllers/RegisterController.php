@@ -22,15 +22,25 @@ class RegisterController extends Controller
         return Inertia::render('Auth/Register');
     }
 
+    public function success(): Response
+    {
+        return Inertia::render('Auth/RegisterSuccess');
+    }
+
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Password::min(8)],
-            'account_type' => ['nullable', Rule::in(['participant', 'business_owner'])],
-        ]);
+        $validated = $request->validate(
+            [
+                'first_name' => ['required', 'string', 'max:255'],
+                'last_name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+                'password' => ['required', 'confirmed', Password::min(8)],
+                'account_type' => ['nullable', Rule::in(['participant', 'business_owner'])],
+            ],
+            [
+                'email.unique' => 'This email is already registered. Please sign in or reset your password.',
+            ],
+        );
 
         [$user, $plainCode] = DB::transaction(function () use ($validated) {
             $user = User::create([

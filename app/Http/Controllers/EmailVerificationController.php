@@ -76,7 +76,7 @@ class EmailVerificationController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended($this->redirectRouteFor($user));
+        return redirect()->route('register.success');
     }
 
     public function resend(Request $request): RedirectResponse
@@ -143,18 +143,4 @@ class EmailVerificationController extends Controller
         return max(0, now()->diffInSeconds($verificationCode->expires_at, false));
     }
 
-    private function redirectRouteFor(User $user): string
-    {
-        if ($user->isAdmin()) {
-            return route('admin.dashboard');
-        }
-
-        if ($user->isBusinessOwner()) {
-            return $user->hasCompleteBusinessProfile()
-                ? route('business.dashboard')
-                : route('business.profile.edit');
-        }
-
-        return route('dashboard');
-    }
 }
