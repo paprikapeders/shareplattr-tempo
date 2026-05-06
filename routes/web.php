@@ -28,6 +28,14 @@ Route::get('/', function () {
     return Inertia::render('Home');
 });
 
+Route::get('/terms-of-use', function () {
+    return Inertia::render('Legal/TermsOfUse');
+})->name('legal.terms');
+
+Route::get('/privacy-policy', function () {
+    return Inertia::render('Legal/PrivacyPolicy');
+})->name('legal.privacy');
+
 Route::get('/register/success', [RegisterController::class, 'success'])->name('register.success');
 
 Route::middleware('guest')->group(function () {

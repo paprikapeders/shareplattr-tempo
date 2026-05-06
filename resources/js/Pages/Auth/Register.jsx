@@ -9,6 +9,7 @@ export default function Register() {
         password: '',
         password_confirmation: '',
         account_type: 'participant',
+        terms_accepted: false,
     });
 
     const submit = (event) => {
@@ -94,10 +95,31 @@ export default function Register() {
                     className="h-12 w-full rounded-full border-0 bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280]"
                 />
 
+                <label className="flex items-start gap-3 rounded-2xl bg-white/55 px-4 py-3 text-sm leading-5 text-[#101010] shadow-sm">
+                    <input
+                        type="checkbox"
+                        checked={data.terms_accepted}
+                        onChange={(event) => setData('terms_accepted', event.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span>
+                        I agree to the{' '}
+                        <Link href="/terms-of-use" className="font-semibold underline underline-offset-4">
+                            Terms of Use
+                        </Link>
+                        {' '}and{' '}
+                        <Link href="/privacy-policy" className="font-semibold underline underline-offset-4">
+                            Privacy Policy
+                        </Link>
+                        .
+                    </span>
+                </label>
+                {errors.terms_accepted && <p className="-mt-2 text-sm text-red-600">{errors.terms_accepted}</p>}
+
                 <button
                     type="submit"
                     disabled={processing}
-                    className="mt-20 h-12 w-full whitespace-nowrap rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:opacity-50 lg:mt-8"
+                    className="mt-8 h-12 w-full whitespace-nowrap rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:opacity-50 lg:mt-8"
                 >
                     {processing ? 'Creating...' : 'Next'}
                 </button>

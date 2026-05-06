@@ -22,6 +22,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'taylor@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'terms_accepted' => true,
         ]);
 
         $response->assertRedirect(route('verify.notice'));
@@ -84,6 +85,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'casey@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'terms_accepted' => true,
         ])->assertRedirect(route('verify.notice'));
 
         $user = User::where('email', 'casey@example.com')->firstOrFail();
@@ -125,6 +127,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'taken@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'terms_accepted' => true,
         ])->assertSessionHasErrors([
             'email' => 'This email is already registered. Please sign in or reset your password.',
         ]);

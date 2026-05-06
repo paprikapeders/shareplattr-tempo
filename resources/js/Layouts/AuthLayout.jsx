@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react';
+
 const peopleImage = '/images/people.png';
 
 function BackIcon() {
@@ -67,6 +69,15 @@ export default function AuthLayout({
                         )}
 
                         {children}
+
+                        <nav className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center text-xs font-medium text-[#101010]/75">
+                            <Link href="/terms-of-use" className="hover:text-[#101010] hover:underline">
+                                Terms of Use
+                            </Link>
+                            <Link href="/privacy-policy" className="hover:text-[#101010] hover:underline">
+                                Privacy Policy
+                            </Link>
+                        </nav>
                     </div>
                 </section>
             </div>
