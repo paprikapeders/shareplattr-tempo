@@ -21,14 +21,14 @@ function toneClasses(tone) {
 
 export default function ActivityFeed({ activities }) {
     return (
-        <aside id="activity" className="scroll-mt-24 rounded-[28px] bg-white p-4 shadow-[0_22px_55px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 sm:p-5 lg:sticky lg:top-24 lg:max-h-[760px] lg:overflow-hidden">
+        <aside id="activity" className="scroll-mt-24 rounded-[22px] bg-white p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 sm:p-5 xl:sticky xl:top-[90px] xl:max-h-[420px] xl:overflow-hidden">
             <div className="border-b border-slate-200 px-2 pb-4 text-sm">
                 <div className="border-b border-[#25338c] pb-2 font-semibold text-[#25338c]">
                     Activity feed
                 </div>
             </div>
 
-            <div className="mt-4 space-y-4 lg:max-h-[660px] lg:overflow-y-auto lg:pr-1">
+            <div className="mt-4 max-h-[360px] space-y-4 overflow-y-auto pr-1 xl:max-h-[330px]">
                 {activities.map((activity) => (
                     <article key={activity.id} className="flex items-start gap-3">
                         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${toneClasses(activity.tone)}`}>

@@ -8,9 +8,11 @@ use App\Models\BusinessProfile;
 use App\Models\Campaign;
 use App\Models\Click;
 use App\Models\Conversion;
+use App\Models\PayoutRequest;
 use App\Models\ReferralToken;
 use App\Models\Reward;
 use App\Models\User;
+use App\Services\StripeBillingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -412,6 +414,145 @@ class BusinessOwnerModuleTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_business_owner_can_approve_own_payout_request_with_saved_card(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile('Owner One', 'One Co');
+        $participant = User::factory()->create();
+        $campaign = $this->campaignForOwner($owner, $profile);
+        $reward = $this->rewardForCampaign($participant, $campaign, 1500, 'processing');
+        $payoutRequest = PayoutRequest::create([
+            'user_id' => $participant->id,
+            'amount' => 1500,
+            'status' => 'pending',
+            'requested_at' => now(),
+        ]);
+        $payoutRequest->rewards()->attach($reward->id);
+        $profile->update([
+            'stripe_customer_id' => 'cus_test_123',
+            'stripe_payment_method_id' => 'pm_test_123',
+            'stripe_card_brand' => 'visa',
+            'stripe_card_last4' => '4242',
+            'stripe_billing_ready' => true,
+        ]);
+
+        $this->mock(StripeBillingService::class, function ($mock) {
+            $mock->shouldReceive('chargeSavedPaymentMethod')
+                ->once()
+                ->andReturn([
+                    'id' => 'pi_test_123',
+                    'status' => 'succeeded',
+                ]);
+        });
+
+        $this
+            ->actingAs($owner)
+            ->post(route('business.payout-requests.approve', $payoutRequest))
+            ->assertRedirect()
+            ->assertSessionHas('success', 'Payout approved and business card charged.');
+
+        $this->assertDatabaseHas('payout_requests', [
+            'id' => $payoutRequest->id,
+            'status' => 'approved',
+            'business_approved_by' => $owner->id,
+            'stripe_payment_intent_id' => 'pi_test_123',
+            'stripe_payment_status' => 'succeeded',
+        ]);
+    }
+
+    public function test_business_owner_can_view_only_own_payout_requests(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile('Owner One', 'One Co');
+        [$otherOwner, $otherProfile] = $this->businessOwnerWithProfile('Owner Two', 'Two Co');
+        $participant = User::factory()->create();
+        $ownCampaign = $this->campaignForOwner($owner, $profile);
+        $otherCampaign = $this->campaignForOwner($otherOwner, $otherProfile);
+        $ownReward = $this->rewardForCampaign($participant, $ownCampaign, 1500, 'processing');
+        $otherReward = $this->rewardForCampaign($participant, $otherCampaign, 2500, 'processing');
+        $ownRequest = PayoutRequest::create([
+            'user_id' => $participant->id,
+            'amount' => 1500,
+            'status' => 'pending',
+            'requested_at' => now(),
+        ]);
+        $otherRequest = PayoutRequest::create([
+            'user_id' => $participant->id,
+            'amount' => 2500,
+            'status' => 'pending',
+            'requested_at' => now(),
+        ]);
+        $ownRequest->rewards()->attach($ownReward->id);
+        $otherRequest->rewards()->attach($otherReward->id);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.payout-requests.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/PayoutRequests/Index')
+                ->where('payoutRequests.0.id', $ownRequest->id)
+                ->missing('payoutRequests.1')
+            );
+    }
+
+    public function test_business_owner_cannot_approve_payout_without_saved_card(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile('Owner One', 'One Co');
+        $participant = User::factory()->create();
+        $campaign = $this->campaignForOwner($owner, $profile);
+        $reward = $this->rewardForCampaign($participant, $campaign, 1500, 'processing');
+        $payoutRequest = PayoutRequest::create([
+            'user_id' => $participant->id,
+            'amount' => 1500,
+            'status' => 'pending',
+            'requested_at' => now(),
+        ]);
+        $payoutRequest->rewards()->attach($reward->id);
+
+        $this
+            ->actingAs($owner)
+            ->post(route('business.payout-requests.approve', $payoutRequest))
+            ->assertRedirect()
+            ->assertSessionHas('error', 'Add a card before approving payout requests.');
+
+        $this->assertDatabaseHas('payout_requests', [
+            'id' => $payoutRequest->id,
+            'status' => 'pending',
+            'stripe_payment_intent_id' => null,
+        ]);
+    }
+
+    public function test_business_owner_cannot_approve_another_business_payout_request(): void
+    {
+        [$owner] = $this->businessOwnerWithProfile('Owner One', 'One Co');
+        [$otherOwner, $otherProfile] = $this->businessOwnerWithProfile('Owner Two', 'Two Co');
+        $participant = User::factory()->create();
+        $campaign = $this->campaignForOwner($otherOwner, $otherProfile);
+        $reward = $this->rewardForCampaign($participant, $campaign, 1500, 'processing');
+        $payoutRequest = PayoutRequest::create([
+            'user_id' => $participant->id,
+            'amount' => 1500,
+            'status' => 'pending',
+            'requested_at' => now(),
+        ]);
+        $payoutRequest->rewards()->attach($reward->id);
+        $owner->businessProfile->update([
+            'stripe_customer_id' => 'cus_test_123',
+            'stripe_payment_method_id' => 'pm_test_123',
+            'stripe_billing_ready' => true,
+        ]);
+
+        $this
+            ->actingAs($owner)
+            ->post(route('business.payout-requests.approve', $payoutRequest))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('payout_requests', [
+            'id' => $payoutRequest->id,
+            'status' => 'pending',
+            'stripe_payment_intent_id' => null,
+        ]);
+    }
+
     private function businessOwnerWithProfile(string $ownerName = 'Business Owner', string $companyName = 'Northstar Coffee'): array
     {
         $owner = User::factory()->businessOwner()->create([
@@ -443,6 +584,25 @@ class BusinessOwnerModuleTest extends TestCase
             'reward_amount' => 1000,
             'destination_url' => 'https://example.com',
             'status' => 'active',
+        ]);
+    }
+
+    private function rewardForCampaign(User $participant, Campaign $campaign, int $amount, string $status): Reward
+    {
+        $conversion = Conversion::create([
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'amount' => $amount,
+            'status' => 'verified',
+            'verified_at' => now(),
+        ]);
+
+        return Reward::create([
+            'conversion_id' => $conversion->id,
+            'user_id' => $participant->id,
+            'campaign_id' => $campaign->id,
+            'amount' => $amount,
+            'status' => $status,
         ]);
     }
 }

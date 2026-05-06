@@ -11,6 +11,16 @@ function CopyIcon() {
     );
 }
 
+function OpenIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-5 w-5">
+            <path d="M14 3h7v7" />
+            <path d="M10 14L21 3" />
+            <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+        </svg>
+    );
+}
+
 export default function GeneratedLinksTable({
     rows,
     filters,
@@ -23,6 +33,7 @@ export default function GeneratedLinksTable({
     onPageChange,
     copiedId,
     onCopy,
+    onExport,
 }) {
     return (
         <section className="rounded-[28px] bg-white shadow-[0_22px_55px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
@@ -39,6 +50,7 @@ export default function GeneratedLinksTable({
                     searchPlaceholder="Search"
                     actionLabel="Browse Campaigns"
                     actionHref="/campaigns"
+                    onExport={onExport}
                 />
             </div>
 
@@ -56,8 +68,8 @@ export default function GeneratedLinksTable({
                                 <tr className="text-left text-[13px] uppercase tracking-[0.18em] text-[#5a5d74]">
                                     <th className="px-6 py-4">Campaign</th>
                                     <th className="px-6 py-4">Referral Link</th>
-                                    <th className="px-6 py-4 text-center">Actions</th>
                                     <th className="px-6 py-4 text-center">Clicks</th>
+                                    <th className="px-6 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -72,18 +84,28 @@ export default function GeneratedLinksTable({
                                             </div>
                                         </td>
                                         <td className="px-6 py-5 font-mono text-[15px] text-[#6b7088]">{row.url.replace(/^https?:\/\//, '')}</td>
+                                        <td className="px-6 py-5 text-center">{row.clicks_count}</td>
                                         <td className="px-6 py-5">
-                                            <div className="flex items-center justify-center gap-4">
+                                            <div className="flex items-center justify-end gap-4">
+                                                <a
+                                                    href={row.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="text-slate-500 transition hover:text-[#6255e8]"
+                                                    aria-label={`Open referral link for ${row.campaign_title}`}
+                                                >
+                                                    <OpenIcon />
+                                                </a>
                                                 <button
                                                     type="button"
                                                     onClick={() => onCopy(row.id, row.url)}
                                                     className={`transition ${copiedId === row.id ? 'text-emerald-600' : 'text-slate-500 hover:text-[#6255e8]'}`}
+                                                    aria-label={`Copy referral link for ${row.campaign_title}`}
                                                 >
                                                     <CopyIcon />
                                                 </button>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5 text-center">{row.clicks_count}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -98,13 +120,25 @@ export default function GeneratedLinksTable({
                                         <p className="text-[15px] font-semibold text-[#2a3041]">{row.campaign_title}</p>
                                         <p className="mt-2 break-all font-mono text-xs text-slate-500">{row.url}</p>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => onCopy(row.id, row.url)}
-                                        className={`transition ${copiedId === row.id ? 'text-emerald-600' : 'text-slate-500 hover:text-[#6255e8]'}`}
-                                    >
-                                        <CopyIcon />
-                                    </button>
+                                    <div className="flex items-center gap-3">
+                                        <a
+                                            href={row.url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-slate-500 transition hover:text-[#6255e8]"
+                                            aria-label={`Open referral link for ${row.campaign_title}`}
+                                        >
+                                            <OpenIcon />
+                                        </a>
+                                        <button
+                                            type="button"
+                                            onClick={() => onCopy(row.id, row.url)}
+                                            className={`transition ${copiedId === row.id ? 'text-emerald-600' : 'text-slate-500 hover:text-[#6255e8]'}`}
+                                            aria-label={`Copy referral link for ${row.campaign_title}`}
+                                        >
+                                            <CopyIcon />
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <p className="mt-3 text-sm text-slate-500">Clicks: <span className="font-semibold text-[#2a3041]">{row.clicks_count}</span></p>

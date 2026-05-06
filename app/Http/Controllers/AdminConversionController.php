@@ -3,16 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Campaign;
-use App\Models\Conversion;
 use App\Models\ReferralToken;
 use App\Models\User;
+use App\Services\ConversionRewardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AdminConversionController extends Controller
 {
+    public function __construct(private ConversionRewardService $conversions)
+    {
+    }
+
     /**
      * Show the conversion entry form.
      */
@@ -26,8 +29,21 @@ class AdminConversionController extends Controller
                 ->get(['id', 'brand_id', 'brand_name', 'title', 'reward_amount']),
             'users' => User::query()
                 ->where('is_admin', false)
+                ->where('user_type', 'participant')
                 ->orderBy('name')
                 ->get(['id', 'name', 'email']),
+            'referralTokens' => ReferralToken::query()
+                ->with('user:id,name,email')
+                ->orderByDesc('created_at')
+                ->get(['id', 'campaign_id', 'user_id', 'token'])
+                ->map(fn (ReferralToken $token) => [
+                    'id' => $token->id,
+                    'campaign_id' => $token->campaign_id,
+                    'user_id' => $token->user_id,
+                    'token' => $token->token,
+                    'user_name' => $token->user?->name,
+                    'user_email' => $token->user?->email,
+                ]),
         ]);
     }
 
@@ -39,7 +55,8 @@ class AdminConversionController extends Controller
         $validated = $request->validate([
             'campaign_id' => ['required', 'exists:campaigns,id'],
             'user_id' => ['required', 'exists:users,id'],
-            'amount' => ['required', 'numeric', 'min:0.01'],
+            'referral_token_id' => ['nullable', 'exists:referral_tokens,id'],
+            'amount' => ['nullable', 'numeric', 'min:0.01'],
             'amount_type' => ['required', 'in:dollars,cents'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
@@ -54,35 +71,45 @@ class AdminConversionController extends Controller
                 ->withInput();
         }
 
-        $amount = $validated['amount_type'] === 'dollars'
-            ? (int) round($validated['amount'] * 100)
-            : (int) $validated['amount'];
+        $participant = User::query()
+            ->where('user_type', 'participant')
+            ->findOrFail($validated['user_id']);
 
-        DB::transaction(function () use ($campaign, $validated, $amount) {
-            $referralToken = ReferralToken::query()
-                ->where('campaign_id', $campaign->id)
-                ->where('user_id', $validated['user_id'])
-                ->first();
+        $referralToken = $this->resolveReferralToken($campaign, $participant, $validated['referral_token_id'] ?? null);
 
-            $conversion = Conversion::create([
-                'campaign_id' => $campaign->id,
-                'user_id' => $validated['user_id'],
-                'referral_token_id' => $referralToken?->id,
-                'amount' => $amount,
-                'status' => 'verified',
-                'notes' => $validated['notes'] ?? null,
-                'verified_at' => now(),
-            ]);
+        if (array_key_exists('referral_token_id', $validated) && filled($validated['referral_token_id']) && ! $referralToken) {
+            return back()
+                ->withErrors(['referral_token_id' => 'The selected referral token does not belong to this participant and campaign.'])
+                ->withInput();
+        }
 
-            $campaign->increment('conversion_count');
+        $amount = filled($validated['amount'] ?? null)
+            ? ($validated['amount_type'] === 'dollars'
+                ? (int) round($validated['amount'] * 100)
+                : (int) $validated['amount'])
+            : (int) $campaign->reward_amount;
 
-            $conversion->reward()->create([
-                'user_id' => $validated['user_id'],
-                'campaign_id' => $campaign->id,
-                'amount' => $campaign->reward_amount,
-            ]);
-        });
+        $this->conversions->recordVerifiedConversion(
+            $campaign,
+            $participant,
+            $amount,
+            $referralToken,
+            $validated['notes'] ?? null,
+        );
 
         return back()->with('success', 'Conversion recorded and reward created.');
+    }
+
+    private function resolveReferralToken(Campaign $campaign, User $participant, ?int $referralTokenId): ?ReferralToken
+    {
+        $query = ReferralToken::query()
+            ->where('campaign_id', $campaign->id)
+            ->where('user_id', $participant->id);
+
+        if ($referralTokenId) {
+            $query->whereKey($referralTokenId);
+        }
+
+        return $query->first();
     }
 }

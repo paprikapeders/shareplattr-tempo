@@ -17,10 +17,13 @@ class PayoutRequestController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        abort_unless($user->isParticipant(), 403);
 
         $availableBalance = Reward::query()
             ->where('user_id', $user->id)
             ->where('status', 'pending')
+            ->whereHas('conversion', fn ($query) => $query->where('status', 'verified'))
+            ->whereDoesntHave('payoutRequests', fn ($query) => $query->whereNotIn('status', ['rejected', 'payment_failed']))
             ->sum('amount');
 
         $rewardCounts = Reward::query()
@@ -35,9 +38,8 @@ class PayoutRequestController extends Controller
         $payoutRequests = PayoutRequest::query()
             ->where('user_id', $user->id)
             ->with([
-                'payoutMethod:id,user_id,type,paypal_email',
                 'rewards:id,campaign_id,amount,status,paid_at,payout_reference',
-                'rewards.campaign:id,title',
+                'rewards.campaign:id,title,brand_name',
             ])
             ->latest('requested_at')
             ->latest()
@@ -52,12 +54,14 @@ class PayoutRequestController extends Controller
                 'payout_reference' => $payoutRequest->payout_reference,
                 'admin_notes' => $payoutRequest->admin_notes,
                 'rejection_reason' => $payoutRequest->rejection_reason,
-                'paypal_email' => $payoutRequest->payoutMethod?->paypal_email,
+                'business_approved_at' => $payoutRequest->business_approved_at?->toDateTimeString(),
+                'stripe_payment_status' => $payoutRequest->stripe_payment_status,
                 'rewards' => $payoutRequest->rewards->map(fn (Reward $reward) => [
                     'id' => $reward->id,
                     'amount' => $reward->amount,
                     'status' => $reward->status,
                     'campaign_title' => $reward->campaign?->title,
+                    'brand_name' => $reward->campaign?->brand_name,
                 ])->values(),
             ]);
 
@@ -68,12 +72,6 @@ class PayoutRequestController extends Controller
                 'processing_rewards_count' => (int) $rewardCounts->processing_count,
                 'paid_rewards_count' => (int) $rewardCounts->paid_count,
             ],
-            'payoutMethod' => $user->payoutMethod
-                ? [
-                    'type' => $user->payoutMethod->type,
-                    'paypal_email' => $user->payoutMethod->paypal_email,
-                ]
-                : null,
             'payoutRequests' => $payoutRequests,
         ]);
     }
@@ -84,32 +82,35 @@ class PayoutRequestController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $payoutMethod = $user->payoutMethod;
+        abort_unless($user->isParticipant(), 403);
 
-        if (! $payoutMethod?->paypal_email) {
-            return back()->with('error', 'Save a PayPal email before requesting a payout.');
-        }
-
-        $created = DB::transaction(function () use ($user, $payoutMethod) {
+        $created = DB::transaction(function () use ($user) {
             $eligibleRewards = Reward::query()
                 ->where('user_id', $user->id)
                 ->where('status', 'pending')
+                ->whereHas('conversion', fn ($query) => $query->where('status', 'verified'))
+                ->whereDoesntHave('payoutRequests', fn ($query) => $query->whereNotIn('status', ['rejected', 'payment_failed']))
+                ->with('campaign:id,business_owner_id')
                 ->lockForUpdate()
                 ->get();
 
             if ($eligibleRewards->isEmpty()) {
-                return null;
+                return 0;
             }
 
-            $payoutRequest = PayoutRequest::create([
-                'user_id' => $user->id,
-                'payout_method_id' => $payoutMethod->id,
-                'amount' => (int) $eligibleRewards->sum('amount'),
-                'status' => 'pending',
-                'requested_at' => now(),
-            ]);
+            $created = 0;
 
-            $payoutRequest->rewards()->attach($eligibleRewards->pluck('id'));
+            foreach ($eligibleRewards->groupBy(fn (Reward $reward) => $reward->campaign?->business_owner_id ?: 'unassigned') as $rewards) {
+                $payoutRequest = PayoutRequest::create([
+                    'user_id' => $user->id,
+                    'amount' => (int) $rewards->sum('amount'),
+                    'status' => 'pending',
+                    'requested_at' => now(),
+                ]);
+
+                $payoutRequest->rewards()->attach($rewards->pluck('id'));
+                $created++;
+            }
 
             Reward::query()
                 ->whereIn('id', $eligibleRewards->pluck('id'))
@@ -119,13 +120,13 @@ class PayoutRequestController extends Controller
                     'payout_reference' => null,
                 ]);
 
-            return $payoutRequest;
+            return $created;
         });
 
         if (! $created) {
             return back()->with('error', 'There are no pending rewards available for payout right now.');
         }
 
-        return back()->with('success', 'Payout request submitted.');
+        return back()->with('success', $created === 1 ? 'Payout request submitted.' : 'Payout requests submitted.');
     }
 }

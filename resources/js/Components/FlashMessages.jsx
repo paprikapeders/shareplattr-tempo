@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
 
-export default function FlashMessages() {
+export default function FlashMessages({ className = '' }) {
     const { flash = {} } = usePage().props;
 
     if (!flash.success && !flash.error) {
@@ -8,7 +8,7 @@ export default function FlashMessages() {
     }
 
     return (
-        <div className="space-y-3">
+        <div className={`space-y-3 ${className}`}>
             {flash.success && (
                 <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-sm shadow-emerald-950/5">
                     <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500" />

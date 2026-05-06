@@ -8,17 +8,19 @@ use App\Http\Controllers\AdminBrandController;
 use App\Http\Controllers\AdminPayoutRequestController;
 use App\Http\Controllers\AdminRewardController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BusinessBillingController;
 use App\Http\Controllers\BusinessCampaignController;
 use App\Http\Controllers\BusinessDashboardController;
+use App\Http\Controllers\BusinessPayoutRequestController;
 use App\Http\Controllers\BusinessProfileController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
-use App\Http\Controllers\PayoutMethodController;
 use App\Http\Controllers\PayoutRequestController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ReferralLinkController;
+use App\Http\Controllers\SimulateConversionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -49,7 +51,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->name('campaigns.show');
     Route::post('/campaigns/{campaign}/referral-link', [ReferralLinkController::class, 'store'])
         ->name('campaigns.referral-link.store');
-    Route::put('/payout-method', [PayoutMethodController::class, 'update'])->name('payout-method.update');
     Route::get('/payouts', [PayoutRequestController::class, 'index'])->name('payouts.index');
     Route::post('/payout-requests', [PayoutRequestController::class, 'store'])->name('payout-requests.store');
 });
@@ -71,14 +72,12 @@ Route::middleware(['auth', 'admin'])
         Route::post('/campaigns', [AdminCampaignController::class, 'store'])->name('campaigns.store');
         Route::get('/campaigns/{campaign}/edit', [AdminCampaignController::class, 'edit'])->name('campaigns.edit');
         Route::match(['post', 'put'], '/campaigns/{campaign}', [AdminCampaignController::class, 'update'])->name('campaigns.update');
+        Route::post('/campaigns/{campaign}/simulate-conversion', [SimulateConversionController::class, 'admin'])->name('campaigns.simulate-conversion');
         Route::get('/conversions/create', [AdminConversionController::class, 'create'])->name('conversions.create');
         Route::post('/conversions', [AdminConversionController::class, 'store'])->name('conversions.store');
         Route::get('/rewards', [AdminRewardController::class, 'index'])->name('rewards.index');
         Route::patch('/rewards/{reward}/paid', [AdminRewardController::class, 'markPaid'])->name('rewards.mark-paid');
         Route::get('/payout-requests', [AdminPayoutRequestController::class, 'index'])->name('payout-requests.index');
-        Route::patch('/payout-requests/{payoutRequest}/processing', [AdminPayoutRequestController::class, 'markProcessing'])->name('payout-requests.processing');
-        Route::patch('/payout-requests/{payoutRequest}/paid', [AdminPayoutRequestController::class, 'markPaid'])->name('payout-requests.paid');
-        Route::patch('/payout-requests/{payoutRequest}/rejected', [AdminPayoutRequestController::class, 'reject'])->name('payout-requests.rejected');
         Route::get('/activity', [AdminActivityController::class, 'index'])->name('activity.index');
     });
 
@@ -89,10 +88,16 @@ Route::middleware(['auth', 'business_owner'])
         Route::get('/dashboard', BusinessDashboardController::class)->name('dashboard');
         Route::get('/profile', [BusinessProfileController::class, 'edit'])->name('profile.edit');
         Route::post('/profile', [BusinessProfileController::class, 'update'])->name('profile.update');
+        Route::get('/billing', [BusinessBillingController::class, 'edit'])->name('billing.edit');
+        Route::post('/billing/setup-intent', [BusinessBillingController::class, 'setupIntent'])->name('billing.setup-intent');
+        Route::post('/billing/payment-method', [BusinessBillingController::class, 'savePaymentMethod'])->name('billing.payment-method');
+        Route::get('/payout-requests', [BusinessPayoutRequestController::class, 'index'])->name('payout-requests.index');
+        Route::post('/payout-requests/{payoutRequest}/approve', [BusinessPayoutRequestController::class, 'approve'])->name('payout-requests.approve');
         Route::get('/campaigns', [BusinessCampaignController::class, 'index'])->name('campaigns.index');
         Route::get('/campaigns/create', [BusinessCampaignController::class, 'create'])->name('campaigns.create');
         Route::post('/campaigns', [BusinessCampaignController::class, 'store'])->name('campaigns.store');
         Route::patch('/campaigns/{campaign}/status', [BusinessCampaignController::class, 'updateStatus'])->name('campaigns.status.update');
+        Route::post('/campaigns/{campaign}/simulate-conversion', [SimulateConversionController::class, 'business'])->name('campaigns.simulate-conversion');
         Route::get('/campaigns/{campaign}', [BusinessCampaignController::class, 'show'])->name('campaigns.show');
         Route::get('/campaigns/{campaign}/edit', [BusinessCampaignController::class, 'edit'])->name('campaigns.edit');
         Route::match(['post', 'put'], '/campaigns/{campaign}', [BusinessCampaignController::class, 'update'])->name('campaigns.update');

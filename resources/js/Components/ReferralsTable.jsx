@@ -20,31 +20,35 @@ function Badge({ status }) {
     );
 }
 
+function OpenIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-5 w-5">
+            <path d="M14 3h7v7" />
+            <path d="M10 14L21 3" />
+            <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+        </svg>
+    );
+}
+
+function CopyIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-5 w-5">
+            <rect x="9" y="9" width="11" height="11" rx="2" />
+            <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" />
+        </svg>
+    );
+}
+
 function ActionIcons({ row }) {
     const campaignPath = `/campaigns/${row.campaign_slug ?? row.campaign_id}`;
 
     return (
         <div className="flex items-center justify-end gap-3 text-slate-500">
-            <Link href={campaignPath} className="transition hover:text-[#6255e8]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-5 w-5">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" />
-                </svg>
+            <Link href={campaignPath} className="transition hover:text-[#6255e8]" aria-label={`Open ${row.campaign_title}`}>
+                <OpenIcon />
             </Link>
-            <button type="button" onClick={() => navigator.clipboard.writeText(row.url)} className="transition hover:text-[#6255e8]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-5 w-5">
-                    <path d="M9 15l6-6" />
-                    <path d="M7.5 7.5a3.5 3.5 0 0 1 5 0l1 1" />
-                    <path d="M10.5 16.5a3.5 3.5 0 0 1-5 0l-1-1a3.5 3.5 0 0 1 0-5l1.5-1.5" />
-                    <path d="M13.5 7.5a3.5 3.5 0 0 1 5 0l1 1a3.5 3.5 0 0 1 0 5L18 15" />
-                </svg>
-            </button>
-            <button type="button" className="transition hover:text-[#6255e8]">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                    <circle cx="12" cy="5" r="1.8" />
-                    <circle cx="12" cy="12" r="1.8" />
-                    <circle cx="12" cy="19" r="1.8" />
-                </svg>
+            <button type="button" onClick={() => navigator.clipboard.writeText(row.url)} className="transition hover:text-[#6255e8]" aria-label={`Copy referral link for ${row.campaign_title}`}>
+                <CopyIcon />
             </button>
         </div>
     );
@@ -93,6 +97,7 @@ export default function ReferralsTable({
     totalPages,
     totalItems,
     onPageChange,
+    onExport,
 }) {
     return (
         <section className="rounded-[28px] bg-white shadow-[0_22px_55px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
@@ -109,6 +114,7 @@ export default function ReferralsTable({
                     searchPlaceholder="Search"
                     actionLabel="Browse Campaigns"
                     actionHref="/campaigns"
+                    onExport={onExport}
                 />
             </div>
 

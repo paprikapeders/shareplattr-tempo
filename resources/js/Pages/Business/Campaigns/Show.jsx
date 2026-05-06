@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
@@ -83,11 +83,22 @@ function ReferralSources({ sources = [] }) {
 export default function Show({ campaign }) {
     const canToggleStatus = ['active', 'paused'].includes(campaign.status);
     const nextStatus = campaign.status === 'active' ? 'paused' : 'active';
+    const simulateForm = useForm({
+        referral_token_id: campaign.referral_tokens?.length === 1 ? campaign.referral_tokens[0].id : '',
+    });
 
     function updateStatus() {
         router.patch(`/business/campaigns/${campaign.id}/status`, {
             status: nextStatus,
         }, {
+            preserveScroll: true,
+        });
+    }
+
+    function simulateConversion(event) {
+        event.preventDefault();
+
+        simulateForm.post(`/business/campaigns/${campaign.id}/simulate-conversion`, {
             preserveScroll: true,
         });
     }
@@ -126,6 +137,47 @@ export default function Show({ campaign }) {
                 </div>
 
                 <ReferralSources sources={campaign.source_breakdown} />
+
+                {campaign.can_simulate_conversion && (
+                    <Card>
+                        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                            <div className="min-w-0">
+                                <h2 className="text-sm font-bold text-slate-950">Simulate Conversion</h2>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Creates a verified conversion and pending reward for MVP testing. Payout still requires participant request.
+                                </p>
+                            </div>
+
+                            <form onSubmit={simulateConversion} className="flex flex-col gap-3 sm:min-w-80">
+                                {campaign.referral_tokens?.length > 1 && (
+                                    <select
+                                        value={simulateForm.data.referral_token_id}
+                                        onChange={(event) => simulateForm.setData('referral_token_id', event.target.value)}
+                                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm shadow-slate-950/5"
+                                    >
+                                        <option value="">Select referral owner</option>
+                                        {campaign.referral_tokens.map((token) => (
+                                            <option key={token.id} value={token.id}>
+                                                {token.user_name} ({token.user_email})
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+
+                                {simulateForm.errors.referral_token_id && (
+                                    <p className="text-sm text-rose-600">{simulateForm.errors.referral_token_id}</p>
+                                )}
+
+                                <Button
+                                    type="submit"
+                                    disabled={simulateForm.processing || campaign.referral_tokens?.length === 0}
+                                >
+                                    {simulateForm.processing ? 'Simulating...' : 'Simulate Conversion'}
+                                </Button>
+                            </form>
+                        </div>
+                    </Card>
+                )}
 
                 <Card>
                     <h2 className="text-sm font-bold text-slate-950">Campaign Details</h2>

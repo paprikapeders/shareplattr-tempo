@@ -14,6 +14,11 @@ use Illuminate\Database\Eloquent\Model;
     'requested_at',
     'processed_at',
     'paid_at',
+    'business_approved_at',
+    'business_approved_by',
+    'stripe_payment_intent_id',
+    'stripe_payment_status',
+    'stripe_failure_reason',
     'payout_reference',
     'admin_notes',
     'rejection_reason',
@@ -34,6 +39,7 @@ class PayoutRequest extends Model
             'requested_at' => 'datetime',
             'processed_at' => 'datetime',
             'paid_at' => 'datetime',
+            'business_approved_at' => 'datetime',
         ];
     }
 
@@ -59,5 +65,10 @@ class PayoutRequest extends Model
     public function rewards()
     {
         return $this->belongsToMany(Reward::class, 'payout_request_reward');
+    }
+
+    public function businessApprover()
+    {
+        return $this->belongsTo(User::class, 'business_approved_by');
     }
 }

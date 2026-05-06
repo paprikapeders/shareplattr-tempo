@@ -7,6 +7,7 @@ use App\Models\Conversion;
 use App\Models\ReferralToken;
 use App\Models\Reward;
 use App\Models\User;
+use App\Services\ConversionRewardService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -96,6 +97,32 @@ class AdminRewardFlowTest extends TestCase
         $this->assertSame('paid', $reward->status);
         $this->assertNotNull($reward->paid_at);
         $this->assertSame('PAYPAL-TXN-123', $reward->payout_reference);
+    }
+
+    public function test_verified_conversion_reward_creation_is_not_duplicated(): void
+    {
+        $participant = User::factory()->create();
+        $campaign = $this->createCampaign();
+        $conversion = Conversion::create([
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'amount' => 4999,
+            'status' => 'verified',
+            'verified_at' => now(),
+        ]);
+        $service = app(ConversionRewardService::class);
+
+        $service->createPendingRewardFor($conversion);
+        $service->createPendingRewardFor($conversion);
+
+        $this->assertSame(1, Reward::query()->where('conversion_id', $conversion->id)->count());
+        $this->assertDatabaseHas('rewards', [
+            'conversion_id' => $conversion->id,
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'amount' => $campaign->reward_amount,
+            'status' => 'pending',
+        ]);
     }
 
     private function createCampaign(): Campaign

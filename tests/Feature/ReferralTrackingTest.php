@@ -33,6 +33,8 @@ class ReferralTrackingTest extends TestCase
         ]);
 
         $this->assertSame(1, $campaign->fresh()->click_count);
+        $this->assertDatabaseCount('conversions', 0);
+        $this->assertDatabaseCount('rewards', 0);
     }
 
     public function test_self_referral_is_blocked(): void

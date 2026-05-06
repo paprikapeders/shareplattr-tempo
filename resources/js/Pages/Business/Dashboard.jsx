@@ -190,56 +190,59 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
 
     return (
         <BusinessLayout>
-            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="grid gap-2 border-b border-slate-100 px-5 py-4 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-9">
-                    <SummaryMetric label="Total Campaigns" value={stats.total_campaigns} />
-                    <SummaryMetric label="Active" value={stats.active_campaigns} />
-                    <SummaryMetric label="Clicks" value={stats.total_clicks} />
-                    <SummaryMetric label="Unique" value={stats.unique_clicks} />
-                    <SummaryMetric label="Conversions" value={stats.total_conversions} />
-                    <SummaryMetric label="Avg CVR" value={`${stats.average_conversion_rate}%`} />
-                    <SummaryMetric label="Generated" value={dollars(stats.rewards_generated)} />
-                    <SummaryMetric label="Pending" value={dollars(stats.pending_payout_liability)} />
-                    <SummaryMetric label="Paid" value={dollars(stats.paid_rewards)} />
-                </div>
-
-                <div>
-                    {campaignPerformance.length > 0 ? (
-                        campaignPerformance.slice(0, 5).map((campaign, index) => (
-                            <CampaignRow key={campaign.id} campaign={campaign} index={index} maxClicks={maxClicks} />
-                        ))
-                    ) : (
-                        <div className="px-5 py-10 text-center">
-                            <p className="text-sm font-semibold text-slate-950">You have not created any campaigns yet.</p>
-                            <Link href="/business/campaigns/create" className="mt-3 inline-flex rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
-                                Create your first campaign
-                            </Link>
+            <div className="mx-auto w-full max-w-screen-xl space-y-6">
+                <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <div className="border-b border-slate-100 p-5 sm:p-6">
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-9">
+                            <SummaryMetric label="Total Campaigns" value={stats.total_campaigns} />
+                            <SummaryMetric label="Active" value={stats.active_campaigns} />
+                            <SummaryMetric label="Clicks" value={stats.total_clicks} />
+                            <SummaryMetric label="Unique" value={stats.unique_clicks} />
+                            <SummaryMetric label="Conversions" value={stats.total_conversions} />
+                            <SummaryMetric label="Avg CVR" value={`${stats.average_conversion_rate}%`} />
+                            <SummaryMetric label="Generated" value={dollars(stats.rewards_generated)} />
+                            <SummaryMetric label="Pending" value={dollars(stats.pending_payout_liability)} />
+                            <SummaryMetric label="Paid" value={dollars(stats.paid_rewards)} />
                         </div>
-                    )}
-                </div>
-
-                <div className="border-t border-slate-100 px-5 py-4 text-center">
-                    <Link href="/business/campaigns" className="text-sm font-semibold text-cyan-600">
-                        View all campaigns -
-                    </Link>
-                </div>
-            </section>
-
-            <section className="mt-10">
-                <div className="mb-5 flex flex-wrap items-center gap-2">
-                    <PillTab active={activeTab === 'campaigns'} onClick={() => setActiveTab('campaigns')}>Campaigns</PillTab>
-                    <PillTab active={activeTab === 'conversions'} onClick={() => setActiveTab('conversions')}>Conversions</PillTab>
-                    <PillTab active={activeTab === 'payouts'} onClick={() => setActiveTab('payouts')}>Payout Liability</PillTab>
-                </div>
-
-                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 px-5 py-5">
-                        <h2 className="text-sm font-bold text-slate-950">
-                            {activeTab === 'campaigns' && 'My Campaigns'}
-                            {activeTab === 'conversions' && 'Campaign Conversions'}
-                            {activeTab === 'payouts' && 'Payout Liability'}
-                        </h2>
                     </div>
+
+                    <div>
+                        {campaignPerformance.length > 0 ? (
+                            campaignPerformance.slice(0, 5).map((campaign, index) => (
+                                <CampaignRow key={campaign.id} campaign={campaign} index={index} maxClicks={maxClicks} />
+                            ))
+                        ) : (
+                            <div className="px-5 py-10 text-center">
+                                <p className="text-sm font-semibold text-slate-950">You have not created any campaigns yet.</p>
+                                <Link href="/business/campaigns/create" className="mt-3 inline-flex rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
+                                    Create your first campaign
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="border-t border-slate-100 px-5 py-4 text-center">
+                        <Link href="/business/campaigns" className="text-sm font-semibold text-cyan-600">
+                            View all campaigns -
+                        </Link>
+                    </div>
+                </section>
+
+                <section className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <PillTab active={activeTab === 'campaigns'} onClick={() => setActiveTab('campaigns')}>Campaigns</PillTab>
+                        <PillTab active={activeTab === 'conversions'} onClick={() => setActiveTab('conversions')}>Conversions</PillTab>
+                        <PillTab active={activeTab === 'payouts'} onClick={() => setActiveTab('payouts')}>Payout Liability</PillTab>
+                    </div>
+
+                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <div className="border-b border-slate-100 px-5 py-5">
+                            <h2 className="text-sm font-bold text-slate-950">
+                                {activeTab === 'campaigns' && 'My Campaigns'}
+                                {activeTab === 'conversions' && 'Campaign Conversions'}
+                                {activeTab === 'payouts' && 'Payout Liability'}
+                            </h2>
+                        </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
                         <select className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 outline-none">
@@ -347,8 +350,9 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
                             </table>
                         )}
                     </div>
-                </div>
-            </section>
+                    </div>
+                </section>
+            </div>
         </BusinessLayout>
     );
 }

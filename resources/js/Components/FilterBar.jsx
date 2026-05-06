@@ -35,6 +35,7 @@ export default function FilterBar({
     searchPlaceholder,
     actionLabel,
     actionHref,
+    onExport,
 }) {
     return (
         <div className="space-y-4">
@@ -63,7 +64,11 @@ export default function FilterBar({
                         />
                     </div>
 
-                    <button type="button" className="inline-flex h-11 items-center justify-center gap-2 rounded-[10px] bg-slate-100 px-5 text-[15px] font-medium text-slate-400">
+                    <button
+                        type="button"
+                        onClick={onExport}
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-[10px] bg-slate-100 px-5 text-[15px] font-medium text-slate-600 transition hover:bg-slate-200 hover:text-slate-900"
+                    >
                         <ExportIcon />
                         <span>Export</span>
                     </button>
@@ -78,17 +83,9 @@ export default function FilterBar({
                 </div>
             </div>
 
-            <div className="grid gap-3 lg:grid-cols-3">
-                <select value={filters.role} onChange={(event) => onChange('role', event.target.value)} className={baseSelectClass}>
-                    <option value="all">Select Role</option>
-                    <option value="participant">Participant</option>
-                </select>
-                <select value={filters.plan} onChange={(event) => onChange('plan', event.target.value)} className={baseSelectClass}>
-                    <option value="all">Select Plan</option>
-                    <option value="all-plans">All Plans</option>
-                </select>
+            <div className="grid gap-3 sm:max-w-xs">
                 <select value={filters.status} onChange={(event) => onChange('status', event.target.value)} className={baseSelectClass}>
-                    <option value="all">Select Status</option>
+                    <option value="all">All Statuses</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                 </select>

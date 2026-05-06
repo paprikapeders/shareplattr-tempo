@@ -81,16 +81,6 @@ function RewardRow({ reward }) {
                     {reward.status}
                 </span>
             </td>
-            <td className="px-5 py-5 text-sm text-slate-600">
-                {reward.payout_method ? (
-                    <div>
-                        <p className="font-medium capitalize text-slate-800">{reward.payout_method.type}</p>
-                        <p className="mt-1 text-xs">{reward.payout_method.paypal_email}</p>
-                    </div>
-                ) : (
-                    <span className="text-slate-400">Not saved</span>
-                )}
-            </td>
             <td className="whitespace-nowrap px-5 py-5 text-sm text-slate-500">{formatDate(reward.created_at)}</td>
             <td className="whitespace-nowrap px-5 py-5 text-sm text-slate-500">{formatDate(reward.paid_at)}</td>
             <td className="px-5 py-5 text-sm text-slate-600">
@@ -102,7 +92,7 @@ function RewardRow({ reward }) {
                         <Input
                             value={data.payout_reference}
                             onChange={(event) => setData('payout_reference', event.target.value)}
-                            placeholder="PayPal transaction ID"
+                            placeholder="Payout reference"
                         />
                         {errors.payout_reference && (
                             <p className="text-sm text-rose-600">{errors.payout_reference}</p>
@@ -140,7 +130,7 @@ export default function Index({ rewards, filters, counts, statuses }) {
             <PageHeader
                 title="Rewards"
                 eyebrow="Admin"
-                description="Review rewards by status and mark pending manual payouts as paid after processing them outside SharePlattr."
+                description="Review rewards by status and monitor payout release references."
             />
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -177,7 +167,6 @@ export default function Index({ rewards, filters, counts, statuses }) {
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Campaign</th>
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Amount</th>
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Status</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Payout Method</th>
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Created</th>
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Paid</th>
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Reference</th>

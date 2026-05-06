@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Campaign;
 use App\Models\Click;
 use App\Models\Conversion;
+use App\Models\ReferralToken;
 use App\Models\Reward;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -79,6 +80,18 @@ class BusinessCampaignController extends Controller
             'campaign' => [
                 ...$this->campaignPayload($campaign),
                 'source_breakdown' => $this->sourceBreakdown($campaign),
+                'referral_tokens' => ReferralToken::query()
+                    ->where('campaign_id', $campaign->id)
+                    ->with('user:id,name,email')
+                    ->latest()
+                    ->get(['id', 'campaign_id', 'user_id', 'token'])
+                    ->map(fn (ReferralToken $token) => [
+                        'id' => $token->id,
+                        'token' => $token->token,
+                        'user_name' => $token->user?->name,
+                        'user_email' => $token->user?->email,
+                    ]),
+                'can_simulate_conversion' => config('app.env') !== 'production',
             ],
         ]);
     }
@@ -158,7 +171,7 @@ class BusinessCampaignController extends Controller
                 'conversions' => $totalConversions,
                 'conversion_rate' => $totalClicks > 0 ? round(($totalConversions / $totalClicks) * 100, 2) : 0,
                 'reward_amount' => $campaign->reward_amount,
-                'total_rewards_generated' => Reward::query()->where('campaign_id', $campaign->id)->sum('amount'),
+                'total_rewards_generated' => (int) Reward::query()->where('campaign_id', $campaign->id)->sum('amount'),
             ],
             'recentClicks' => (clone $clicks)
                 ->latest()
@@ -263,9 +276,9 @@ class BusinessCampaignController extends Controller
     {
         $counts = Click::query()
             ->where('campaign_id', $campaign->id)
-            ->selectRaw('COALESCE(source, ?) as source, COUNT(*) as clicks', ['direct'])
-            ->groupByRaw('COALESCE(source, ?)', ['direct'])
-            ->pluck('clicks', 'source');
+            ->selectRaw("COALESCE(`source`, 'direct') as normalized_source, COUNT(*) as clicks")
+            ->groupByRaw("COALESCE(`source`, 'direct')")
+            ->pluck('clicks', 'normalized_source');
 
         return collect(self::CLICK_SOURCES)
             ->map(fn (string $label, string $source) => [

@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import FlashMessages from '../Components/FlashMessages';
 
 function LogoIcon() {
@@ -202,6 +202,34 @@ function MobileSidebarContent({ url, onNavigate = () => {} }) {
 function ClientTopBar({ url, user }) {
     const name = user?.name || 'SharePlattr user';
     const activityFeedActive = url === '/dashboard#activity';
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        if (!menuOpen) {
+            return undefined;
+        }
+
+        function closeOnOutsideClick(event) {
+            if (!menuRef.current?.contains(event.target)) {
+                setMenuOpen(false);
+            }
+        }
+
+        function closeOnEscape(event) {
+            if (event.key === 'Escape') {
+                setMenuOpen(false);
+            }
+        }
+
+        document.addEventListener('mousedown', closeOnOutsideClick);
+        document.addEventListener('keydown', closeOnEscape);
+
+        return () => {
+            document.removeEventListener('mousedown', closeOnOutsideClick);
+            document.removeEventListener('keydown', closeOnEscape);
+        };
+    }, [menuOpen]);
 
     return (
         <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white px-4 py-3 shadow-sm sm:px-6">
@@ -227,8 +255,21 @@ function ClientTopBar({ url, user }) {
                     </nav>
                 </div>
 
-                <div className="flex items-center justify-end gap-3">
-                    <button type="button" className="flex min-w-0 items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 shadow-sm transition hover:border-slate-300 hover:bg-slate-50" aria-label="Open user menu">
+                <div ref={menuRef} className="relative flex items-center justify-end gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setMenuOpen((current) => !current)}
+                        onKeyDown={(event) => {
+                            if (event.key === 'ArrowDown') {
+                                event.preventDefault();
+                                setMenuOpen(true);
+                            }
+                        }}
+                        className="flex min-w-0 items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                        aria-label="Open user menu"
+                        aria-haspopup="menu"
+                        aria-expanded={menuOpen}
+                    >
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-400 text-sm font-bold uppercase text-white">
                             {getInitials(name)}
                         </div>
@@ -236,8 +277,38 @@ function ClientTopBar({ url, user }) {
                             <p className="text-[10px] text-slate-400">Welcome back,</p>
                             <p className="truncate text-xs font-semibold text-slate-950">{name}</p>
                         </div>
-                        <ChevronDownIcon />
+                        <span className={`transition-transform ${menuOpen ? 'rotate-180' : ''}`}>
+                            <ChevronDownIcon />
+                        </span>
                     </button>
+
+                    {menuOpen && (
+                        <div
+                            role="menu"
+                            className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl shadow-slate-950/10"
+                        >
+                            <Link
+                                href="/dashboard"
+                                role="menuitem"
+                                onClick={() => setMenuOpen(false)}
+                                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
+                            >
+                                <DashboardIconGrid />
+                                Dashboard
+                            </Link>
+                            <Link
+                                href="/logout"
+                                method="post"
+                                as="button"
+                                role="menuitem"
+                                onClick={() => setMenuOpen(false)}
+                                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                            >
+                                <DashboardIconLogout />
+                                Logout
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </div>
         </header>

@@ -155,13 +155,6 @@ class DashboardController extends Controller
                 'created_at' => $link['created_at'],
             ])->values(),
             'activities' => $activities,
-            'payoutMethod' => $user->payoutMethod
-                ? [
-                    'type' => $user->payoutMethod->type,
-                    'paypal_email' => $user->payoutMethod->paypal_email,
-                    'verified_at' => $user->payoutMethod->verified_at?->toDateTimeString(),
-                ]
-                : null,
         ]);
     }
 

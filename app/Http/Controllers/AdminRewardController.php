@@ -28,7 +28,7 @@ class AdminRewardController extends Controller
             ->first();
 
         $rewards = Reward::query()
-            ->with(['campaign:id,title', 'user:id,name,email', 'user.payoutMethod:id,user_id,type,paypal_email'])
+            ->with(['campaign:id,title', 'user:id,name,email'])
             ->when($status, fn ($query) => $query->where('status', $status))
             ->latest()
             ->get()
@@ -43,12 +43,6 @@ class AdminRewardController extends Controller
                 ],
                 'amount' => $reward->amount,
                 'status' => $reward->status,
-                'payout_method' => $reward->user->payoutMethod
-                    ? [
-                        'type' => $reward->user->payoutMethod->type,
-                        'paypal_email' => $reward->user->payoutMethod->paypal_email,
-                    ]
-                    : null,
                 'payout_reference' => $reward->payout_reference,
                 'created_at' => $reward->created_at->toDateTimeString(),
                 'paid_at' => $reward->paid_at?->toDateTimeString(),

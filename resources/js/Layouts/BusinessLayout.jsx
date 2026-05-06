@@ -10,6 +10,24 @@ function IconMenu() {
     );
 }
 
+function IconPanelOpen() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+            <rect x="4" y="4" width="16" height="16" rx="2.5" />
+            <path d="M9 4v16M14 9l3 3-3 3" />
+        </svg>
+    );
+}
+
+function IconPanelClose() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+            <rect x="4" y="4" width="16" height="16" rx="2.5" />
+            <path d="M9 4v16M17 9l-3 3 3 3" />
+        </svg>
+    );
+}
+
 function IconGrid() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
@@ -43,6 +61,26 @@ function IconProfile() {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
             <circle cx="12" cy="8" r="4" />
             <path d="M5 20a7 7 0 0 1 14 0" />
+        </svg>
+    );
+}
+
+function IconWallet() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+            <rect x="3" y="6" width="18" height="13" rx="3" />
+            <path d="M16 12h5" />
+            <circle cx="16" cy="12" r="1" fill="currentColor" />
+            <path d="M6 6V5a2 2 0 0 1 2-2h9" />
+        </svg>
+    );
+}
+
+function IconCard() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+            <rect x="3" y="5" width="18" height="14" rx="2.5" />
+            <path d="M3 10h18M7 15h4" />
         </svg>
     );
 }
@@ -87,8 +125,12 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {} }) {
         { href: '/business/dashboard', label: 'Dashboard', icon: IconGrid },
         { href: '/business/campaigns', label: 'My Campaigns', icon: IconList },
         { href: '/business/campaigns/create', label: 'Create Campaign', icon: IconBolt },
+        { href: '/business/payout-requests', label: 'Payout Requests', icon: IconWallet, matchPrefix: '/business/payout-requests' },
+        { href: '/business/billing', label: 'Billing', icon: IconCard, matchPrefix: '/business/billing' },
         { href: '/business/profile', label: 'Profile', icon: IconProfile, matchPrefix: '/business/profile' },
     ];
+    const toggleLabel = expanded ? 'Collapse menu' : 'Expand menu';
+    const ToggleIcon = expanded ? IconPanelClose : IconPanelOpen;
 
     return (
         <div className="flex h-full flex-col">
@@ -108,11 +150,18 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {} }) {
                 <button
                     type="button"
                     onClick={onToggle}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-800 hover:text-white"
-                    aria-label={expanded ? 'Collapse business sidebar' : 'Expand business sidebar'}
-                    title={expanded ? 'Collapse' : 'Expand'}
+                    className={[
+                        'group relative flex h-9 shrink-0 items-center justify-center rounded-xl border border-slate-700/70 bg-slate-800/70 text-slate-300 transition hover:border-cyan-400/50 hover:bg-slate-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/35',
+                        expanded ? 'gap-2 px-3 text-xs font-semibold' : 'w-9',
+                    ].join(' ')}
+                    aria-label={toggleLabel}
+                    title={toggleLabel}
                 >
-                    <IconMenu />
+                    <ToggleIcon />
+                    {expanded && <span>Collapse</span>}
+                    <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus:opacity-100">
+                        {toggleLabel}
+                    </span>
                 </button>
             </div>
 
@@ -227,8 +276,8 @@ export default function BusinessLayout({ children }) {
 
             <div className={`min-w-0 transition-all duration-200 ${expanded ? 'lg:pl-56' : 'lg:pl-14'}`}>
                 <Header user={auth.user} onMobileMenu={() => setMobileOpen(true)} />
-                <main className="mx-auto max-w-[1500px] px-5 py-4">
-                    <FlashMessages />
+                <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
+                    <FlashMessages className="mb-6" />
                     {children}
                 </main>
             </div>
