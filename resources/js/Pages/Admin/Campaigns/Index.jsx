@@ -68,7 +68,10 @@ export default function Index({ campaigns }) {
                                             </div>
                                         </td>
                                         <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{campaign.category}</td>
-                                        <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-950">{dollars(campaign.reward_amount)}</td>
+                                        <td className="whitespace-nowrap px-5 py-4 text-sm">
+                                            <p className="font-semibold text-slate-950">{dollars(campaign.reward_amount)}</p>
+                                            {campaign.commission_details && <p className="mt-1 max-w-48 truncate text-xs text-slate-500">{campaign.commission_details}</p>}
+                                        </td>
                                         <td className="whitespace-nowrap px-5 py-4">
                                             <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClasses(campaign.status)}`}>
                                                 {campaign.status}

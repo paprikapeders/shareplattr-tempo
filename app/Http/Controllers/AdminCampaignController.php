@@ -21,7 +21,7 @@ class AdminCampaignController extends Controller
     public function index()
     {
         $campaigns = Campaign::query()
-            ->with('brand:id,name,logo')
+            ->with('brand:id,name,logo,logo_url')
             ->latest()
             ->get()
             ->map(fn (Campaign $campaign) => $this->campaignPayload($campaign));
@@ -69,7 +69,7 @@ class AdminCampaignController extends Controller
      */
     public function edit(Campaign $campaign)
     {
-        $campaign->load('brand:id,name,logo');
+        $campaign->load('brand:id,name,logo,logo_url');
 
         return Inertia::render('Admin/Campaigns/Edit', [
             'campaign' => [
@@ -118,6 +118,13 @@ class AdminCampaignController extends Controller
             'description' => ['required', 'string', 'max:2000'],
             'category' => ['required', 'string', 'max:255'],
             'reward_amount' => ['required', 'numeric', 'min:0.01'],
+            'commission_details' => ['nullable', 'string', 'max:2000'],
+            'cookie_duration' => ['nullable', 'string', 'max:255'],
+            'network_platform' => ['nullable', 'string', 'max:255'],
+            'payout_details' => ['nullable', 'string', 'max:2000'],
+            'requirements' => ['nullable', 'string', 'max:4000'],
+            'deliverables' => ['nullable', 'string', 'max:4000'],
+            'participant_instructions' => ['nullable', 'string', 'max:4000'],
             'destination_url' => ['required', 'url', 'max:2048'],
             'campaign_banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
             'status' => ['required', Rule::in($this->statuses())],
@@ -172,11 +179,20 @@ class AdminCampaignController extends Controller
             'id' => $campaign->id,
             'brand_id' => $campaign->brand_id,
             'brand_name' => $campaign->brand?->name ?? $campaign->brand_name,
-            'brand_logo_url' => $campaign->brand?->logo ? Storage::disk('public')->url($campaign->brand->logo) : null,
+            'brand_logo_url' => $campaign->brand?->logo ? Storage::disk('public')->url($campaign->brand->logo) : $campaign->brand?->logo_url,
             'title' => $campaign->title,
             'description' => $campaign->description,
             'category' => $campaign->category,
             'reward_amount' => $campaign->reward_amount,
+            'commission_details' => $campaign->commission_details,
+            'cookie_duration' => $campaign->cookie_duration,
+            'network_platform' => $campaign->network_platform,
+            'payout_details' => $campaign->payout_details,
+            'requirements' => $campaign->requirements,
+            'deliverables' => $campaign->deliverables,
+            'tags' => $campaign->tags ?? [],
+            'assets' => $campaign->assets ?? [],
+            'participant_instructions' => $campaign->participant_instructions,
             'destination_url' => $campaign->destination_url,
             'campaign_banner_url' => $this->publicStorageUrl($campaign->campaign_banner, $campaign->updated_at?->timestamp),
             'status' => $campaign->status,

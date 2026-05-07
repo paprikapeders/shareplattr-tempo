@@ -86,6 +86,62 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                     </div>
                 </div>
 
+                <details className="rounded-lg border border-slate-200 bg-slate-50/70 p-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-slate-800">Imported affiliate metadata</summary>
+
+                    <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700">Commission</label>
+                            <Input
+                                value={data.commission_details}
+                                onChange={(event) => setData('commission_details', event.target.value)}
+                                className="mt-1"
+                            />
+                            {errors.commission_details && <p className="mt-1 text-sm text-rose-600">{errors.commission_details}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700">Cookie Duration</label>
+                            <Input
+                                value={data.cookie_duration}
+                                onChange={(event) => setData('cookie_duration', event.target.value)}
+                                className="mt-1"
+                            />
+                            {errors.cookie_duration && <p className="mt-1 text-sm text-rose-600">{errors.cookie_duration}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700">Network / Platform</label>
+                            <Input
+                                value={data.network_platform}
+                                onChange={(event) => setData('network_platform', event.target.value)}
+                                className="mt-1"
+                            />
+                            {errors.network_platform && <p className="mt-1 text-sm text-rose-600">{errors.network_platform}</p>}
+                        </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        {[
+                            ['payout_details', 'Payout Details'],
+                            ['requirements', 'Requirements'],
+                            ['deliverables', 'Deliverables'],
+                            ['participant_instructions', 'Participant Instructions'],
+                        ].map(([field, label]) => (
+                            <div key={field}>
+                                <label className="block text-sm font-medium text-slate-700">{label}</label>
+                                <textarea
+                                    value={data[field]}
+                                    onChange={(event) => setData(field, event.target.value)}
+                                    rows="3"
+                                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-950/5 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+                                />
+                                {errors[field] && <p className="mt-1 text-sm text-rose-600">{errors[field]}</p>}
+                            </div>
+                        ))}
+                    </div>
+                </details>
+
                 <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
                     <div>
                         <label className="block text-sm font-medium text-slate-700">Destination URL</label>

@@ -42,6 +42,7 @@ function AdminSidebar({ url, onNavigate = () => {} }) {
             items: [
                 { href: '/admin/brands', label: 'Brands', active: url?.startsWith('/admin/brands') },
                 { href: '/admin/campaigns', label: 'Campaigns', active: url?.startsWith('/admin/campaigns') },
+                { href: '/admin/imports', label: 'Bulk Imports', active: url?.startsWith('/admin/imports') },
                 { href: '/admin/conversions/create', label: 'Record Conversion', active: url?.startsWith('/admin/conversions') },
             ],
         },

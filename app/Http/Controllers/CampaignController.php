@@ -18,7 +18,7 @@ class CampaignController extends Controller
         $user = $request->user();
 
         $campaigns = Campaign::query()
-            ->with('brand:id,name,logo,description,business_type,website_url')
+            ->with('brand:id,name,logo,logo_url,description,business_type,website_url,country_region,affiliate_url,contact_info,notes')
             ->with(['referralTokens' => fn ($query) => $query->where('user_id', $user->id)])
             ->withCount(['referralTokens', 'clicks', 'conversions'])
             ->available()
@@ -53,7 +53,7 @@ class CampaignController extends Controller
         }
 
         $campaign->load([
-            'brand:id,name,logo,description,business_type,website_url',
+            'brand:id,name,logo,logo_url,description,business_type,website_url,country_region,affiliate_url,contact_info,notes',
             'referralTokens' => fn ($query) => $query->where('user_id', $request->user()->id),
         ]);
         $campaign->loadCount(['referralTokens', 'clicks', 'conversions']);
@@ -72,14 +72,24 @@ class CampaignController extends Controller
             'id' => $campaign->id,
             'slug' => $campaign->slug,
             'brand_name' => $campaign->brand?->name ?? $campaign->brand_name,
-            'brand_logo_url' => $campaign->brand?->logo ? Storage::disk('public')->url($campaign->brand->logo) : null,
+            'brand_logo_url' => $campaign->brand?->logo ? Storage::disk('public')->url($campaign->brand->logo) : $campaign->brand?->logo_url,
             'brand_industry' => $campaign->brand?->business_type,
             'brand_description' => $campaign->brand?->description,
             'brand_website_url' => $campaign->brand?->website_url,
+            'brand_country_region' => $campaign->brand?->country_region,
             'title' => $campaign->title,
             'description' => $campaign->description,
             'category' => $campaign->category,
             'reward_amount' => $campaign->reward_amount,
+            'commission_details' => $campaign->commission_details,
+            'cookie_duration' => $campaign->cookie_duration,
+            'network_platform' => $campaign->network_platform,
+            'payout_details' => $campaign->payout_details,
+            'requirements' => $campaign->requirements,
+            'deliverables' => $campaign->deliverables,
+            'tags' => $campaign->tags ?? [],
+            'assets' => $campaign->assets ?? [],
+            'participant_instructions' => $campaign->participant_instructions,
             'status' => $campaign->status,
             'expires_at' => $campaign->expires_at?->toIso8601String(),
             'click_count' => (int) ($campaign->clicks_count ?? $campaign->click_count ?? 0),

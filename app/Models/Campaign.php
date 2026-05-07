@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ImportKey;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,10 +15,21 @@ use Illuminate\Support\Str;
     'brand_id',
     'brand_name',
     'title',
+    'normalized_title',
     'slug',
     'description',
     'category',
     'reward_amount',
+    'commission_details',
+    'cookie_duration',
+    'network_platform',
+    'payout_details',
+    'requirements',
+    'deliverables',
+    'tags',
+    'assets',
+    'participant_instructions',
+    'import_metadata',
     'destination_url',
     'campaign_banner',
     'status',
@@ -34,6 +46,10 @@ class Campaign extends Model
             if ($campaign->isDirty('title') || blank($campaign->slug)) {
                 $campaign->slug = static::uniqueSlug($campaign->title, $campaign->id);
             }
+
+            if ($campaign->isDirty('title') || blank($campaign->normalized_title)) {
+                $campaign->normalized_title = ImportKey::normalize($campaign->title);
+            }
         });
     }
 
@@ -46,6 +62,9 @@ class Campaign extends Model
     {
         return [
             'expires_at' => 'datetime',
+            'tags' => 'array',
+            'assets' => 'array',
+            'import_metadata' => 'array',
         ];
     }
 

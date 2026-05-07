@@ -8,7 +8,13 @@ export default function Create({ statuses }) {
         name: '',
         description: '',
         business_type: '',
+        country_region: '',
         website_url: '',
+        domain: '',
+        affiliate_url: '',
+        logo_url: '',
+        contact_info: '',
+        notes: '',
         status: 'active',
         logo: null,
     });

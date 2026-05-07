@@ -57,9 +57,33 @@ export default function Show({ brand }) {
                             </dd>
                         </div>
                         <div>
+                            <dt className="font-semibold text-slate-950">Affiliate URL</dt>
+                            <dd className="mt-1">
+                                {brand.affiliate_url ? (
+                                    <a href={brand.affiliate_url} className="break-all text-slate-700 underline underline-offset-2" target="_blank" rel="noreferrer">
+                                        {brand.affiliate_url}
+                                    </a>
+                                ) : 'Not set'}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt className="font-semibold text-slate-950">Country / Region</dt>
+                            <dd className="mt-1">{brand.country_region ?? 'Not set'}</dd>
+                        </div>
+                        <div>
+                            <dt className="font-semibold text-slate-950">Contact</dt>
+                            <dd className="mt-1">{brand.contact_info ?? 'Not set'}</dd>
+                        </div>
+                        <div>
                             <dt className="font-semibold text-slate-950">Description</dt>
                             <dd className="mt-1">{brand.description ?? 'No description saved.'}</dd>
                         </div>
+                        {brand.notes && (
+                            <div>
+                                <dt className="font-semibold text-slate-950">Import Notes</dt>
+                                <dd className="mt-1">{brand.notes}</dd>
+                            </div>
+                        )}
                     </dl>
                 </Card>
 

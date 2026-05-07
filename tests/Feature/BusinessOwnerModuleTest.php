@@ -311,6 +311,22 @@ class BusinessOwnerModuleTest extends TestCase
         ])->assertRedirect(route('dashboard'));
     }
 
+    public function test_admin_login_ignores_stale_client_intended_url(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin-intended@example.com',
+            'password' => 'password123',
+        ]);
+
+        $this
+            ->withSession(['url.intended' => route('dashboard')])
+            ->post(route('login'), [
+                'email' => $admin->email,
+                'password' => 'password123',
+            ])
+            ->assertRedirect(route('admin.dashboard'));
+    }
+
     public function test_business_owner_with_incomplete_profile_redirects_to_profile_completion(): void
     {
         $owner = User::factory()->businessOwner()->create([

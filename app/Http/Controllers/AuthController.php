@@ -52,7 +52,9 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended($this->redirectRouteFor($request->user()));
+        $request->session()->forget('url.intended');
+
+        return redirect()->to($this->redirectRouteFor($request->user()));
     }
 
     public function destroy(Request $request): RedirectResponse

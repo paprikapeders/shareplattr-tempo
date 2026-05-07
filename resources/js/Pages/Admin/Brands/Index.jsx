@@ -46,7 +46,7 @@ export default function Index({ brands }) {
                             <thead className="bg-slate-50/80">
                                 <tr>
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Brand</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Business Type</th>
+                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Market</th>
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Status</th>
                                     <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase text-slate-500">Campaigns</th>
                                     <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase text-slate-500">Actions</th>
@@ -70,7 +70,10 @@ export default function Index({ brands }) {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-5 py-4 text-sm text-slate-600">{brand.business_type ?? 'Not set'}</td>
+                                        <td className="px-5 py-4 text-sm text-slate-600">
+                                            <p>{brand.business_type ?? 'Not set'}</p>
+                                            {brand.country_region && <p className="mt-1 text-xs text-slate-400">{brand.country_region}</p>}
+                                        </td>
                                         <td className="px-5 py-4">
                                             <span className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${statusClasses(brand.status)}`}>
                                                 {brand.status}

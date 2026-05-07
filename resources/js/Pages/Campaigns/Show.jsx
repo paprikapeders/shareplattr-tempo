@@ -172,6 +172,19 @@ function Step({ number, title, children }) {
     );
 }
 
+function MetadataBlock({ title, children }) {
+    if (!children) {
+        return null;
+    }
+
+    return (
+        <div>
+            <h3 className="text-sm font-bold text-slate-950">{title}</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{children}</p>
+        </div>
+    );
+}
+
 function FacebookIcon({ className = 'h-4 w-4' }) {
     return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M14.2 8.1V6.7c0-.7.5-1.1 1.2-1.1h1.6V2.7c-.8-.1-1.7-.2-2.6-.2-2.6 0-4.4 1.6-4.4 4.5v1.1H7.2v3.2H10v8.2h3.4v-8.2h2.7l.4-3.2h-2.3Z" /></svg>;
 }
@@ -363,6 +376,18 @@ export default function Show({ campaign }) {
                                 </p>
                             </Card>
 
+                            {(campaign.requirements || campaign.deliverables || campaign.participant_instructions || campaign.payout_details) && (
+                                <Card className="p-6">
+                                    <h2 className="text-lg font-bold text-slate-950">Campaign details</h2>
+                                    <div className="mt-5 grid gap-5 md:grid-cols-2">
+                                        <MetadataBlock title="Requirements">{campaign.requirements}</MetadataBlock>
+                                        <MetadataBlock title="Deliverables">{campaign.deliverables}</MetadataBlock>
+                                        <MetadataBlock title="Instructions">{campaign.participant_instructions}</MetadataBlock>
+                                        <MetadataBlock title="Payout notes">{campaign.payout_details}</MetadataBlock>
+                                    </div>
+                                </Card>
+                            )}
+
                             <Card className="p-6">
                                 <h2 className="text-lg font-bold text-slate-950">How it works</h2>
                                 <div className="mt-6 space-y-5">
@@ -463,6 +488,35 @@ export default function Show({ campaign }) {
                                 <p className="mt-4 border-b border-slate-100 pb-4 text-sm leading-6 text-slate-600">
                                     {campaign.brand_description ?? `${campaign.brand_name ?? 'This brand'} is a trusted SharePlattr campaign partner.`}
                                 </p>
+
+                                {(campaign.commission_details || campaign.cookie_duration || campaign.network_platform || campaign.brand_country_region) && (
+                                    <dl className="mt-4 space-y-3 border-b border-slate-100 pb-4 text-sm">
+                                        {campaign.commission_details && (
+                                            <div>
+                                                <dt className="font-semibold text-slate-950">Commission</dt>
+                                                <dd className="mt-1 text-slate-600">{campaign.commission_details}</dd>
+                                            </div>
+                                        )}
+                                        {campaign.cookie_duration && (
+                                            <div>
+                                                <dt className="font-semibold text-slate-950">Cookie duration</dt>
+                                                <dd className="mt-1 text-slate-600">{campaign.cookie_duration}</dd>
+                                            </div>
+                                        )}
+                                        {campaign.network_platform && (
+                                            <div>
+                                                <dt className="font-semibold text-slate-950">Network</dt>
+                                                <dd className="mt-1 text-slate-600">{campaign.network_platform}</dd>
+                                            </div>
+                                        )}
+                                        {campaign.brand_country_region && (
+                                            <div>
+                                                <dt className="font-semibold text-slate-950">Region</dt>
+                                                <dd className="mt-1 text-slate-600">{campaign.brand_country_region}</dd>
+                                            </div>
+                                        )}
+                                    </dl>
+                                )}
 
                                 <div className="mt-4 grid grid-cols-2 gap-3 text-center">
                                     <div>

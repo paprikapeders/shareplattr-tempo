@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
+    libzip-dev \
     libonig-dev \
     libxml2-dev \
     zip \
@@ -13,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     npm
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -31,9 +32,9 @@ WORKDIR /var/www
 COPY . .
 
 # Create temp directory and set permissions
-RUN mkdir -p /var/www/storage/temp \
+RUN mkdir -p /var/www/storage/temp /var/www/storage/framework/cache/laravel-excel \
     && chown -R www-data:www-data /var/www \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/storage/temp \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/storage/temp /var/www/storage/framework/cache/laravel-excel \
     && echo 'env[TMPDIR] = /var/www/storage/temp' >> /usr/local/etc/php-fpm.d/www.conf
 
 # Set TMPDIR environment variable
