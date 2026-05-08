@@ -250,8 +250,14 @@ function Navigation() {
         setIsOpen(false);
     };
 
+    const navSurfaceClass = isOpen
+        ? 'bg-[#c9f4ec] border-b border-[#9fdcd5] shadow-card'
+        : isScrolled
+            ? 'glass-strong border-b border-white/30'
+            : 'bg-transparent';
+
     return (
-        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'glass-strong border-b border-white/30' : 'bg-transparent'}`}>
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navSurfaceClass}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16 lg:h-20">
                     <button
@@ -287,11 +293,11 @@ function Navigation() {
             </div>
 
             {isOpen && (
-                <div className="md:hidden glass-strong border-b border-white/30">
+                <div className="md:hidden bg-[#c9f4ec] border-b border-[#9fdcd5] shadow-card">
                     <div className="px-4 py-4 space-y-1">
                         {['how-it-works', 'why-shareplattr', 'founding-partner', 'faq'].map((id) => (
                             <button
-                                className="block w-full text-left text-sm text-gray-700 hover:text-gray-900 py-3 font-medium capitalize"
+                                className="block w-full text-left text-sm text-gray-900 hover:text-purple-700 py-3 font-semibold capitalize"
                                 key={id}
                                 onClick={() => goTo(id)}
                                 type="button"
