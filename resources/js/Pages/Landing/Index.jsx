@@ -160,7 +160,7 @@ function Button({ children, className = '', type = 'button', ...props }) {
 function Input({ className = '', ...props }) {
     return (
         <input
-            className={`border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-gray-400 focus-visible:border-purple-300 focus-visible:ring-[3px] focus-visible:ring-purple-100 md:text-sm ${className}`}
+            className={`border-input block h-9 w-full max-w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-gray-400 focus-visible:border-purple-300 focus-visible:ring-[3px] focus-visible:ring-purple-100 md:text-sm ${className}`}
             {...props}
         />
     );
@@ -657,8 +657,8 @@ function FooterCTA() {
                     <p className="text-gray-500 text-lg max-w-xl mx-auto">Pick your path and we will notify you the moment doors open.</p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                    <div className="rounded-3xl bg-white border border-gray-100 shadow-card hover:shadow-hover p-8 transition-all duration-300">
+                <div className="grid min-w-0 md:grid-cols-2 gap-6">
+                    <div className="min-w-0 rounded-3xl bg-white border border-gray-100 shadow-card hover:shadow-hover p-6 sm:p-8 transition-all duration-300">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
                                 <IconMail className="w-6 h-6 text-purple-600" />
@@ -673,7 +673,7 @@ function FooterCTA() {
                             </div>
                         ) : (
                             <form
-                                className="space-y-4"
+                                className="min-w-0 space-y-4"
                                 onSubmit={(event) => submitWaitlist({
                                     event,
                                     email: referrerEmail,
@@ -683,7 +683,7 @@ function FooterCTA() {
                                 })}
                             >
                                 <Input
-                                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-300 h-12 rounded-full"
+                                    className="h-12 rounded-full bg-gray-50 px-5 text-gray-900 placeholder:text-gray-400 border-gray-200 focus:border-purple-300"
                                     disabled={referrerState.status === 'loading'}
                                     onChange={(event) => {
                                         setReferrerEmail(event.target.value);
@@ -710,7 +710,7 @@ function FooterCTA() {
                         )}
                     </div>
 
-                    <div className="rounded-3xl bg-white border border-gray-100 shadow-card hover:shadow-hover p-8 transition-all duration-300">
+                    <div className="min-w-0 rounded-3xl bg-white border border-gray-100 shadow-card hover:shadow-hover p-6 sm:p-8 transition-all duration-300">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center">
                                 <IconMail className="w-6 h-6 text-purple-600" />
@@ -725,7 +725,7 @@ function FooterCTA() {
                             </div>
                         ) : (
                             <form
-                                className="space-y-4"
+                                className="min-w-0 space-y-4"
                                 onSubmit={(event) => submitWaitlist({
                                     event,
                                     email: businessEmail,
@@ -735,7 +735,7 @@ function FooterCTA() {
                                 })}
                             >
                                 <Input
-                                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-300 h-12 rounded-full"
+                                    className="h-12 rounded-full bg-gray-50 px-5 text-gray-900 placeholder:text-gray-400 border-gray-200 focus:border-gray-300"
                                     disabled={businessState.status === 'loading'}
                                     onChange={(event) => {
                                         setBusinessEmail(event.target.value);

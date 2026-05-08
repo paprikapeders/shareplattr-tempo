@@ -47,6 +47,12 @@ function AdminSidebar({ url, onNavigate = () => {} }) {
             ],
         },
         {
+            title: 'Growth',
+            items: [
+                { href: '/admin/waitlist', label: 'Waitlist', active: url?.startsWith('/admin/waitlist') },
+            ],
+        },
+        {
             title: 'Payouts',
             items: [
                 { href: '/admin/payout-requests', label: 'Payout Requests', active: url?.startsWith('/admin/payout-requests') },

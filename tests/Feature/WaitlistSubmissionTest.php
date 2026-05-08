@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\WaitlistSubmission;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class WaitlistSubmissionTest extends TestCase
@@ -65,5 +67,38 @@ class WaitlistSubmissionTest extends TestCase
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['email', 'type']);
+    }
+
+    public function test_admin_can_view_waitlist_submissions(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $businessSubmission = WaitlistSubmission::create([
+            'email' => 'business@example.com',
+            'type' => 'business',
+            'source_page' => 'landing',
+        ]);
+        WaitlistSubmission::create([
+            'email' => 'referrer@example.com',
+            'type' => 'referrer',
+            'source_page' => 'landing',
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->get(route('admin.waitlist.index', [
+                'type' => 'business',
+                'search' => 'business',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Waitlist/Index')
+                ->where('filters.type', 'business')
+                ->where('filters.search', 'business')
+                ->where('submissions.0.id', $businessSubmission->id)
+                ->where('submissions.0.email', 'business@example.com')
+                ->where('submissions.0.type', 'business')
+                ->where('submissions.0.source_page', 'landing')
+                ->missing('submissions.1')
+            );
     }
 }

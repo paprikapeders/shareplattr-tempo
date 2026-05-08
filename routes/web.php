@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminBrandController;
 use App\Http\Controllers\AdminImportController;
 use App\Http\Controllers\AdminPayoutRequestController;
 use App\Http\Controllers\AdminRewardController;
+use App\Http\Controllers\AdminWaitlistController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BusinessBillingController;
 use App\Http\Controllers\BusinessCampaignController;
@@ -101,6 +102,7 @@ Route::middleware(['auth', 'admin'])
         Route::get('/imports/export/brands', [AdminImportController::class, 'exportBrands'])->name('imports.export.brands');
         Route::get('/imports/export/campaigns', [AdminImportController::class, 'exportCampaigns'])->name('imports.export.campaigns');
         Route::get('/imports/export/all', [AdminImportController::class, 'exportAll'])->name('imports.export.all');
+        Route::get('/waitlist', [AdminWaitlistController::class, 'index'])->name('waitlist.index');
         Route::get('/campaigns', [AdminCampaignController::class, 'index'])->name('campaigns.index');
         Route::get('/campaigns/create', [AdminCampaignController::class, 'create'])->name('campaigns.create');
         Route::post('/campaigns', [AdminCampaignController::class, 'store'])->name('campaigns.store');
