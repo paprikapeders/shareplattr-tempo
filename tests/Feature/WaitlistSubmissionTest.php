@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\WaitlistWelcomeMail;
 use App\Models\WaitlistSubmission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,6 +34,34 @@ class WaitlistSubmissionTest extends TestCase
             'type' => 'referrer',
             'source_page' => 'landing',
         ]);
+
+        Mail::assertSent(WaitlistWelcomeMail::class, function (WaitlistWelcomeMail $mail) {
+            return $mail->hasTo('newuser@example.com')
+                && $mail->submission->email === 'newuser@example.com'
+                && $mail->submission->type === 'referrer';
+        });
+    }
+
+    public function test_business_waitlist_submission_sends_welcome_email(): void
+    {
+        Mail::fake();
+
+        $this
+            ->postJson(route('waitlist.store'), [
+                'email' => 'Business@Example.com',
+                'type' => 'business',
+                'source_page' => 'landing',
+            ])
+            ->assertCreated()
+            ->assertJson([
+                'status' => 'created',
+            ]);
+
+        Mail::assertSent(WaitlistWelcomeMail::class, function (WaitlistWelcomeMail $mail) {
+            return $mail->hasTo('business@example.com')
+                && $mail->submission->email === 'business@example.com'
+                && $mail->submission->type === 'business';
+        });
     }
 
     public function test_duplicate_waitlist_submission_returns_duplicate_status(): void
@@ -56,6 +85,8 @@ class WaitlistSubmissionTest extends TestCase
             ]);
 
         $this->assertSame(1, WaitlistSubmission::query()->where('email', 'joined@example.com')->where('type', 'business')->count());
+
+        Mail::assertNotSent(WaitlistWelcomeMail::class);
     }
 
     public function test_waitlist_submission_validates_input(): void

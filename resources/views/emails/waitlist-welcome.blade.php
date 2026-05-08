@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <title>You're on the Shareplattr waitlist! 🎉</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: #f4f4f7;
+      font-family: 'Inter', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .email-wrapper {
+      width: 100%;
+      background-color: #f4f4f7;
+      padding: 40px 16px;
+    }
+
+    .email-container {
+      max-width: 580px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    /* ── Header ── */
+    .email-header {
+      background: linear-gradient(160deg, #A8DDD9 0%, #2E7FA8 45%, #0B2C4A 100%);
+      padding: 48px 40px 56px;
+      text-align: center;
+      position: relative;
+    }
+
+    .email-header::after {
+      content: '';
+      display: block;
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 32px;
+      background: #ffffff;
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    }
+
+    .logo {
+      display: inline-block;
+      font-size: 26px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      margin-bottom: 28px;
+      text-decoration: none;
+    }
+
+    .logo span {
+      opacity: 0.75;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .header-emoji {
+      font-size: 56px;
+      display: block;
+      margin-bottom: 16px;
+      line-height: 1;
+    }
+
+    .email-header h1 {
+      font-size: 32px;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+    }
+
+    .email-header h1 span {
+      display: block;
+      font-size: 22px;
+      font-weight: 600;
+      opacity: 0.85;
+      margin-top: 6px;
+    }
+
+    /* ── Body ── */
+    .email-body {
+      padding: 40px 40px 32px;
+    }
+
+    .greeting {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 16px;
+    }
+
+    .email-body p {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #4a4a68;
+      margin-bottom: 16px;
+    }
+
+    /* ── Highlight Box ── */
+    .highlight-box {
+      background: linear-gradient(135deg, #f0e8ff 0%, #ffe8f5 100%);
+      border-left: 4px solid #7B2FF7;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 28px 0;
+    }
+
+    .highlight-box p {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 500;
+      color: #3a1a6e;
+    }
+
+    .highlight-box strong {
+      color: #7B2FF7;
+    }
+
+    /* ── What's Next ── */
+    .whats-next {
+      margin: 28px 0;
+    }
+
+    .whats-next h3 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #9999bb;
+      margin-bottom: 16px;
+    }
+
+    .step-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #7B2FF7, #F72585);
+      font-size: 16px;
+      line-height: 36px;
+      text-align: center;
+    }
+
+    .step-text strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 2px;
+    }
+
+    .step-text span {
+      font-size: 13px;
+      color: #7070a0;
+      line-height: 1.5;
+    }
+
+    /* ── CTA Button ── */
+    .cta-wrap {
+      text-align: center;
+      margin: 32px 0 28px;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #7B2FF7 0%, #F72585 100%);
+      color: #ffffff !important;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 15px 36px;
+      border-radius: 100px;
+      letter-spacing: 0.2px;
+      box-shadow: 0 4px 16px rgba(123, 47, 247, 0.35);
+    }
+
+    .cta-subtext {
+      font-size: 12px;
+      color: #aaaacc;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid #f0f0f8;
+      margin: 28px 0;
+    }
+
+    /* ── Social Share ── */
+    .share-section {
+      text-align: center;
+      padding: 4px 0 8px;
+    }
+
+    .share-section p {
+      font-size: 14px;
+      color: #7070a0;
+      margin-bottom: 14px;
+    }
+
+    .share-links {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .share-link {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 8px 18px;
+      border-radius: 100px;
+      border: 1.5px solid #e0e0f0;
+      color: #5555aa;
+      transition: border-color 0.2s;
+    }
+
+    /* ── Footer ── */
+    .email-footer {
+      background: #f8f8fc;
+      padding: 24px 40px;
+      text-align: center;
+      border-top: 1px solid #ececf8;
+    }
+
+    .email-footer p {
+      font-size: 12px;
+      color: #aaaacc;
+      line-height: 1.6;
+      margin-bottom: 4px;
+    }
+
+    .email-footer a {
+      color: #7B2FF7;
+      text-decoration: none;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .email-body { padding: 32px 24px 24px; }
+      .email-header { padding: 36px 24px 48px; }
+      .email-header h1 { font-size: 26px; }
+      .email-footer { padding: 20px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+
+      <!-- Header -->
+      <div class="email-header">
+        <div class="logo">share<span>plattr</span></div>
+        <div class="badge">🚀 You're in!</div>
+        <span class="header-emoji">🎉</span>
+        <h1>
+          Welcome to the waitlist!
+          <span>Something amazing is coming.</span>
+        </h1>
+      </div>
+
+      <!-- Body -->
+      <div class="email-body">
+
+        <p class="greeting">Hey there, early adopter! 👋</p>
+
+        <p>
+          You just made a seriously great move. We're absolutely thrilled to have you
+          join the <strong>Shareplattr</strong> waitlist — and we can't wait to show
+          you what we've been building.
+        </p>
+
+        <div class="highlight-box">
+          <p>
+            ✅ <strong>You're officially on the list.</strong> We've saved your spot and
+            you'll be among the very first to get access when we go live.
+          </p>
+        </div>
+
+        <p>
+          We're putting the finishing touches on something we truly believe will
+          change the way you share — and we're building it with early supporters
+          like you in mind.
+        </p>
+
+        <!-- What's Next -->
+        <div class="whats-next">
+          <h3>What happens next</h3>
+
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse;">
+            <tr>
+              <td width="36" valign="top" style="width: 36px; vertical-align: top; padding: 0 0 16px 0;">
+                <div class="step-icon" style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #7B2FF7, #F72585); color: #ffffff; font-size: 16px; line-height: 36px; text-align: center;">🔨</div>
+              </td>
+              <td valign="top" style="vertical-align: top; padding: 5px 0 16px 14px; text-align: left;">
+                <strong style="display: block; font-size: 14px; font-weight: 700; color: #1a1a2e; margin: 0 0 4px 0;">We keep building</strong>
+                <span style="display: block; font-size: 13px; color: #7070a0; line-height: 20px;">Our team is heads-down crafting an experience you'll love.</span>
+              </td>
+            </tr>
+            <tr>
+              <td width="36" valign="top" style="width: 36px; vertical-align: top; padding: 0 0 16px 0;">
+                <div class="step-icon" style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #7B2FF7, #F72585); color: #ffffff; font-size: 16px; line-height: 36px; text-align: center;">📬</div>
+              </td>
+              <td valign="top" style="vertical-align: top; padding: 5px 0 16px 14px; text-align: left;">
+                <strong style="display: block; font-size: 14px; font-weight: 700; color: #1a1a2e; margin: 0 0 4px 0;">You get the heads-up first</strong>
+                <span style="display: block; font-size: 13px; color: #7070a0; line-height: 20px;">We'll drop you an email the moment we're ready to launch — before anyone else.</span>
+              </td>
+            </tr>
+            <tr>
+              <td width="36" valign="top" style="width: 36px; vertical-align: top; padding: 0;">
+                <div class="step-icon" style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #7B2FF7, #F72585); color: #ffffff; font-size: 16px; line-height: 36px; text-align: center;">⚡</div>
+              </td>
+              <td valign="top" style="vertical-align: top; padding: 5px 0 0 14px; text-align: left;">
+                <strong style="display: block; font-size: 14px; font-weight: 700; color: #1a1a2e; margin: 0 0 4px 0;">You get early access</strong>
+                <span style="display: block; font-size: 13px; color: #7070a0; line-height: 20px;">As a waitlist member, you'll be first through the door. No waiting in line.</span>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-wrap">
+          <a href="mailto:?subject=You%20have%20to%20check%20out%20Shareplattr!&body=Hey!%0A%0AI%20just%20joined%20the%20Shareplattr%20waitlist%20and%20thought%20you%27d%20love%20it%20too.%0A%0ACheck%20it%20out%20here%3A%20https%3A%2F%2Fwww.shareplattr.com%2F" class="cta-btn">Share with a Friend 💌</a>
+          <p class="cta-subtext">Keep an eye on this email — big news is coming soon.</p>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Share -->
+        <div class="share-section">
+          <p>Know someone who'd love Shareplattr? Spread the word! 🙌</p>
+          <div class="share-links">
+            <a class="share-link" href="https://twitter.com/intent/tweet?text=Just+joined+the+%40shareplattr+waitlist+%E2%80%94+can%27t+wait+to+see+this+go+live!+%F0%9F%9A%80+https%3A%2F%2Fwww.shareplattr.com">𝕏 Twitter</a>
+            <a class="share-link" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fwww.shareplattr.com">LinkedIn</a>
+            <a class="share-link" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.shareplattr.com">Facebook</a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="email-footer">
+        <p>You're receiving this because you signed up at <a href="https://www.shareplattr.com">shareplattr.com</a>.</p>
+        <p>
+          © 2026 Shareplattr. All rights reserved.<br/>
+          <a href="#">Unsubscribe</a> · <a href="#">Privacy Policy</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

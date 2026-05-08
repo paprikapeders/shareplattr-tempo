@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WaitlistWelcomeMail;
 use App\Models\WaitlistSubmission;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -53,12 +54,27 @@ class WaitlistSubmissionController extends Controller
             throw $exception;
         }
 
+        $this->sendWelcomeEmail($submission);
         $this->notifyAdmin($submission);
 
         return response()->json([
             'status' => 'created',
             'message' => 'You are on the list! We will be in touch.',
         ], 201);
+    }
+
+    private function sendWelcomeEmail(WaitlistSubmission $submission): void
+    {
+        try {
+            Mail::to($submission->email)->send(new WaitlistWelcomeMail($submission));
+        } catch (\Throwable $exception) {
+            Log::warning('Waitlist signup saved, but welcome email failed.', [
+                'waitlist_submission_id' => $submission->id,
+                'email' => $submission->email,
+                'type' => $submission->type,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     private function notifyAdmin(WaitlistSubmission $submission): void
