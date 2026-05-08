@@ -22,11 +22,29 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ReferralLinkController;
 use App\Http\Controllers\SimulateConversionController;
+use App\Http\Controllers\WaitlistSubmissionController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Home');
+Route::get('/', function (Request $request) {
+    $user = $request->user();
+
+    if ($user?->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
+
+    if ($user?->isBusinessOwner()) {
+        return redirect()->route(
+            $user->hasCompleteBusinessProfile() ? 'business.dashboard' : 'business.profile.edit',
+        );
+    }
+
+    if ($user) {
+        return redirect()->route('dashboard');
+    }
+
+    return Inertia::render('Landing/Index');
 });
 
 Route::get('/terms-of-use', function () {
@@ -38,6 +56,7 @@ Route::get('/privacy-policy', function () {
 })->name('legal.privacy');
 
 Route::get('/register/success', [RegisterController::class, 'success'])->name('register.success');
+Route::post('/waitlist', [WaitlistSubmissionController::class, 'store'])->name('waitlist.store');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');

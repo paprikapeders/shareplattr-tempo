@@ -275,6 +275,27 @@ class BusinessOwnerModuleTest extends TestCase
             ->assertRedirect(route('admin.campaigns.index'));
     }
 
+    public function test_guest_homepage_renders_landing_page(): void
+    {
+        $this
+            ->get('/')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Landing/Index')
+            );
+    }
+
+    public function test_authenticated_root_redirects_by_role(): void
+    {
+        $admin = User::factory()->admin()->create();
+        [$owner] = $this->businessOwnerWithProfile('Root Owner', 'Root Co');
+        $participant = User::factory()->create();
+
+        $this->actingAs($admin)->get('/')->assertRedirect(route('admin.dashboard'));
+        $this->actingAs($owner)->get('/')->assertRedirect(route('business.dashboard'));
+        $this->actingAs($participant)->get('/')->assertRedirect(route('dashboard'));
+    }
+
     public function test_login_redirects_by_role(): void
     {
         $admin = User::factory()->admin()->create([
