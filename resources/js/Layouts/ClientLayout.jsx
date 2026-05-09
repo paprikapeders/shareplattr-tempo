@@ -97,9 +97,6 @@ function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
         <div className="flex h-full flex-col">
             <div className={`flex items-center ${collapsed ? 'flex-col gap-3' : 'justify-between gap-3'}`}>
                 <Link href="/dashboard" className="flex min-w-0 items-center gap-3 text-white" onClick={onNavigate} aria-label="SharePlattr dashboard" title="SharePlattr">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#08c4c4] text-white">
-                        <LogoIcon />
-                    </span>
                     {!collapsed && <span className="truncate text-sm font-semibold">SharePlattr</span>}
                 </Link>
 
@@ -165,7 +162,7 @@ function MobileSidebarContent({ url, onNavigate = () => {} }) {
             <nav className="mt-7 flex flex-1 flex-col items-center gap-2">
                 {[
                     { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
-                    { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
+                    { href: '/campaigns', label: 'Marketplace', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
                     { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts'), icon: DashboardIconWallet },
                 ].map((item) => {
                     const Icon = item.icon;
