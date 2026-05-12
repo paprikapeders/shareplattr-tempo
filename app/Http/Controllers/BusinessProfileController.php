@@ -42,7 +42,7 @@ class BusinessProfileController extends Controller
             'contact_person_name' => ['required', 'string', 'max:255'],
             'website_url' => ['nullable', 'url', 'max:2048'],
             'phone' => ['nullable', 'string', 'max:50'],
-            'industry' => ['nullable', 'string', 'max:255'],
+            'industry' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);

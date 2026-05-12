@@ -1,5 +1,6 @@
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
+import FieldLabel from '../../../Components/FieldLabel';
 import FileUpload from '../../../Components/FileUpload';
 import Input from '../../../Components/Input';
 import Select from '../../../Components/Select';
@@ -12,33 +13,35 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
             <form onSubmit={onSubmit} className="space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">Title</label>
-                        <Input value={data.title} onChange={(event) => setData('title', event.target.value)} className="mt-1" />
+                        <FieldLabel required>Campaign Title</FieldLabel>
+                        <Input name="title" value={data.title} onChange={(event) => setData('title', event.target.value)} error={Boolean(errors.title)} className="mt-1" />
                         {errors.title && <p className="mt-1 text-sm text-rose-600">{errors.title}</p>}
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">Category</label>
-                        <Input value={data.category} onChange={(event) => setData('category', event.target.value)} className="mt-1" />
+                        <FieldLabel required>Category</FieldLabel>
+                        <Input name="category" value={data.category} onChange={(event) => setData('category', event.target.value)} error={Boolean(errors.category)} className="mt-1" />
                         {errors.category && <p className="mt-1 text-sm text-rose-600">{errors.category}</p>}
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700">Description</label>
+                    <FieldLabel required>Description</FieldLabel>
                     <textarea
+                        name="description"
                         value={data.description}
                         onChange={(event) => setData('description', event.target.value)}
                         rows="4"
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-950/5 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+                        className={`mt-1 w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-950/5 outline-none transition focus:ring-4 ${errors.description ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100' : 'border-slate-200 focus:border-slate-400 focus:ring-slate-100'}`}
+                        aria-invalid={errors.description ? 'true' : undefined}
                     />
                     {errors.description && <p className="mt-1 text-sm text-rose-600">{errors.description}</p>}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-3">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">Reward Type</label>
-                        <Select value={data.reward_type ?? 'flat'} onChange={(event) => setData('reward_type', event.target.value)} className="mt-1">
+                        <FieldLabel required>Reward Type</FieldLabel>
+                        <Select name="reward_type" value={data.reward_type ?? 'flat'} onChange={(event) => setData('reward_type', event.target.value)} error={Boolean(errors.reward_type)} className="mt-1">
                             <option value="flat">Fixed amount ($)</option>
                             <option value="percentage">Percentage (%)</option>
                         </Select>
@@ -46,9 +49,9 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">{isPercentage ? 'Reward Percentage' : 'Reward Amount'}</label>
+                        <FieldLabel required>{isPercentage ? 'Reward Percentage' : 'Reward Amount'}</FieldLabel>
                         <div className="relative mt-1">
-                            <Input type="number" min="0.01" max={isPercentage ? '100' : undefined} step="0.01" value={data.reward_amount} onChange={(event) => setData('reward_amount', event.target.value)} className={isPercentage ? 'pr-9' : ''} />
+                            <Input name="reward_amount" type="number" min="0.01" max={isPercentage ? '100' : undefined} step="0.01" value={data.reward_amount} onChange={(event) => setData('reward_amount', event.target.value)} error={Boolean(errors.reward_amount)} className={isPercentage ? 'pr-9' : ''} />
                             {isPercentage && <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-slate-400">%</span>}
                         </div>
                         <p className="mt-1 text-xs text-slate-500">
@@ -58,23 +61,23 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">Status</label>
-                        <Select value={data.status} onChange={(event) => setData('status', event.target.value)} className="mt-1">
+                        <FieldLabel required>Status</FieldLabel>
+                        <Select name="status" value={data.status} onChange={(event) => setData('status', event.target.value)} error={Boolean(errors.status)} className="mt-1">
                             {statuses.map((status) => <option key={status} value={status}>{status}</option>)}
                         </Select>
                         {errors.status && <p className="mt-1 text-sm text-rose-600">{errors.status}</p>}
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">Expires At</label>
-                        <Input type="date" value={data.expires_at} onChange={(event) => setData('expires_at', event.target.value)} className="mt-1" />
+                        <FieldLabel>Expires At</FieldLabel>
+                        <Input name="expires_at" type="date" value={data.expires_at} onChange={(event) => setData('expires_at', event.target.value)} error={Boolean(errors.expires_at)} className="mt-1" />
                         {errors.expires_at && <p className="mt-1 text-sm text-rose-600">{errors.expires_at}</p>}
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700">Destination URL</label>
-                    <Input type="url" value={data.destination_url} onChange={(event) => setData('destination_url', event.target.value)} className="mt-1" />
+                    <FieldLabel required>Destination URL</FieldLabel>
+                    <Input name="destination_url" type="url" value={data.destination_url} onChange={(event) => setData('destination_url', event.target.value)} error={Boolean(errors.destination_url)} className="mt-1" />
                     {errors.destination_url && <p className="mt-1 text-sm text-rose-600">{errors.destination_url}</p>}
                 </div>
 

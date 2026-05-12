@@ -124,12 +124,13 @@ class ConversionSimulationFlowTest extends TestCase
     private function businessOwnerWithProfile(): array
     {
         $owner = User::factory()->businessOwner()->create();
-        $brand = Brand::create(['name' => 'Demo Business']);
+        $brand = Brand::create(['name' => 'Demo Business', 'business_type' => 'Retail']);
         $profile = BusinessProfile::create([
             'user_id' => $owner->id,
             'brand_id' => $brand->id,
             'company_name' => 'Demo Business',
             'contact_person_name' => $owner->name,
+            'industry' => 'Retail',
         ]);
 
         return [$owner, $profile];

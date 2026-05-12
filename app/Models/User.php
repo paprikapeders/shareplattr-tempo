@@ -115,8 +115,28 @@ class User extends Authenticatable
 
     public function hasCompleteBusinessProfile(): bool
     {
-        return $this->businessProfile
-            && filled($this->businessProfile->company_name)
-            && filled($this->businessProfile->contact_person_name);
+        return $this->missingBusinessProfileFields() === [];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function missingBusinessProfileFields(): array
+    {
+        $profile = $this->businessProfile;
+
+        $fields = [
+            'company_name' => 'Company Name',
+            'contact_person_name' => 'Contact Person',
+            'industry' => 'Industry',
+        ];
+
+        if (! $profile) {
+            return $fields;
+        }
+
+        return collect($fields)
+            ->filter(fn (string $label, string $field) => blank($profile->{$field}))
+            ->all();
     }
 }

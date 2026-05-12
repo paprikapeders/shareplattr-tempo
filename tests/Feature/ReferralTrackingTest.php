@@ -265,13 +265,14 @@ class ReferralTrackingTest extends TestCase
     private function createBusinessOwner(string $companyName = 'Northstar Coffee'): User
     {
         $business = User::factory()->businessOwner()->create();
-        $brand = Brand::create(['name' => $companyName]);
+        $brand = Brand::create(['name' => $companyName, 'business_type' => 'Retail']);
 
         BusinessProfile::create([
             'user_id' => $business->id,
             'brand_id' => $brand->id,
             'company_name' => $companyName,
             'contact_person_name' => $business->name,
+            'industry' => 'Retail',
         ]);
 
         return $business;

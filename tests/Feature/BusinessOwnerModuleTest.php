@@ -646,6 +646,25 @@ class BusinessOwnerModuleTest extends TestCase
         ])->assertRedirect(route('business.profile.edit'));
     }
 
+    public function test_business_profile_gate_lists_missing_fields(): void
+    {
+        $owner = User::factory()->businessOwner()->create();
+        $brand = Brand::create(['name' => 'Incomplete Co']);
+
+        BusinessProfile::create([
+            'user_id' => $owner->id,
+            'brand_id' => $brand->id,
+            'company_name' => 'Incomplete Co',
+            'contact_person_name' => $owner->name,
+        ]);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.campaigns.create'))
+            ->assertRedirect(route('business.profile.edit'))
+            ->assertSessionHas('error', 'Please fill in: Industry.');
+    }
+
     public function test_business_owner_stats_only_include_own_campaign_data(): void
     {
         [$owner, $profile] = $this->businessOwnerWithProfile('Owner One', 'One Co');
@@ -883,12 +902,14 @@ class BusinessOwnerModuleTest extends TestCase
         ]);
         $brand = Brand::create([
             'name' => $companyName,
+            'business_type' => 'Retail',
         ]);
         $profile = BusinessProfile::create([
             'user_id' => $owner->id,
             'brand_id' => $brand->id,
             'company_name' => $companyName,
             'contact_person_name' => $ownerName,
+            'industry' => 'Retail',
         ]);
 
         return [$owner, $profile];

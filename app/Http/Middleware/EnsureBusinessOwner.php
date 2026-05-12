@@ -14,13 +14,15 @@ class EnsureBusinessOwner
 
         abort_unless($user?->isBusinessOwner(), 403);
 
+        $missingProfileFields = $user->missingBusinessProfileFields();
+
         if (
-            ! $user->hasCompleteBusinessProfile()
+            $missingProfileFields !== []
             && ! $request->routeIs('business.profile.edit')
             && ! $request->routeIs('business.profile.update')
         ) {
             return redirect()->route('business.profile.edit')
-                ->with('error', 'Complete your business profile before continuing.');
+                ->with('error', 'Please fill in: '.implode(', ', $missingProfileFields).'.');
         }
 
         return $next($request);
