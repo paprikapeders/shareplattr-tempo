@@ -17,7 +17,68 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $summary = $this->dashboardSummary($request);
 
+        return Inertia::render('Dashboard', [
+            'stats' => $summary['stats'],
+            'referralLinks' => $summary['referralLinks'],
+            'campaignPosts' => $summary['referralLinks']->map(fn (array $link) => [
+                'id' => $link['id'],
+                'campaign_id' => $link['campaign_id'],
+                'campaign_slug' => $link['campaign_slug'],
+                'username' => '@'.str($user->name)->lower()->replace(' ', ''),
+                'title' => $link['campaign_title'],
+                'content' => $link['campaign_description'] ?: 'Your active referral campaign is ready to share with your audience.',
+                'thumbnail_url' => $link['campaign_banner_url'],
+                'clicks_count' => $link['clicks_count'],
+                'unique_clicks_count' => $link['unique_clicks_count'],
+                'conversions_count' => $link['conversions_count'],
+                'created_at' => $link['created_at'],
+            ])->values(),
+            'activities' => $summary['activities'],
+        ]);
+    }
+
+    public function statsSummary(Request $request)
+    {
+        $summary = $this->dashboardSummary($request);
+
+        return response()->json([
+            'stats' => $summary['stats'],
+            'referralLinks' => $summary['referralLinks']->values(),
+            'activities' => $summary['activities'],
+        ]);
+    }
+
+    private function dashboardSummary(Request $request): array
+    {
+        $user = $request->user();
+        $referralLinks = $this->referralLinks($user);
+        $rewardTotals = Reward::query()
+            ->where('user_id', $user->id)
+            ->selectRaw("
+                COALESCE(SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END), 0) as pending_total,
+                COALESCE(SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END), 0) as paid_total
+            ")
+            ->first();
+
+        return [
+            'stats' => [
+                'total_conversions' => $referralLinks->sum('conversions_count'),
+                'total_clicks' => $referralLinks->sum('clicks_count'),
+                'unique_clicks' => $referralLinks->sum('unique_clicks_count'),
+                'total_earned' => $referralLinks->sum('total_earned'),
+                'active_campaigns' => $referralLinks->where('campaign_status', 'active')->count(),
+                'pending_rewards' => (int) $rewardTotals->pending_total,
+                'paid_rewards' => (int) $rewardTotals->paid_total,
+            ],
+            'referralLinks' => $referralLinks,
+            'activities' => $this->activities($user, $referralLinks),
+        ];
+    }
+
+    private function referralLinks($user)
+    {
         $rewardSummaries = Reward::query()
             ->where('user_id', $user->id)
             ->selectRaw('campaign_id, COUNT(*) as conversions_count, COALESCE(SUM(amount), 0) as total_earned')
@@ -25,18 +86,13 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('campaign_id');
 
-        $referralLinks = $user->referralTokens()
+        return $user->referralTokens()
             ->with('campaign:id,brand_id,brand_name,title,slug,description,status,campaign_banner,updated_at')
             ->with('campaign.brand:id,name,logo')
             ->withCount('clicks')
             ->withCount('conversions')
             ->withCount([
-                'clicks as unique_clicks_count' => fn ($query) => $query
-                    ->where(function ($query) {
-                        $query
-                            ->whereNull('flag_reason')
-                            ->orWhere('flag_reason', '!=', 'duplicate');
-                    }),
+                'clicks as unique_clicks_count' => fn ($query) => $query->where('is_flagged', false),
             ])
             ->latest()
             ->get(['id', 'campaign_id', 'token', 'created_at'])
@@ -56,27 +112,17 @@ class DashboardController extends Controller
                     'brand_name' => $campaign->brand?->name ?? $campaign->brand_name,
                     'brand_logo_url' => $campaign->brand?->logo ? Storage::disk('public')->url($campaign->brand->logo) : null,
                     'url' => route('referrals.show', $referralToken->token),
-                    'clicks_count' => $referralToken->clicks_count,
-                    'unique_clicks_count' => $referralToken->unique_clicks_count,
+                    'clicks_count' => (int) $referralToken->clicks_count,
+                    'unique_clicks_count' => (int) $referralToken->unique_clicks_count,
                     'conversions_count' => (int) ($rewardSummary?->conversions_count ?? $referralToken->conversions_count),
                     'total_earned' => (int) ($rewardSummary?->total_earned ?? 0),
                     'created_at' => $referralToken->created_at->toDateTimeString(),
                 ];
             });
+    }
 
-        $totalClicks = $referralLinks->sum('clicks_count');
-        $uniqueClicks = $referralLinks->sum('unique_clicks_count');
-        $totalConversions = $referralLinks->sum('conversions_count');
-        $totalEarned = $referralLinks->sum('total_earned');
-
-        $rewardTotals = Reward::query()
-            ->where('user_id', $user->id)
-            ->selectRaw("
-                COALESCE(SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END), 0) as pending_total,
-                COALESCE(SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END), 0) as paid_total
-            ")
-            ->first();
-
+    private function activities($user, $referralLinks)
+    {
         $recentClicks = Click::query()
             ->where('user_id', $user->id)
             ->with('campaign:id,title')
@@ -118,7 +164,7 @@ class DashboardController extends Controller
                 'tone' => 'link',
             ]);
 
-        $activities = $recentClicks
+        return $recentClicks
             ->concat($recentRewards)
             ->concat($recentLinks)
             ->sortByDesc(fn (array $activity) => $activity['sort_at'])
@@ -129,33 +175,6 @@ class DashboardController extends Controller
                 return $activity;
             })
             ->values();
-
-        return Inertia::render('Dashboard', [
-            'stats' => [
-                'total_conversions' => $totalConversions,
-                'total_clicks' => $totalClicks,
-                'unique_clicks' => $uniqueClicks,
-                'total_earned' => $totalEarned,
-                'active_campaigns' => $referralLinks->where('campaign_status', 'active')->count(),
-                'pending_rewards' => (int) $rewardTotals->pending_total,
-                'paid_rewards' => (int) $rewardTotals->paid_total,
-            ],
-            'referralLinks' => $referralLinks,
-            'campaignPosts' => $referralLinks->map(fn (array $link) => [
-                'id' => $link['id'],
-                'campaign_id' => $link['campaign_id'],
-                'campaign_slug' => $link['campaign_slug'],
-                'username' => '@'.str($user->name)->lower()->replace(' ', ''),
-                'title' => $link['campaign_title'],
-                'content' => $link['campaign_description'] ?: 'Your active referral campaign is ready to share with your audience.',
-                'thumbnail_url' => $link['campaign_banner_url'],
-                'clicks_count' => $link['clicks_count'],
-                'unique_clicks_count' => $link['unique_clicks_count'],
-                'conversions_count' => $link['conversions_count'],
-                'created_at' => $link['created_at'],
-            ])->values(),
-            'activities' => $activities,
-        ]);
     }
 
     private function publicStorageUrl(?string $path, ?int $version = null): ?string

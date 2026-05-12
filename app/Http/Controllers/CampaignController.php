@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Campaign;
 use App\Models\Reward;
+use App\Models\Click;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -127,6 +128,43 @@ class CampaignController extends Controller
         ]);
     }
 
+    public function statsSummary(Request $request, string $campaign)
+    {
+        [$campaign] = $this->resolveCampaign($campaign);
+
+        abort_unless(
+            $campaign && Campaign::query()->available()->whereKey($campaign->id)->exists(),
+            404,
+        );
+
+        $campaign->loadCount(['referralTokens', 'clicks', 'conversions']);
+
+        $tokenIds = $request->user()
+            ->referralTokens()
+            ->where('campaign_id', $campaign->id)
+            ->pluck('id');
+
+        $participantClicks = Click::query()
+            ->whereIn('referral_token_id', $tokenIds);
+
+        $participantConversions = Reward::query()
+            ->where('user_id', $request->user()->id)
+            ->where('campaign_id', $campaign->id);
+
+        return response()->json([
+            'campaign_id' => $campaign->id,
+            'campaign_click_count' => (int) $campaign->click_count,
+            'click_count' => (int) $campaign->click_count,
+            'conversion_count' => (int) ($campaign->conversions_count ?? 0),
+            'participants_count' => (int) ($campaign->referral_tokens_count ?? 0),
+            'participant_clicks_count' => (clone $participantClicks)->count(),
+            'participant_unique_clicks_count' => (clone $participantClicks)->where('is_flagged', false)->count(),
+            'participant_conversions_count' => (clone $participantConversions)->count(),
+            'participant_total_earned' => (int) (clone $participantConversions)->sum('amount'),
+            'source_breakdown' => $this->sourceBreakdown($campaign->id, $tokenIds->all()),
+        ]);
+    }
+
     private function campaignPayload(Campaign $campaign): array
     {
         $token = $campaign->referralTokens->first();
@@ -231,6 +269,28 @@ class CampaignController extends Controller
                 'total_earnings' => (int) $performer->total_earnings,
                 'conversions_count' => (int) $performer->conversions_count,
                 'bar_percent' => (int) round(((int) $performer->total_earnings / $maxEarnings) * 100),
+            ])
+            ->all();
+    }
+
+    private function sourceBreakdown(int $campaignId, array $tokenIds): array
+    {
+        if ($tokenIds === []) {
+            return [];
+        }
+
+        return Click::query()
+            ->where('campaign_id', $campaignId)
+            ->whereIn('referral_token_id', $tokenIds)
+            ->where('is_flagged', false)
+            ->selectRaw("COALESCE(`source`, 'direct') as source, COUNT(*) as clicks")
+            ->groupByRaw("COALESCE(`source`, 'direct')")
+            ->orderByDesc('clicks')
+            ->get()
+            ->map(fn (Click $click) => [
+                'source' => $click->source,
+                'label' => str($click->source)->replace('_', ' ')->title()->toString(),
+                'clicks' => (int) $click->clicks,
             ])
             ->all();
     }

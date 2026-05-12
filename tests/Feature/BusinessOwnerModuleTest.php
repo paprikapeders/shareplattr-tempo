@@ -251,6 +251,114 @@ class BusinessOwnerModuleTest extends TestCase
             );
     }
 
+    public function test_business_campaign_detail_receives_channel_click_stats(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        $participant = User::factory()->create();
+        $campaign = $this->campaignForOwner($owner, $profile);
+        $token = ReferralToken::create([
+            'user_id' => $participant->id,
+            'campaign_id' => $campaign->id,
+            'token' => 'channel-token',
+        ]);
+
+        Click::create([
+            'referral_token_id' => $token->id,
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'ip_address' => '203.0.113.70',
+            'source' => 'facebook',
+            'is_flagged' => false,
+        ]);
+
+        Click::create([
+            'referral_token_id' => $token->id,
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'ip_address' => '203.0.113.71',
+            'source' => 'direct',
+            'is_flagged' => false,
+        ]);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.campaigns.show', $campaign))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Campaigns/Show')
+                ->has('campaign.source_breakdown', 10)
+                ->where('campaign.source_breakdown.0.source', 'facebook')
+                ->where('campaign.source_breakdown.0.label', 'Facebook')
+                ->where('campaign.source_breakdown.0.clicks', 1)
+                ->where('campaign.source_breakdown.9.source', 'direct')
+                ->where('campaign.source_breakdown.9.label', 'Direct / Unknown')
+                ->where('campaign.source_breakdown.9.clicks', 1)
+            );
+    }
+
+    public function test_business_campaign_detail_only_returns_pending_conversions_for_current_campaign(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        [$otherOwner, $otherProfile] = $this->businessOwnerWithProfile('Other Owner', 'Other Co');
+        $participant = User::factory()->create();
+        $campaign = $this->campaignForOwner($owner, $profile);
+        $otherCampaign = $this->campaignForOwner($otherOwner, $otherProfile);
+
+        $pendingConversion = Conversion::create([
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'amount' => 4500,
+            'status' => 'pending',
+        ]);
+
+        Conversion::create([
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'amount' => 2500,
+            'status' => 'verified',
+            'verified_at' => now(),
+        ]);
+
+        Conversion::create([
+            'campaign_id' => $otherCampaign->id,
+            'user_id' => $participant->id,
+            'amount' => 9900,
+            'status' => 'pending',
+        ]);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.campaigns.show', $campaign))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Campaigns/Show')
+                ->has('campaign.pending_conversions', 1)
+                ->where('campaign.pending_conversions.0.id', $pendingConversion->id)
+                ->where('campaign.pending_conversions.0.campaign', $campaign->title)
+                ->where('campaign.pending_conversions.0.amount_display', '$45.00')
+                ->where('campaign.pending_conversions.0.status', 'pending')
+            );
+    }
+
+    public function test_another_business_cannot_see_another_campaign_conversion_queue(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        [$otherOwner] = $this->businessOwnerWithProfile('Other Owner', 'Other Co');
+        $campaign = $this->campaignForOwner($owner, $profile);
+
+        Conversion::create([
+            'campaign_id' => $campaign->id,
+            'user_id' => User::factory()->create()->id,
+            'amount' => 4500,
+            'status' => 'pending',
+        ]);
+
+        $this
+            ->actingAs($otherOwner)
+            ->get(route('business.campaigns.show', $campaign))
+            ->assertForbidden();
+    }
+
     public function test_business_campaign_preview_is_business_only_and_uses_preview_mode(): void
     {
         [$owner, $profile] = $this->businessOwnerWithProfile();

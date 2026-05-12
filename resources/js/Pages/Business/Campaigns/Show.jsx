@@ -3,6 +3,7 @@ import BusinessLayout from '../../../Layouts/BusinessLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
 import { formatReward } from '../../../Support/rewards';
+import usePollingStats from '../../../Support/usePollingStats';
 
 function statusClass(status) {
     if (status === 'active') {
@@ -58,26 +59,101 @@ function DetailItem({ label, children, wide = false }) {
     );
 }
 
-function ReferralSources({ sources = [] }) {
+function ChannelStats({ sources = [] }) {
+    const maxClicks = Math.max(0, ...sources.map((source) => Number(source.clicks) || 0));
+
     return (
         <Card className="p-0">
             <div className="border-b border-slate-100 px-5 py-4">
-                <h2 className="text-sm font-bold text-slate-950">Referral Sources</h2>
+                <h2 className="text-sm font-bold text-slate-950">Clicks by Channel</h2>
             </div>
 
-            <div className="divide-y divide-slate-100">
+            <div className="space-y-4 px-5 py-5">
                 {sources.map((source) => (
-                    <div key={source.source} className="flex items-center justify-between px-5 py-3 text-sm">
-                        <span className="font-medium text-slate-700">{source.label}</span>
-                        <span className="font-bold text-slate-950">{source.clicks}</span>
+                    <div key={source.source} className="grid gap-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)_56px] sm:items-center">
+                        <span className="font-medium text-slate-700">{source.source === 'direct' ? 'Direct / Unknown' : source.label}</span>
+                        <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                            <div
+                                className="h-full rounded-full bg-[#08c4c4] transition-[width] duration-300"
+                                style={{ width: maxClicks > 0 ? `${Math.round(((Number(source.clicks) || 0) / maxClicks) * 100)}%` : '0%' }}
+                            />
+                        </div>
+                        <span className="text-right font-bold text-slate-950">{source.clicks}</span>
                     </div>
                 ))}
+
+                <p className="border-t border-slate-100 pt-4 text-xs font-medium text-slate-400">
+                    Channel attribution is estimated/unavailable until tracking data is available.
+                </p>
             </div>
         </Card>
     );
 }
 
+function ConversionApprovalQueue({ conversions = [] }) {
+    return (
+        <Card className="p-0">
+            <div className="border-b border-slate-100 px-5 py-4">
+                <h2 className="text-sm font-bold text-slate-950">Conversion Approval Queue</h2>
+            </div>
+
+            {conversions.length === 0 ? (
+                <div className="px-5 py-8 text-sm text-slate-500">No conversions waiting for approval.</div>
+            ) : (
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[720px] divide-y divide-slate-100 text-sm">
+                        <thead className="bg-slate-50 text-left text-xs font-bold uppercase text-slate-500">
+                            <tr>
+                                <th className="px-5 py-3">Participant</th>
+                                <th className="px-5 py-3">Campaign</th>
+                                <th className="px-5 py-3">Amount / Reward</th>
+                                <th className="px-5 py-3">Created</th>
+                                <th className="px-5 py-3">Status</th>
+                                <th className="px-5 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {conversions.map((conversion) => (
+                                <tr key={conversion.id}>
+                                    <td className="px-5 py-4">
+                                        <div className="font-semibold text-slate-950">{conversion.participant_name}</div>
+                                        {conversion.participant_email && (
+                                            <div className="mt-0.5 text-xs text-slate-500">{conversion.participant_email}</div>
+                                        )}
+                                    </td>
+                                    <td className="px-5 py-4 text-slate-700">{conversion.campaign}</td>
+                                    <td className="px-5 py-4 text-slate-700">
+                                        <div className="font-semibold text-slate-950">{conversion.amount_display}</div>
+                                        <div className="mt-0.5 text-xs text-slate-500">Reward {conversion.reward_display}</div>
+                                    </td>
+                                    <td className="px-5 py-4 text-slate-600">{conversion.created_at}</td>
+                                    <td className="px-5 py-4">
+                                        <StatusBadge status={conversion.status} />
+                                    </td>
+                                    <td className="px-5 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            <Button type="button" disabled variant="secondary">Approve</Button>
+                                            <Button type="button" disabled variant="secondary">Reject</Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </Card>
+    );
+}
+
 export default function Show({ campaign }) {
+    const { stats: liveSummary, lastUpdatedAt } = usePollingStats(`/business/campaigns/${campaign.id}/stats-summary`, {
+        campaign: {
+            click_count: campaign.click_count,
+            conversion_count: campaign.conversion_count,
+            source_breakdown: campaign.source_breakdown,
+        },
+    });
     const canToggleStatus = ['active', 'paused'].includes(campaign.status);
     const nextStatus = campaign.status === 'active' ? 'paused' : 'active';
     const simulateForm = useForm({
@@ -99,6 +175,10 @@ export default function Show({ campaign }) {
             preserveScroll: true,
         });
     }
+
+    const liveCampaign = liveSummary?.campaign ?? {};
+    const sourceBreakdown = liveSummary?.source_breakdown ?? liveCampaign.source_breakdown ?? campaign.source_breakdown;
+    const pendingConversions = liveCampaign.pending_conversions ?? campaign.pending_conversions ?? [];
 
     return (
         <BusinessLayout>
@@ -130,11 +210,18 @@ export default function Show({ campaign }) {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <MetricCard label="Status"><StatusBadge status={campaign.status} /></MetricCard>
                     <MetricCard label="Reward" value={formatReward(campaign)} />
-                    <MetricCard label="Clicks" value={campaign.click_count ?? 0} />
-                    <MetricCard label="Conversions" value={campaign.conversion_count ?? 0} />
+                    <MetricCard label="Clicks" value={liveCampaign.click_count ?? campaign.click_count ?? 0} />
+                    <MetricCard label="Conversions" value={liveCampaign.conversion_count ?? campaign.conversion_count ?? 0} />
                 </div>
+                {lastUpdatedAt && (
+                    <p className="-mt-3 text-xs font-medium text-slate-400">
+                        Last updated {lastUpdatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                    </p>
+                )}
 
-                <ReferralSources sources={campaign.source_breakdown} />
+                <ChannelStats sources={sourceBreakdown} />
+
+                <ConversionApprovalQueue conversions={pendingConversions} />
 
                 {campaign.can_simulate_conversion && (
                     <Card>

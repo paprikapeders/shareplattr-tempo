@@ -5,6 +5,7 @@ import DashboardLayout from '../Components/DashboardLayout';
 import GeneratedLinksTable from '../Components/GeneratedLinksTable';
 import MetricsCards from '../Components/MetricsCards';
 import ReferralsTable from '../Components/ReferralsTable';
+import usePollingStats from '../Support/usePollingStats';
 
 function clampPage(page, totalPages) {
     if (totalPages === 0) {
@@ -69,6 +70,11 @@ function dollars(cents) {
 }
 
 export default function Dashboard({ stats, referralLinks, activities }) {
+    const { stats: liveSummary, lastUpdatedAt } = usePollingStats('/dashboard/stats-summary', {
+        stats,
+        referralLinks,
+        activities,
+    });
     const [referralFilters, setReferralFilters] = useState({
         status: 'all',
         search: '',
@@ -82,9 +88,12 @@ export default function Dashboard({ stats, referralLinks, activities }) {
     const [referralPage, setReferralPage] = useState(1);
     const [generatedPage, setGeneratedPage] = useState(1);
     const [copiedId, setCopiedId] = useState(null);
+    const liveStats = liveSummary?.stats ?? stats;
+    const liveReferralLinks = liveSummary?.referralLinks ?? referralLinks;
+    const liveActivities = liveSummary?.activities ?? activities;
 
-    const filteredReferrals = useMemo(() => applyFilters(referralLinks, referralFilters), [referralLinks, referralFilters]);
-    const filteredGeneratedLinks = useMemo(() => applyFilters(referralLinks, generatedFilters), [referralLinks, generatedFilters]);
+    const filteredReferrals = useMemo(() => applyFilters(liveReferralLinks, referralFilters), [liveReferralLinks, referralFilters]);
+    const filteredGeneratedLinks = useMemo(() => applyFilters(liveReferralLinks, generatedFilters), [liveReferralLinks, generatedFilters]);
 
     const referralTotalPages = Math.ceil(filteredReferrals.length / referralPageSize);
     const generatedTotalPages = Math.ceil(filteredGeneratedLinks.length / generatedPageSize);
@@ -137,7 +146,12 @@ export default function Dashboard({ stats, referralLinks, activities }) {
         <DashboardLayout>
             <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
                 <div className="min-w-0 space-y-5">
-                    <MetricsCards stats={stats} />
+                    <MetricsCards stats={liveStats} />
+                    {lastUpdatedAt && (
+                        <p className="-mt-3 text-xs font-medium text-slate-400">
+                            Last updated {lastUpdatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                        </p>
+                    )}
 
                     <div className="flex flex-wrap items-center gap-2">
                         <button type="button" className="rounded-full bg-[linear-gradient(90deg,#d8dde9_0%,#c7ccd7_100%)] px-6 py-3 text-[15px] font-semibold text-[#16325f]">
@@ -191,7 +205,7 @@ export default function Dashboard({ stats, referralLinks, activities }) {
                     />
                 </div>
 
-                <ActivityFeed activities={activities} />
+                <ActivityFeed activities={liveActivities} />
             </div>
         </DashboardLayout>
     );

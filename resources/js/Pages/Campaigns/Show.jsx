@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import ClientLayout from '../../Layouts/ClientLayout';
 import BusinessLayout from '../../Layouts/BusinessLayout';
 import { formatReward } from '../../Support/rewards';
+import usePollingStats from '../../Support/usePollingStats';
 
 const DEMO_FALLBACKS = {
     participants: 89,
@@ -225,13 +226,22 @@ export default function Show({ campaign, businessPreview = false }) {
     const [generating, setGenerating] = useState(false);
     const [toast, setToast] = useState(null);
     const Layout = businessPreview ? BusinessLayout : ClientLayout;
+    const statsUrl = businessPreview
+        ? `/business/campaigns/${campaign.id}/stats-summary`
+        : `/campaigns/${campaign.slug ?? campaign.id}/stats-summary`;
+    const { stats: liveStats, lastUpdatedAt } = usePollingStats(statsUrl, {
+        campaign_click_count: campaign.click_count,
+        click_count: campaign.click_count,
+        conversion_count: campaign.conversion_count,
+        participants_count: campaign.participants_count,
+    });
 
     const reward = useMemo(() => formatReward(campaign), [campaign]);
     const remainingDays = daysLeft(campaign.expires_at) ?? DEMO_FALLBACKS.daysLeft;
     const metrics = {
-        participants: campaign.participants_count ?? DEMO_FALLBACKS.participants,
-        clicks: campaign.click_count ?? DEMO_FALLBACKS.clicks,
-        conversions: campaign.conversion_count ?? DEMO_FALLBACKS.conversions,
+        participants: liveStats?.participants_count ?? campaign.participants_count ?? DEMO_FALLBACKS.participants,
+        clicks: liveStats?.click_count ?? liveStats?.campaign?.click_count ?? campaign.click_count ?? DEMO_FALLBACKS.clicks,
+        conversions: liveStats?.conversion_count ?? liveStats?.campaign?.conversion_count ?? campaign.conversion_count ?? DEMO_FALLBACKS.conversions,
     };
 
     const referralUrl = (source = 'copy') => {
@@ -363,6 +373,11 @@ export default function Show({ campaign, businessPreview = false }) {
                                 <StatCard label="Total Clicks" value={compactNumber(metrics.clicks)} helper="this campaign" />
                                 <StatCard label="Conversions" value={metrics.conversions} helper="verified" />
                             </div>
+                            {lastUpdatedAt && (
+                                <p className="-mt-3 text-xs font-medium text-slate-400">
+                                    Last updated {lastUpdatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                                </p>
+                            )}
 
                             <Card className="p-6">
                                 <h2 className="text-lg font-bold text-slate-950">About this campaign</h2>

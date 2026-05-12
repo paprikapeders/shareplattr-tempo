@@ -36,7 +36,7 @@ class BusinessCampaignController extends Controller
         'telegram' => 'Telegram',
         'discord' => 'Discord',
         'copy' => 'Copy',
-        'direct' => 'Direct',
+        'direct' => 'Direct / Unknown',
     ];
 
     public function index(Request $request)
@@ -98,6 +98,7 @@ class BusinessCampaignController extends Controller
             'campaign' => [
                 ...$this->campaignPayload($campaign),
                 'source_breakdown' => $this->sourceBreakdown($campaign),
+                'pending_conversions' => $this->pendingConversionQueue($campaign),
                 'referral_tokens' => ReferralToken::query()
                     ->where('campaign_id', $campaign->id)
                     ->with('user:id,name,email')
@@ -201,43 +202,31 @@ class BusinessCampaignController extends Controller
     {
         $this->authorizeOwner($request, $campaign);
 
-        $clicks = Click::query()->where('campaign_id', $campaign->id);
-        $conversions = Conversion::query()->where('campaign_id', $campaign->id);
-        $totalClicks = (clone $clicks)->count();
-        $totalConversions = (clone $conversions)->count();
+        $summary = $this->statsPayload($campaign);
 
         return Inertia::render('Business/Campaigns/Stats', [
             'campaign' => $this->campaignPayload($campaign),
-            'stats' => [
-                'total_clicks' => $totalClicks,
-                'unique_clicks' => (clone $clicks)->where('is_flagged', false)->count(),
-                'flagged_clicks' => (clone $clicks)->where('is_flagged', true)->count(),
-                'conversions' => $totalConversions,
-                'conversion_rate' => $totalClicks > 0 ? round(($totalConversions / $totalClicks) * 100, 2) : 0,
-                'reward_amount' => $campaign->reward_amount,
-                'total_rewards_generated' => (int) Reward::query()->where('campaign_id', $campaign->id)->sum('amount'),
+            'stats' => $summary['stats'],
+            'recentClicks' => $summary['recentClicks'],
+            'recentConversions' => $summary['recentConversions'],
+        ]);
+    }
+
+    public function statsSummary(Request $request, Campaign $campaign)
+    {
+        $this->authorizeOwner($request, $campaign);
+
+        $summary = $this->statsPayload($campaign);
+
+        return response()->json([
+            ...$summary,
+            'campaign' => [
+                'id' => $campaign->id,
+                'click_count' => (int) $campaign->fresh()->click_count,
+                'conversion_count' => (int) Conversion::query()->where('campaign_id', $campaign->id)->count(),
+                'source_breakdown' => $this->sourceBreakdown($campaign),
+                'pending_conversions' => $this->pendingConversionQueue($campaign),
             ],
-            'recentClicks' => (clone $clicks)
-                ->latest()
-                ->limit(10)
-                ->get()
-                ->map(fn (Click $click) => [
-                    'id' => $click->id,
-                    'ip_address' => $click->ip_address,
-                    'is_flagged' => $click->is_flagged,
-                    'flag_reason' => $click->flag_reason,
-                    'created_at' => $click->created_at->toDateTimeString(),
-                ]),
-            'recentConversions' => (clone $conversions)
-                ->latest()
-                ->limit(10)
-                ->get()
-                ->map(fn (Conversion $conversion) => [
-                    'id' => $conversion->id,
-                    'amount' => $conversion->amount,
-                    'status' => $conversion->status,
-                    'created_at' => $conversion->created_at->toDateTimeString(),
-                ]),
         ]);
     }
 
@@ -457,6 +446,48 @@ class BusinessCampaignController extends Controller
         return '$'.number_format($campaign->reward_amount / 100, 2);
     }
 
+    private function statsPayload(Campaign $campaign): array
+    {
+        $clicks = Click::query()->where('campaign_id', $campaign->id);
+        $conversions = Conversion::query()->where('campaign_id', $campaign->id);
+        $totalClicks = (clone $clicks)->count();
+        $totalConversions = (clone $conversions)->count();
+
+        return [
+            'stats' => [
+                'total_clicks' => $totalClicks,
+                'unique_clicks' => (clone $clicks)->where('is_flagged', false)->count(),
+                'flagged_clicks' => (clone $clicks)->where('is_flagged', true)->count(),
+                'conversions' => $totalConversions,
+                'conversion_rate' => $totalClicks > 0 ? round(($totalConversions / $totalClicks) * 100, 2) : 0,
+                'reward_amount' => $campaign->reward_amount,
+                'total_rewards_generated' => (int) Reward::query()->where('campaign_id', $campaign->id)->sum('amount'),
+            ],
+            'source_breakdown' => $this->sourceBreakdown($campaign),
+            'recentClicks' => (clone $clicks)
+                ->latest()
+                ->limit(10)
+                ->get()
+                ->map(fn (Click $click) => [
+                    'id' => $click->id,
+                    'ip_address' => $click->ip_address,
+                    'is_flagged' => $click->is_flagged,
+                    'flag_reason' => $click->flag_reason,
+                    'created_at' => $click->created_at->toDateTimeString(),
+                ]),
+            'recentConversions' => (clone $conversions)
+                ->latest()
+                ->limit(10)
+                ->get()
+                ->map(fn (Conversion $conversion) => [
+                    'id' => $conversion->id,
+                    'amount' => $conversion->amount,
+                    'status' => $conversion->status,
+                    'created_at' => $conversion->created_at->toDateTimeString(),
+                ]),
+        ];
+    }
+
     private function sourceBreakdown(Campaign $campaign): array
     {
         $counts = Click::query()
@@ -472,6 +503,35 @@ class BusinessCampaignController extends Controller
                 'clicks' => (int) ($counts[$source] ?? 0),
             ])
             ->values()
+            ->all();
+    }
+
+    private function pendingConversionQueue(Campaign $campaign): array
+    {
+        return Conversion::query()
+            ->where('campaign_id', $campaign->id)
+            ->where('status', 'pending')
+            ->with([
+                'user:id,name,email',
+                'referralToken.user:id,name,email',
+            ])
+            ->latest()
+            ->get()
+            ->map(function (Conversion $conversion) use ($campaign) {
+                $owner = $conversion->referralToken?->user ?? $conversion->user;
+
+                return [
+                    'id' => $conversion->id,
+                    'participant_name' => $owner?->name ?? 'Participant',
+                    'participant_email' => $owner?->email,
+                    'campaign' => $campaign->title,
+                    'amount' => $conversion->amount,
+                    'amount_display' => '$'.number_format($conversion->amount / 100, 2),
+                    'reward_display' => $this->rewardDisplay($campaign),
+                    'created_at' => $conversion->created_at?->toDateString(),
+                    'status' => $conversion->status,
+                ];
+            })
             ->all();
     }
 }

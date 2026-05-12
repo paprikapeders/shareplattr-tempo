@@ -77,7 +77,9 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/stats-summary', [DashboardController::class, 'statsSummary'])->name('dashboard.stats-summary');
     Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+    Route::get('/campaigns/{campaign}/stats-summary', [CampaignController::class, 'statsSummary'])->name('campaigns.stats-summary');
     Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->name('campaigns.show');
     Route::post('/campaigns/{campaign}/referral-link', [ReferralLinkController::class, 'store'])
         ->name('campaigns.referral-link.store');
@@ -136,6 +138,7 @@ Route::middleware(['auth', 'business_owner'])
         Route::patch('/campaigns/{campaign}/status', [BusinessCampaignController::class, 'updateStatus'])->name('campaigns.status.update');
         Route::post('/campaigns/{campaign}/simulate-conversion', [SimulateConversionController::class, 'business'])->name('campaigns.simulate-conversion');
         Route::get('/campaigns/{campaign}/preview', [BusinessCampaignController::class, 'preview'])->name('campaigns.preview');
+        Route::get('/campaigns/{campaign}/stats-summary', [BusinessCampaignController::class, 'statsSummary'])->name('campaigns.stats-summary');
         Route::get('/campaigns/{campaign}', [BusinessCampaignController::class, 'show'])->name('campaigns.show');
         Route::get('/campaigns/{campaign}/edit', [BusinessCampaignController::class, 'edit'])->name('campaigns.edit');
         Route::match(['post', 'put'], '/campaigns/{campaign}', [BusinessCampaignController::class, 'update'])->name('campaigns.update');

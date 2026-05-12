@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\BlockedActivity;
+use App\Models\Brand;
+use App\Models\BusinessProfile;
 use App\Models\Campaign;
 use App\Models\Click;
 use App\Models\ReferralToken;
@@ -37,6 +39,87 @@ class ReferralTrackingTest extends TestCase
         $this->assertDatabaseCount('rewards', 0);
     }
 
+    public function test_participant_campaign_stats_summary_returns_updated_click_count_after_referral_visit(): void
+    {
+        [$campaign, $token, $owner] = $this->createReferralToken();
+
+        $this
+            ->withServerVariables(['REMOTE_ADDR' => '203.0.113.11'])
+            ->get(route('referrals.show', ['token' => $token->token, 'source' => 'facebook']))
+            ->assertRedirect($campaign->destination_url);
+
+        $this
+            ->actingAs($owner)
+            ->getJson(route('campaigns.stats-summary', $campaign))
+            ->assertOk()
+            ->assertJsonPath('campaign_id', $campaign->id)
+            ->assertJsonPath('campaign_click_count', 1)
+            ->assertJsonPath('click_count', 1)
+            ->assertJsonPath('participant_clicks_count', 1)
+            ->assertJsonPath('participant_unique_clicks_count', 1)
+            ->assertJsonPath('source_breakdown.0.source', 'facebook')
+            ->assertJsonPath('source_breakdown.0.clicks', 1);
+    }
+
+    public function test_participant_dashboard_stats_summary_returns_updated_click_count_after_referral_visit(): void
+    {
+        [$campaign, $token, $owner] = $this->createReferralToken();
+
+        $this
+            ->withServerVariables(['REMOTE_ADDR' => '203.0.113.12'])
+            ->get(route('referrals.show', $token->token))
+            ->assertRedirect($campaign->destination_url);
+
+        $this
+            ->actingAs($owner)
+            ->getJson(route('dashboard.stats-summary'))
+            ->assertOk()
+            ->assertJsonPath('stats.total_clicks', 1)
+            ->assertJsonPath('stats.unique_clicks', 1)
+            ->assertJsonPath('referralLinks.0.id', $token->id)
+            ->assertJsonPath('referralLinks.0.clicks_count', 1)
+            ->assertJsonPath('referralLinks.0.unique_clicks_count', 1);
+    }
+
+    public function test_business_campaign_stats_summary_returns_updated_click_count_after_referral_visit(): void
+    {
+        $business = $this->createBusinessOwner();
+        [$campaign, $token] = $this->createReferralToken([
+            'business_owner_id' => $business->id,
+        ]);
+
+        $this
+            ->withServerVariables(['REMOTE_ADDR' => '203.0.113.13'])
+            ->get(route('referrals.show', ['token' => $token->token, 'source' => 'telegram']))
+            ->assertRedirect($campaign->destination_url);
+
+        $this
+            ->actingAs($business)
+            ->getJson(route('business.campaigns.stats-summary', $campaign))
+            ->assertOk()
+            ->assertJsonPath('campaign.id', $campaign->id)
+            ->assertJsonPath('campaign.click_count', 1)
+            ->assertJsonPath('stats.total_clicks', 1)
+            ->assertJsonPath('stats.unique_clicks', 1)
+            ->assertJsonPath('source_breakdown.6.source', 'telegram')
+            ->assertJsonPath('source_breakdown.6.clicks', 1)
+            ->assertJsonPath('recentClicks.0.ip_address', '203.0.113.13');
+    }
+
+    public function test_business_campaign_stats_summary_is_only_available_to_campaign_owner(): void
+    {
+        $business = $this->createBusinessOwner('Owner Co');
+        $otherBusiness = $this->createBusinessOwner('Other Co');
+        [$campaign] = $this->createReferralToken([
+            'business_owner_id' => $business->id,
+        ]);
+
+        $this
+            ->actingAs($otherBusiness)
+            ->getJson(route('business.campaigns.stats-summary', $campaign))
+            ->assertForbidden();
+    }
+
     public function test_self_referral_is_blocked(): void
     {
         [$campaign, $token, $owner] = $this->createReferralToken();
@@ -57,6 +140,13 @@ class ReferralTrackingTest extends TestCase
             'user_id' => $owner->id,
             'ip_address' => '203.0.113.20',
         ]);
+
+        $this
+            ->actingAs($owner)
+            ->getJson(route('campaigns.stats-summary', $campaign))
+            ->assertOk()
+            ->assertJsonPath('click_count', 0)
+            ->assertJsonPath('participant_clicks_count', 0);
     }
 
     public function test_duplicate_click_from_same_ip_is_flagged(): void
@@ -170,5 +260,20 @@ class ReferralTrackingTest extends TestCase
         ]);
 
         return [$campaign, $token, $owner];
+    }
+
+    private function createBusinessOwner(string $companyName = 'Northstar Coffee'): User
+    {
+        $business = User::factory()->businessOwner()->create();
+        $brand = Brand::create(['name' => $companyName]);
+
+        BusinessProfile::create([
+            'user_id' => $business->id,
+            'brand_id' => $brand->id,
+            'company_name' => $companyName,
+            'contact_person_name' => $business->name,
+        ]);
+
+        return $business;
     }
 }
