@@ -13,9 +13,10 @@ export default function CampaignSearchBar({
     keyword,
     onCategoryChange,
     onKeywordChange,
+    onSubmit,
 }) {
     return (
-        <div className="mx-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] sm:h-12 sm:flex-row sm:items-center sm:rounded-full">
+        <form onSubmit={onSubmit} className="mx-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] sm:h-12 sm:flex-row sm:items-center sm:rounded-full">
             <div className="sm:w-[170px]">
                 <select
                     value={category}
@@ -42,12 +43,12 @@ export default function CampaignSearchBar({
             </div>
 
             <button
-                type="button"
+                type="submit"
                 className="flex h-12 w-full shrink-0 items-center justify-center bg-[#08c4c4] text-white transition hover:bg-[#08b4b4] sm:w-16"
                 aria-label="Search campaigns"
             >
                 <SearchIcon />
             </button>
-        </div>
+        </form>
     );
 }

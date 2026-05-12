@@ -5,6 +5,8 @@ import Input from '../../../Components/Input';
 import Select from '../../../Components/Select';
 
 export default function Form({ data, setData, errors, processing, statuses, onSubmit, submitLabel }) {
+    const isPercentage = data.reward_type === 'percentage';
+
     return (
         <Card className="max-w-3xl p-6">
             <form onSubmit={onSubmit} className="space-y-5">
@@ -35,8 +37,23 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
 
                 <div className="grid gap-4 sm:grid-cols-3">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">Reward Amount</label>
-                        <Input type="number" min="0.01" step="0.01" value={data.reward_amount} onChange={(event) => setData('reward_amount', event.target.value)} className="mt-1" />
+                        <label className="block text-sm font-medium text-slate-700">Reward Type</label>
+                        <Select value={data.reward_type ?? 'flat'} onChange={(event) => setData('reward_type', event.target.value)} className="mt-1">
+                            <option value="flat">Fixed amount ($)</option>
+                            <option value="percentage">Percentage (%)</option>
+                        </Select>
+                        {errors.reward_type && <p className="mt-1 text-sm text-rose-600">{errors.reward_type}</p>}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700">{isPercentage ? 'Reward Percentage' : 'Reward Amount'}</label>
+                        <div className="relative mt-1">
+                            <Input type="number" min="0.01" max={isPercentage ? '100' : undefined} step="0.01" value={data.reward_amount} onChange={(event) => setData('reward_amount', event.target.value)} className={isPercentage ? 'pr-9' : ''} />
+                            {isPercentage && <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-slate-400">%</span>}
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">
+                            {isPercentage ? 'Enter the conversion reward percentage.' : 'Enter the fixed USD amount paid per conversion.'}
+                        </p>
                         {errors.reward_amount && <p className="mt-1 text-sm text-rose-600">{errors.reward_amount}</p>}
                     </div>
 

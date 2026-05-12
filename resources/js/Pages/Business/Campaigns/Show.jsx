@@ -2,10 +2,7 @@ import { Link, router, useForm } from '@inertiajs/react';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
-
-function dollars(cents) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((cents ?? 0) / 100);
-}
+import { formatReward } from '../../../Support/rewards';
 
 function statusClass(status) {
     if (status === 'active') {
@@ -120,6 +117,7 @@ export default function Show({ campaign }) {
 
                     <div className="flex flex-wrap items-center gap-2">
                         <Button as={Link} href={`/business/campaigns/${campaign.id}/edit`} variant="secondary">Edit</Button>
+                        <Button as={Link} href={campaign.business_preview_url ?? `/business/campaigns/${campaign.id}/preview`} variant="secondary">View Campaign</Button>
                         <Button as={Link} href={`/business/campaigns/${campaign.id}/stats`}>Stats</Button>
                         {canToggleStatus && (
                             <Button type="button" onClick={updateStatus} variant="secondary">
@@ -131,7 +129,7 @@ export default function Show({ campaign }) {
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <MetricCard label="Status"><StatusBadge status={campaign.status} /></MetricCard>
-                    <MetricCard label="Reward" value={dollars(campaign.reward_amount)} />
+                    <MetricCard label="Reward" value={formatReward(campaign)} />
                     <MetricCard label="Clicks" value={campaign.click_count ?? 0} />
                     <MetricCard label="Conversions" value={campaign.conversion_count ?? 0} />
                 </div>

@@ -49,9 +49,18 @@ class ConversionRewardService
             [
                 'user_id' => $conversion->user_id,
                 'campaign_id' => $conversion->campaign_id,
-                'amount' => $campaign->reward_amount,
+                'amount' => $this->rewardAmountFor($campaign, $conversion),
                 'status' => 'pending',
             ],
         );
+    }
+
+    private function rewardAmountFor(Campaign $campaign, Conversion $conversion): int
+    {
+        if (($campaign->reward_type ?? 'flat') === 'percentage') {
+            return (int) round($conversion->amount * $campaign->reward_amount / 10000);
+        }
+
+        return (int) $campaign->reward_amount;
     }
 }

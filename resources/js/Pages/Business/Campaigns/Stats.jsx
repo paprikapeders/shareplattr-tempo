@@ -1,4 +1,5 @@
 import BusinessLayout from '../../../Layouts/BusinessLayout';
+import { formatReward } from '../../../Support/rewards';
 
 function dollars(cents) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((cents ?? 0) / 100);
@@ -42,7 +43,7 @@ export default function Stats({ campaign, stats, recentClicks, recentConversions
                     <Stat label="Flagged Clicks" value={stats.flagged_clicks} />
                     <Stat label="Conversions" value={stats.conversions} />
                     <Stat label="Conversion Rate" value={`${stats.conversion_rate}%`} />
-                    <Stat label="Reward Amount" value={dollars(stats.reward_amount)} />
+                    <Stat label="Reward Amount" value={formatReward(campaign)} />
                     <Stat label="Rewards Generated" value={dollars(stats.total_rewards_generated)} />
                 </div>
 

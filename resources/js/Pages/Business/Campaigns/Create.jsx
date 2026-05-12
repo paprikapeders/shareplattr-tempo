@@ -8,6 +8,7 @@ export default function Create({ statuses }) {
         title: '',
         description: '',
         category: '',
+        reward_type: 'flat',
         reward_amount: '',
         destination_url: '',
         campaign_banner: null,

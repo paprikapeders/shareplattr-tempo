@@ -135,6 +135,7 @@ Route::middleware(['auth', 'business_owner'])
         Route::post('/campaigns', [BusinessCampaignController::class, 'store'])->name('campaigns.store');
         Route::patch('/campaigns/{campaign}/status', [BusinessCampaignController::class, 'updateStatus'])->name('campaigns.status.update');
         Route::post('/campaigns/{campaign}/simulate-conversion', [SimulateConversionController::class, 'business'])->name('campaigns.simulate-conversion');
+        Route::get('/campaigns/{campaign}/preview', [BusinessCampaignController::class, 'preview'])->name('campaigns.preview');
         Route::get('/campaigns/{campaign}', [BusinessCampaignController::class, 'show'])->name('campaigns.show');
         Route::get('/campaigns/{campaign}/edit', [BusinessCampaignController::class, 'edit'])->name('campaigns.edit');
         Route::match(['post', 'put'], '/campaigns/{campaign}', [BusinessCampaignController::class, 'update'])->name('campaigns.update');

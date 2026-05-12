@@ -1,6 +1,8 @@
 import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import ClientLayout from '../../Layouts/ClientLayout';
+import BusinessLayout from '../../Layouts/BusinessLayout';
+import { formatReward } from '../../Support/rewards';
 
 const DEMO_FALLBACKS = {
     participants: 89,
@@ -10,13 +12,6 @@ const DEMO_FALLBACKS = {
     brandReach: '50k+',
     brandRating: '4.7',
 };
-
-function currency(cents = 0) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(cents / 100);
-}
 
 function compactNumber(value) {
     return new Intl.NumberFormat('en-US', {
@@ -135,7 +130,6 @@ function Hero({ campaign, reward, remainingDays }) {
                         Active
                     </Pill>
                     <Pill className="bg-white/18 ring-1 ring-white/25">
-                        <span aria-hidden="true">$</span>
                         {reward} / conversion
                     </Pill>
                     <Pill className="bg-white/18 ring-1 ring-white/25">
@@ -226,12 +220,13 @@ function ShareButton({ label, source, icon: Icon, onClick }) {
     );
 }
 
-export default function Show({ campaign }) {
+export default function Show({ campaign, businessPreview = false }) {
     const [copied, setCopied] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [toast, setToast] = useState(null);
+    const Layout = businessPreview ? BusinessLayout : ClientLayout;
 
-    const reward = useMemo(() => currency(campaign.reward_amount), [campaign.reward_amount]);
+    const reward = useMemo(() => formatReward(campaign), [campaign]);
     const remainingDays = daysLeft(campaign.expires_at) ?? DEMO_FALLBACKS.daysLeft;
     const metrics = {
         participants: campaign.participants_count ?? DEMO_FALLBACKS.participants,
@@ -340,13 +335,13 @@ export default function Show({ campaign }) {
     ];
 
     return (
-        <ClientLayout>
+        <Layout>
             <Toast message={toast} />
 
             <div className="-mx-4 -mt-6 bg-[#f8fafc] sm:-mx-6 lg:-mx-8">
                 <div className="border-b border-slate-200/80 bg-white px-4 py-4 sm:px-6 lg:px-8">
                     <div className="flex flex-wrap items-center gap-3 text-sm">
-                        <Link href="/campaigns" className="flex items-center gap-2 font-medium text-slate-600 transition hover:text-slate-950">
+                        <Link href={businessPreview ? `/business/campaigns/${campaign.id}` : '/campaigns'} className="flex items-center gap-2 font-medium text-slate-600 transition hover:text-slate-950">
                             <span aria-hidden="true">&lsaquo;</span>
                             Back
                         </Link>
@@ -417,16 +412,18 @@ export default function Show({ campaign }) {
                                 <p className="mt-6 text-4xl font-extrabold tracking-tight text-slate-950">{reward}</p>
                                 <p className="mt-2 text-sm text-slate-400">earned per verified conversion</p>
 
-                                <button
-                                    type="button"
-                                    onClick={generateLink}
-                                    disabled={generating}
-                                    className="mt-6 h-12 w-full rounded-xl bg-gradient-to-r from-violet-500 to-purple-700 px-4 text-sm font-extrabold text-white shadow-sm transition hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                    {generating ? 'Generating...' : campaign.referral_url ? (copied ? 'Copied!' : 'Copy My Link') : 'Join & Get My Link'}
-                                </button>
+                                {!businessPreview && (
+                                    <button
+                                        type="button"
+                                        onClick={generateLink}
+                                        disabled={generating}
+                                        className="mt-6 h-12 w-full rounded-xl bg-gradient-to-r from-violet-500 to-purple-700 px-4 text-sm font-extrabold text-white shadow-sm transition hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                        {generating ? 'Generating...' : campaign.referral_url ? (copied ? 'Copied!' : 'Copy My Link') : 'Join & Get My Link'}
+                                    </button>
+                                )}
 
-                                {campaign.referral_url && (
+                                {!businessPreview && campaign.referral_url && (
                                     <div className="mt-4 space-y-4">
                                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left">
                                             <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Your referral link</p>
@@ -472,7 +469,9 @@ export default function Show({ campaign }) {
                                     </div>
                                 )}
 
-                                <p className="mt-6 text-xs font-medium text-slate-400">Free to join &middot; No minimums required</p>
+                                <p className="mt-6 text-xs font-medium text-slate-400">
+                                    {businessPreview ? 'Business preview - participant actions hidden' : 'Free to join - No minimums required'}
+                                </p>
                             </Card>
 
                             <Card className="p-5">
@@ -530,14 +529,16 @@ export default function Show({ campaign }) {
                                 </div>
                             </Card>
 
-                            <button type="button" className="mx-auto flex items-center gap-2 text-xs font-medium text-slate-400 transition hover:text-slate-600">
-                                <span aria-hidden="true">!</span>
-                                Report this campaign
-                            </button>
+                            {!businessPreview && (
+                                <button type="button" className="mx-auto flex items-center gap-2 text-xs font-medium text-slate-400 transition hover:text-slate-600">
+                                    <span aria-hidden="true">!</span>
+                                    Report this campaign
+                                </button>
+                            )}
                         </aside>
                     </div>
                 </div>
             </div>
-        </ClientLayout>
+        </Layout>
     );
 }

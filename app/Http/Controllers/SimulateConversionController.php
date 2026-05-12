@@ -54,7 +54,7 @@ class SimulateConversionController extends Controller
         $this->conversions->recordVerifiedConversion(
             $campaign,
             $participant,
-            (int) $campaign->reward_amount,
+            $campaign->reward_type === 'percentage' ? 10000 : (int) $campaign->reward_amount,
             $token,
             'Simulated conversion for MVP testing',
         );

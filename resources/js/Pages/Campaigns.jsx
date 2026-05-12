@@ -1,30 +1,9 @@
-import { useMemo, useState } from 'react';
+import { router } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
 import CampaignCard from '../Components/CampaignCard';
 import CampaignSearchBar from '../Components/CampaignSearchBar';
 import EmptyState from '../Components/EmptyState';
 import ClientLayout from '../Layouts/ClientLayout';
-
-function campaignMatches(campaign, category, normalizedKeyword) {
-    const matchesCategory = category === 'all' || campaign.category === category;
-
-    if (!matchesCategory) {
-        return false;
-    }
-
-    if (!normalizedKeyword) {
-        return true;
-    }
-
-    return [
-        campaign.brand_name,
-        campaign.title,
-        campaign.description,
-        campaign.category,
-        campaign.brand_industry,
-    ]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalizedKeyword));
-}
 
 function SectionHeader({ title, subtitle, onSeeAll }) {
     return (
@@ -54,15 +33,40 @@ function CampaignGrid({ campaigns }) {
     );
 }
 
-export default function Campaigns({ campaigns, categories }) {
-    const [category, setCategory] = useState('all');
-    const [keyword, setKeyword] = useState('');
+export default function Campaigns({ campaigns, searchResults = [], categories, filters = {} }) {
+    const [category, setCategory] = useState(filters.category ?? 'all');
+    const [keyword, setKeyword] = useState(filters.search ?? '');
 
-    const visibleCampaigns = useMemo(() => {
-        const normalizedKeyword = keyword.trim().toLowerCase();
+    const activeSearch = (filters.search ?? '').trim();
+    const hasActiveSearch = activeSearch.length > 0;
+    const visibleCampaigns = hasActiveSearch ? searchResults : campaigns;
 
-        return campaigns.filter((campaign) => campaignMatches(campaign, category, normalizedKeyword));
-    }, [campaigns, category, keyword]);
+    useEffect(() => {
+        setCategory(filters.category ?? 'all');
+        setKeyword(filters.search ?? '');
+    }, [filters.category, filters.search]);
+
+    const submitSearch = (event, nextCategory = category) => {
+        event?.preventDefault();
+
+        router.get('/campaigns', {
+            search: keyword.trim() || undefined,
+            category: nextCategory === 'all' ? undefined : nextCategory,
+        }, {
+            replace: true,
+        });
+    };
+
+    const changeCategory = (value) => {
+        setCategory(value);
+
+        router.get('/campaigns', {
+            search: keyword.trim() || undefined,
+            category: value === 'all' ? undefined : value,
+        }, {
+            replace: true,
+        });
+    };
 
     const topPayingCampaigns = useMemo(
         () => [...visibleCampaigns].sort((a, b) => b.reward_amount - a.reward_amount),
@@ -72,6 +76,9 @@ export default function Campaigns({ campaigns, categories }) {
     const resetFilters = () => {
         setCategory('all');
         setKeyword('');
+        router.get('/campaigns', {}, {
+            replace: true,
+        });
     };
 
     return (
@@ -90,8 +97,9 @@ export default function Campaigns({ campaigns, categories }) {
                             category={category}
                             categories={categories}
                             keyword={keyword}
-                            onCategoryChange={setCategory}
+                            onCategoryChange={changeCategory}
                             onKeywordChange={setKeyword}
+                            onSubmit={submitSearch}
                         />
                     </div>
                 </section>
@@ -102,6 +110,11 @@ export default function Campaigns({ campaigns, categories }) {
                             Try another category or keyword, or check back when new campaigns are active.
                         </EmptyState>
                     </div>
+                ) : hasActiveSearch ? (
+                    <section className="mt-10">
+                        <SectionHeader title={`Search results for: ${activeSearch}`} subtitle="Matching available campaigns" onSeeAll={resetFilters} />
+                        <CampaignGrid campaigns={searchResults} />
+                    </section>
                 ) : (
                     <>
                         <section className="mt-10">

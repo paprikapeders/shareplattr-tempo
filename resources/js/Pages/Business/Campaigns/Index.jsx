@@ -4,10 +4,7 @@ import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
 import EmptyState from '../../../Components/EmptyState';
 import PageHeader from '../../../Components/PageHeader';
-
-function dollars(cents) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
-}
+import { formatReward } from '../../../Support/rewards';
 
 export default function Index({ campaigns }) {
     return (
@@ -39,7 +36,7 @@ export default function Index({ campaigns }) {
                                             <p className="text-xs text-slate-500">{campaign.category}</p>
                                         </td>
                                         <td className="px-5 py-4 text-sm text-slate-600">{campaign.status}</td>
-                                        <td className="px-5 py-4 text-sm font-semibold text-slate-950">{dollars(campaign.reward_amount)}</td>
+                                        <td className="px-5 py-4 text-sm font-semibold text-slate-950">{formatReward(campaign)}</td>
                                         <td className="px-5 py-4 text-right text-sm text-slate-600">{campaign.click_count}</td>
                                         <td className="px-5 py-4">
                                             <div className="flex justify-end gap-2">

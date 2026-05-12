@@ -1,6 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import BusinessLayout from '../../Layouts/BusinessLayout';
+import { formatReward } from '../../Support/rewards';
 
 function dollars(cents) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((cents ?? 0) / 100);
@@ -98,7 +99,7 @@ function CampaignRow({ campaign, index, maxClicks }) {
                     <span className="hidden text-xs text-slate-400 lg:inline">- Created {campaign.created_at}</span>
                     {campaign.expires_at && <span className="hidden text-xs text-slate-400 xl:inline">- Expires {campaign.expires_at}</span>}
                 </div>
-                <p className="mt-1 truncate text-[11px] text-slate-400">{shortUrl(campaign.destination_url)} - Reward {dollars(campaign.reward_amount)}</p>
+                <p className="mt-1 truncate text-[11px] text-slate-400">{shortUrl(campaign.destination_url)} - Reward {formatReward(campaign)}</p>
                 <div className="mt-2 flex items-center gap-2">
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
                         <div className={`h-full rounded-full ${progressColor(index)}`} style={{ width: `${progress}%` }} />
@@ -284,7 +285,7 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
                                             <td className="px-5 py-4 text-right text-slate-700">{campaign.unique_clicks}</td>
                                             <td className="px-5 py-4 text-right text-slate-700">{campaign.conversions}</td>
                                             <td className="px-5 py-4 text-right text-slate-700">{campaign.conversion_rate}%</td>
-                                            <td className="px-5 py-4 text-right text-slate-700">{dollars(campaign.reward_amount)}</td>
+                                            <td className="px-5 py-4 text-right text-slate-700">{formatReward(campaign)}</td>
                                             <td className="px-5 py-4 text-right font-medium text-slate-700">{dollars(campaign.rewards_generated)}</td>
                                             <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(campaign.status)}`}>{statusLabel(campaign.status)}</span></td>
                                             <td className="px-5 py-4"><Actions campaign={campaign} /></td>

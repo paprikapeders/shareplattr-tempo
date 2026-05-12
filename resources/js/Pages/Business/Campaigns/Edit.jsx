@@ -8,6 +8,7 @@ export default function Edit({ campaign, statuses }) {
         title: campaign.title,
         description: campaign.description ?? '',
         category: campaign.category ?? '',
+        reward_type: campaign.reward_type ?? 'flat',
         reward_amount: campaign.reward_amount_dollars,
         destination_url: campaign.destination_url,
         campaign_banner: null,

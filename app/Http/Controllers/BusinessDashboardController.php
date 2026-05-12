@@ -117,6 +117,7 @@ class BusinessDashboardController extends Controller
             'flagged_clicks' => (int) ($campaign->flagged_clicks_count ?? 0),
             'conversions' => $conversions,
             'conversion_rate' => $clicks > 0 ? round(($conversions / $clicks) * 100, 2) : 0,
+            'reward_type' => $campaign->reward_type ?? 'flat',
             'reward_amount' => $campaign->reward_amount,
             'rewards_generated' => (int) ($campaign->rewards_generated ?? 0),
             'pending_rewards_generated' => (int) ($campaign->pending_rewards_generated ?? 0),

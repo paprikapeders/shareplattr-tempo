@@ -13,6 +13,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
@@ -73,7 +74,7 @@ class BusinessCampaignController extends Controller
                 'business_owner_id' => $request->user()->id,
                 'brand_id' => $profile->brand_id,
                 'brand_name' => $profile->company_name,
-                'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
+                'reward_amount' => $this->storedRewardAmount($validated['reward_type'], $validated['reward_amount']),
                 'campaign_banner' => $bannerPath,
             ]);
         } catch (QueryException $exception) {
@@ -113,6 +114,22 @@ class BusinessCampaignController extends Controller
         ]);
     }
 
+    public function preview(Request $request, Campaign $campaign)
+    {
+        $this->authorizeOwner($request, $campaign);
+
+        $campaign->load([
+            'brand:id,name,logo,logo_url,description,business_type,website_url,country_region,affiliate_url,contact_info,notes',
+        ]);
+        $campaign->loadCount(['referralTokens', 'clicks', 'conversions']);
+
+        return Inertia::render('Campaigns/Show', [
+            'campaign' => $this->clientCampaignPayload($campaign),
+            'topPerformers' => [],
+            'businessPreview' => true,
+        ]);
+    }
+
     public function edit(Request $request, Campaign $campaign)
     {
         $this->authorizeOwner($request, $campaign);
@@ -120,7 +137,7 @@ class BusinessCampaignController extends Controller
         return Inertia::render('Business/Campaigns/Edit', [
             'campaign' => [
                 ...$this->campaignPayload($campaign),
-                'reward_amount_dollars' => number_format($campaign->reward_amount / 100, 2, '.', ''),
+                'reward_amount_dollars' => $this->editableRewardAmount($campaign),
                 'expires_at' => $campaign->expires_at?->format('Y-m-d'),
             ],
             'statuses' => $this->statuses(),
@@ -143,7 +160,7 @@ class BusinessCampaignController extends Controller
             $campaign->update([
                 ...$validated,
                 'business_owner_id' => $request->user()->id,
-                'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
+                'reward_amount' => $this->storedRewardAmount($validated['reward_type'], $validated['reward_amount']),
                 'campaign_banner' => $bannerPath,
             ]);
         } catch (QueryException $exception) {
@@ -231,10 +248,15 @@ class BusinessCampaignController extends Controller
 
     private function validatedCampaign(Request $request, int $brandId, ?Campaign $campaign = null): array
     {
+        $request->merge([
+            'reward_type' => $request->input('reward_type', 'flat'),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:2000'],
             'category' => ['required', 'string', 'max:255'],
+            'reward_type' => ['required', Rule::in(['flat', 'percentage'])],
             'reward_amount' => ['required', 'numeric', 'min:0.01'],
             'destination_url' => ['required', 'url', 'max:2048'],
             'campaign_banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
@@ -249,12 +271,19 @@ class BusinessCampaignController extends Controller
 
             $data = $validator->getData();
 
+            if (($data['reward_type'] ?? 'flat') === 'percentage' && (float) ($data['reward_amount'] ?? 0) > 100) {
+                $validator->errors()->add('reward_amount', 'The reward percentage must not be greater than 100.');
+            }
+
             if ($this->campaignTitleExists($brandId, $data['title'], $campaign?->id)) {
                 $validator->errors()->add('title', self::DUPLICATE_TITLE_MESSAGE);
             }
         });
 
-        return $validator->validate();
+        $validated = $validator->validate();
+        $validated['expires_at'] = $this->normalizeExpiryDate($validated['expires_at'] ?? null);
+
+        return $validated;
     }
 
     private function campaignTitleExists(int $brandId, string $title, ?int $ignoreCampaignId = null): bool
@@ -315,6 +344,41 @@ class BusinessCampaignController extends Controller
         return (int) round(((float) $amount) * 100);
     }
 
+    private function percentageToBasisPoints(string|int|float $percentage): int
+    {
+        return (int) round(((float) $percentage) * 100);
+    }
+
+    private function storedRewardAmount(string $rewardType, string|int|float $amount): int
+    {
+        return $rewardType === 'percentage'
+            ? $this->percentageToBasisPoints($amount)
+            : $this->dollarsToCents($amount);
+    }
+
+    private function normalizeExpiryDate(mixed $expiresAt): ?Carbon
+    {
+        if (blank($expiresAt)) {
+            return null;
+        }
+
+        $expiresAt = (string) $expiresAt;
+        $date = Carbon::parse($expiresAt, config('app.timezone'));
+
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $expiresAt)
+            ? $date->endOfDay()
+            : $date;
+    }
+
+    private function editableRewardAmount(Campaign $campaign): string
+    {
+        if (($campaign->reward_type ?? 'flat') === 'percentage') {
+            return rtrim(rtrim(number_format($campaign->reward_amount / 100, 2, '.', ''), '0'), '.');
+        }
+
+        return number_format($campaign->reward_amount / 100, 2, '.', '');
+    }
+
     private function statuses(): array
     {
         return ['draft', 'active', 'paused'];
@@ -328,7 +392,12 @@ class BusinessCampaignController extends Controller
             'description' => $campaign->description,
             'brand_name' => $campaign->brand_name,
             'category' => $campaign->category,
+            'slug' => $campaign->slug,
+            'participant_campaign_url' => route('campaigns.show', $campaign->slug ?? $campaign->id),
+            'business_preview_url' => route('business.campaigns.preview', $campaign),
+            'reward_type' => $campaign->reward_type ?? 'flat',
             'reward_amount' => $campaign->reward_amount,
+            'reward_display' => $this->rewardDisplay($campaign),
             'destination_url' => $campaign->destination_url,
             'campaign_banner_url' => $this->publicStorageUrl($campaign->campaign_banner, $campaign->updated_at?->timestamp),
             'status' => $campaign->status,
@@ -337,6 +406,55 @@ class BusinessCampaignController extends Controller
             'created_at' => $campaign->created_at?->toDateString(),
             'expires_at' => $campaign->expires_at?->toDateString(),
         ];
+    }
+
+    private function clientCampaignPayload(Campaign $campaign): array
+    {
+        return [
+            'id' => $campaign->id,
+            'slug' => $campaign->slug,
+            'brand_name' => $campaign->brand?->name ?? $campaign->brand_name,
+            'brand_logo_url' => $campaign->brand?->logo ? Storage::disk('public')->url($campaign->brand->logo) : $campaign->brand?->logo_url,
+            'brand_industry' => $campaign->brand?->business_type,
+            'brand_description' => $campaign->brand?->description,
+            'brand_website_url' => $campaign->brand?->website_url,
+            'brand_country_region' => $campaign->brand?->country_region,
+            'title' => $campaign->title,
+            'description' => $campaign->description,
+            'category' => $campaign->category,
+            'reward_type' => $campaign->reward_type ?? 'flat',
+            'reward_amount' => $campaign->reward_amount,
+            'reward_display' => $this->rewardDisplay($campaign),
+            'commission_details' => $campaign->commission_details,
+            'cookie_duration' => $campaign->cookie_duration,
+            'network_platform' => $campaign->network_platform,
+            'payout_details' => $campaign->payout_details,
+            'requirements' => $campaign->requirements,
+            'deliverables' => $campaign->deliverables,
+            'tags' => $campaign->tags ?? [],
+            'assets' => $campaign->assets ?? [],
+            'participant_instructions' => $campaign->participant_instructions,
+            'status' => $campaign->status,
+            'expires_at' => $campaign->expires_at?->toIso8601String(),
+            'click_count' => (int) ($campaign->clicks_count ?? $campaign->click_count ?? 0),
+            'conversion_count' => (int) ($campaign->conversions_count ?? $campaign->conversion_count ?? 0),
+            'participants_count' => (int) ($campaign->referral_tokens_count ?? 0),
+            'destination_url' => $campaign->destination_url,
+            'campaign_banner' => $campaign->campaign_banner,
+            'campaign_banner_url' => $this->publicStorageUrl($campaign->campaign_banner, $campaign->updated_at?->timestamp),
+            'referral_url' => null,
+        ];
+    }
+
+    private function rewardDisplay(Campaign $campaign): string
+    {
+        if (($campaign->reward_type ?? 'flat') === 'percentage') {
+            $percentage = rtrim(rtrim(number_format($campaign->reward_amount / 100, 2, '.', ''), '0'), '.');
+
+            return $percentage.'%';
+        }
+
+        return '$'.number_format($campaign->reward_amount / 100, 2);
     }
 
     private function sourceBreakdown(Campaign $campaign): array

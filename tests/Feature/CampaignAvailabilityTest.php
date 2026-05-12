@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Brand;
 use App\Models\Campaign;
 use App\Models\ReferralToken;
 use App\Models\User;
@@ -118,6 +119,99 @@ class CampaignAvailabilityTest extends TestCase
             'user_id' => $owner->id,
             'ip_address' => '203.0.113.50',
         ]);
+    }
+
+    public function test_marketplace_search_matches_campaign_title(): void
+    {
+        $user = User::factory()->create();
+        $matchingCampaign = $this->createCampaign(['title' => 'Hims & Hers Affiliate Program']);
+        $this->createCampaign(['title' => 'Coffee Starter Pack']);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index', ['search' => 'hims']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->has('campaigns', 1)
+                ->where('campaigns.0.id', $matchingCampaign->id)
+                ->where('filters.search', 'hims')
+            );
+    }
+
+    public function test_marketplace_search_matches_related_brand_name(): void
+    {
+        $user = User::factory()->create();
+        $brand = Brand::create(['name' => 'Luma Pantry']);
+        $matchingCampaign = $this->createCampaign([
+            'brand_id' => $brand->id,
+            'brand_name' => 'Legacy Brand Name',
+            'title' => 'Weekly Grocery Rewards',
+        ]);
+        $this->createCampaign(['brand_name' => 'Northstar Coffee', 'title' => 'Coffee Starter Pack']);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index', ['search' => 'luma pantry']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->has('campaigns', 1)
+                ->where('campaigns.0.id', $matchingCampaign->id)
+            );
+    }
+
+    public function test_marketplace_search_stays_limited_to_available_campaigns(): void
+    {
+        $user = User::factory()->create();
+        $availableCampaign = $this->createCampaign(['title' => 'Active Hims Campaign']);
+        $this->createCampaign([
+            'title' => 'Paused Hims Campaign',
+            'status' => 'paused',
+        ]);
+        $this->createCampaign([
+            'title' => 'Expired Hims Campaign',
+            'expires_at' => now()->subDay(),
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index', ['search' => 'hims']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->has('campaigns', 1)
+                ->where('campaigns.0.id', $availableCampaign->id)
+            );
+    }
+
+    public function test_marketplace_category_filter_and_keyword_search_work_together(): void
+    {
+        $user = User::factory()->create();
+        $matchingCampaign = $this->createCampaign([
+            'title' => 'Luma Pantry Rewards',
+            'category' => 'Food',
+        ]);
+        $this->createCampaign([
+            'title' => 'Luma Pantry Finance Rewards',
+            'category' => 'Finance',
+        ]);
+        $this->createCampaign([
+            'title' => 'Different Food Campaign',
+            'category' => 'Food',
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index', ['search' => 'luma', 'category' => 'Food']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->has('campaigns', 1)
+                ->where('campaigns.0.id', $matchingCampaign->id)
+                ->where('filters.search', 'luma')
+                ->where('filters.category', 'Food')
+            );
     }
 
     private function createCampaign(array $overrides = []): Campaign

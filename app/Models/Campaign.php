@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
     'slug',
     'description',
     'category',
+    'reward_type',
     'reward_amount',
     'commission_details',
     'cookie_duration',

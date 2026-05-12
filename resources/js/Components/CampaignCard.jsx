@@ -1,11 +1,5 @@
 import { Link } from '@inertiajs/react';
-
-function formatReward(cents) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(cents / 100);
-}
+import { formatReward } from '../Support/rewards';
 
 function firstLetter(value = '') {
     return value.trim().slice(0, 1).toUpperCase() || 'S';
@@ -61,7 +55,7 @@ export default function CampaignCard({ campaign }) {
                     {campaign.title}
                 </h2>
                 <p className="mt-1 text-lg font-extrabold leading-none">
-                    {formatReward(campaign.reward_amount)}
+                    {formatReward(campaign)}
                 </p>
                 <p className="mt-2 line-clamp-2 text-[11px] font-medium leading-4 text-white/90">
                     {campaign.description}

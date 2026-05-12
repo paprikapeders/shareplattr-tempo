@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Campaign;
 use App\Models\Reward;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -16,23 +17,85 @@ class CampaignController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $search = preg_replace('/\s+/', ' ', trim((string) $request->query('search', ''))) ?? '';
+        $category = (string) $request->query('category', 'all');
+        $hasSearch = $search !== '';
 
-        $campaigns = Campaign::query()
+        $campaignQuery = Campaign::query()
             ->with('brand:id,name,logo,logo_url,description,business_type,website_url,country_region,affiliate_url,contact_info,notes')
             ->with(['referralTokens' => fn ($query) => $query->where('user_id', $user->id)])
             ->withCount(['referralTokens', 'clicks', 'conversions'])
             ->available()
-            ->latest()
+            ->when($category !== '' && $category !== 'all', fn ($query) => $query->where('category', $category));
+
+        if ($hasSearch) {
+            $normalizedSearch = strtolower($search);
+            $like = '%'.$normalizedSearch.'%';
+            $startsWith = $normalizedSearch.'%';
+
+            $campaignQuery
+                ->where(function ($query) use ($like) {
+                    $query
+                        ->whereRaw('LOWER(title) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(brand_name) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(category) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(description) LIKE ?', [$like])
+                        ->orWhereHas('brand', fn ($query) => $query->whereRaw('LOWER(name) LIKE ?', [$like]));
+                })
+                ->orderByRaw('CASE WHEN LOWER(title) = ? THEN 0 WHEN LOWER(title) LIKE ? THEN 1 ELSE 2 END', [
+                    $normalizedSearch,
+                    $startsWith,
+                ])
+                ->orderByDesc('id');
+        } else {
+            $campaignQuery->latest();
+        }
+
+        $campaigns = $campaignQuery
             ->get()
             ->map(fn (Campaign $campaign) => $this->campaignPayload($campaign));
 
+        if (app()->environment(['local', 'development'])) {
+            $exactTitleCampaigns = $search !== ''
+                ? Campaign::query()
+                    ->whereRaw('LOWER(title) = ?', [strtolower($search)])
+                    ->get(['id', 'title', 'status', 'expires_at'])
+                    ->map(fn (Campaign $campaign) => [
+                        'id' => $campaign->id,
+                        'title' => $campaign->title,
+                        'status' => $campaign->status,
+                        'expires_at' => $campaign->expires_at?->toDateTimeString(),
+                        'included' => $campaigns->contains('id', $campaign->id),
+                    ])
+                    ->all()
+                : [];
+
+            Log::debug('Marketplace campaign search.', [
+                'search' => $search,
+                'category' => $category,
+                'matched_campaigns' => $campaigns->count(),
+                'matched_campaign_ids' => $campaigns->pluck('id')->all(),
+                'matched_campaign_titles' => $campaigns->pluck('title')->all(),
+                'exact_title_candidates' => $exactTitleCampaigns,
+            ]);
+        }
+
+        $categories = Campaign::query()
+            ->available()
+            ->whereNotNull('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category')
+            ->values();
+
         return Inertia::render('Campaigns', [
             'campaigns' => $campaigns,
-            'categories' => $campaigns
-                ->pluck('category')
-                ->filter()
-                ->unique()
-                ->values(),
+            'searchResults' => $hasSearch ? $campaigns : [],
+            'categories' => $categories,
+            'filters' => [
+                'search' => $search,
+                'category' => $category ?: 'all',
+            ],
         ]);
     }
 
@@ -80,7 +143,9 @@ class CampaignController extends Controller
             'title' => $campaign->title,
             'description' => $campaign->description,
             'category' => $campaign->category,
+            'reward_type' => $campaign->reward_type ?? 'flat',
             'reward_amount' => $campaign->reward_amount,
+            'reward_display' => $this->rewardDisplay($campaign),
             'commission_details' => $campaign->commission_details,
             'cookie_duration' => $campaign->cookie_duration,
             'network_platform' => $campaign->network_platform,
@@ -100,6 +165,17 @@ class CampaignController extends Controller
             'campaign_banner_url' => $this->publicStorageUrl($campaign->campaign_banner, $campaign->updated_at?->timestamp),
             'referral_url' => $token ? route('referrals.show', $token->token) : null,
         ];
+    }
+
+    private function rewardDisplay(Campaign $campaign): string
+    {
+        if (($campaign->reward_type ?? 'flat') === 'percentage') {
+            $percentage = rtrim(rtrim(number_format($campaign->reward_amount / 100, 2, '.', ''), '0'), '.');
+
+            return $percentage.'%';
+        }
+
+        return '$'.number_format($campaign->reward_amount / 100, 2);
     }
 
     private function publicStorageUrl(?string $path, ?int $version = null): ?string

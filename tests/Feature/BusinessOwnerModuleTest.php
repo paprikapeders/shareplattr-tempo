@@ -14,6 +14,7 @@ use App\Models\Reward;
 use App\Models\User;
 use App\Services\StripeBillingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -93,9 +94,185 @@ class BusinessOwnerModuleTest extends TestCase
         $this->assertDatabaseHas('campaigns', [
             'business_owner_id' => $owner->id,
             'title' => 'Cold Brew Starter Pack',
+            'reward_type' => 'flat',
             'reward_amount' => 1550,
             'status' => 'active',
         ]);
+    }
+
+    public function test_business_campaign_expiry_date_remains_available_until_end_of_selected_day(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-05-12 12:00:00', config('app.timezone')));
+
+        try {
+            [$owner] = $this->businessOwnerWithProfile();
+
+            $this
+                ->actingAs($owner)
+                ->post(route('business.campaigns.store'), [
+                    'title' => 'Same Day Expiry Campaign',
+                    'description' => 'This campaign should stay available until the selected day ends.',
+                    'category' => 'Food and Drink',
+                    'reward_amount' => '15.50',
+                    'destination_url' => 'https://example.com/same-day-expiry',
+                    'status' => 'active',
+                    'expires_at' => '2026-05-12',
+                ])
+                ->assertRedirect(route('business.campaigns.index'));
+
+            $campaign = Campaign::query()
+                ->where('business_owner_id', $owner->id)
+                ->where('title', 'Same Day Expiry Campaign')
+                ->firstOrFail();
+
+            $this->assertSame('2026-05-12 23:59:59', $campaign->expires_at->format('Y-m-d H:i:s'));
+            $this->assertTrue(Campaign::query()->available()->whereKey($campaign->id)->exists());
+
+            $participant = User::factory()->create();
+
+            $this
+                ->actingAs($participant)
+                ->get(route('campaigns.index', ['search' => 'Same Day Expiry Campaign']))
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->component('Campaigns')
+                    ->has('searchResults', 1)
+                    ->where('searchResults.0.id', $campaign->id)
+                );
+
+            $this
+                ->actingAs($participant)
+                ->from(route('campaigns.show', $campaign->slug ?? $campaign->id))
+                ->post(route('campaigns.referral-link.store', $campaign))
+                ->assertRedirect(route('campaigns.show', $campaign->slug ?? $campaign->id));
+
+            $this->assertDatabaseHas('referral_tokens', [
+                'campaign_id' => $campaign->id,
+                'user_id' => $participant->id,
+            ]);
+
+            Carbon::setTestNow(Carbon::parse('2026-05-13 00:00:00', config('app.timezone')));
+
+            $this->assertFalse(Campaign::query()->available()->whereKey($campaign->id)->exists());
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_business_owner_can_create_fixed_amount_campaign(): void
+    {
+        [$owner] = $this->businessOwnerWithProfile();
+
+        $this
+            ->actingAs($owner)
+            ->post(route('business.campaigns.store'), [
+                'title' => 'Fixed Reward Campaign',
+                'description' => 'Promote a fixed reward offer.',
+                'category' => 'Retail',
+                'reward_type' => 'flat',
+                'reward_amount' => '14.00',
+                'destination_url' => 'https://example.com/fixed',
+                'status' => 'active',
+                'expires_at' => null,
+            ])
+            ->assertRedirect(route('business.campaigns.index'));
+
+        $this->assertDatabaseHas('campaigns', [
+            'business_owner_id' => $owner->id,
+            'title' => 'Fixed Reward Campaign',
+            'reward_type' => 'flat',
+            'reward_amount' => 1400,
+        ]);
+    }
+
+    public function test_business_owner_can_create_percentage_campaign(): void
+    {
+        [$owner] = $this->businessOwnerWithProfile();
+
+        $this
+            ->actingAs($owner)
+            ->post(route('business.campaigns.store'), [
+                'title' => 'Percentage Reward Campaign',
+                'description' => 'Promote a percentage reward offer.',
+                'category' => 'Retail',
+                'reward_type' => 'percentage',
+                'reward_amount' => '15.5',
+                'destination_url' => 'https://example.com/percentage',
+                'status' => 'active',
+                'expires_at' => null,
+            ])
+            ->assertRedirect(route('business.campaigns.index'));
+
+        $this->assertDatabaseHas('campaigns', [
+            'business_owner_id' => $owner->id,
+            'title' => 'Percentage Reward Campaign',
+            'reward_type' => 'percentage',
+            'reward_amount' => 1550,
+        ]);
+    }
+
+    public function test_business_owner_cannot_create_percentage_campaign_above_one_hundred_percent(): void
+    {
+        [$owner] = $this->businessOwnerWithProfile();
+
+        $this
+            ->actingAs($owner)
+            ->post(route('business.campaigns.store'), [
+                'title' => 'Invalid Percentage Campaign',
+                'description' => 'This should be rejected.',
+                'category' => 'Retail',
+                'reward_type' => 'percentage',
+                'reward_amount' => '100.01',
+                'destination_url' => 'https://example.com/invalid',
+                'status' => 'active',
+                'expires_at' => null,
+            ])
+            ->assertSessionHasErrors('reward_amount');
+
+        $this->assertDatabaseMissing('campaigns', [
+            'title' => 'Invalid Percentage Campaign',
+        ]);
+    }
+
+    public function test_existing_fixed_campaign_displays_reward_and_participant_route_on_business_detail(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        $campaign = $this->campaignForOwner($owner, $profile);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.campaigns.show', $campaign))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Campaigns/Show')
+                ->where('campaign.reward_type', 'flat')
+                ->where('campaign.reward_display', '$10.00')
+                ->where('campaign.business_preview_url', route('business.campaigns.preview', $campaign))
+            );
+    }
+
+    public function test_business_campaign_preview_is_business_only_and_uses_preview_mode(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        $campaign = $this->campaignForOwner($owner, $profile);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.campaigns.preview', $campaign))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns/Show')
+                ->where('businessPreview', true)
+                ->where('campaign.id', $campaign->id)
+                ->where('campaign.referral_url', null)
+            );
+
+        $participant = User::factory()->create();
+
+        $this
+            ->actingAs($participant)
+            ->get(route('business.campaigns.preview', $campaign))
+            ->assertForbidden();
     }
 
     public function test_business_owner_can_edit_own_campaign(): void

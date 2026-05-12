@@ -10,6 +10,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
@@ -170,7 +171,10 @@ class AdminCampaignController extends Controller
             }
         });
 
-        return $validator->validate();
+        $validated = $validator->validate();
+        $validated['expires_at'] = $this->normalizeExpiryDate($validated['expires_at'] ?? null);
+
+        return $validated;
     }
 
     private function campaignTitleExists(int $brandId, string $title, ?int $ignoreCampaignId = null): bool
@@ -202,6 +206,20 @@ class AdminCampaignController extends Controller
     private function dollarsToCents(string|int|float $amount): int
     {
         return (int) round(((float) $amount) * 100);
+    }
+
+    private function normalizeExpiryDate(mixed $expiresAt): ?Carbon
+    {
+        if (blank($expiresAt)) {
+            return null;
+        }
+
+        $expiresAt = (string) $expiresAt;
+        $date = Carbon::parse($expiresAt, config('app.timezone'));
+
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $expiresAt)
+            ? $date->endOfDay()
+            : $date;
     }
 
     private function storeCampaignBanner(UploadedFile $file): string
