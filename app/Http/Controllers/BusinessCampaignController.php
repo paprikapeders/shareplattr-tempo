@@ -7,17 +7,24 @@ use App\Models\Click;
 use App\Models\Conversion;
 use App\Models\ReferralToken;
 use App\Models\Reward;
+use App\Support\ImportKey;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use RuntimeException;
 
 class BusinessCampaignController extends Controller
 {
+    private const DUPLICATE_TITLE_MESSAGE = 'A campaign with this title already exists for this brand.';
+
     private const CLICK_SOURCES = [
         'facebook' => 'Facebook',
         'x' => 'X',
@@ -54,20 +61,30 @@ class BusinessCampaignController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $profile = $request->user()->businessProfile;
-        $validated = $this->validatedCampaign($request);
+        $validated = $this->validatedCampaign($request, $profile->brand_id);
         $bannerPath = $request->hasFile('campaign_banner')
             ? $this->storeCampaignBanner($request->file('campaign_banner'))
             : null;
 
-        Campaign::create([
-            ...$validated,
-            'created_by' => $request->user()->id,
-            'business_owner_id' => $request->user()->id,
-            'brand_id' => $profile->brand_id,
-            'brand_name' => $profile->company_name,
-            'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
-            'campaign_banner' => $bannerPath,
-        ]);
+        try {
+            Campaign::create([
+                ...$validated,
+                'created_by' => $request->user()->id,
+                'business_owner_id' => $request->user()->id,
+                'brand_id' => $profile->brand_id,
+                'brand_name' => $profile->company_name,
+                'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
+                'campaign_banner' => $bannerPath,
+            ]);
+        } catch (QueryException $exception) {
+            if ($bannerPath) {
+                Storage::disk('public')->delete($bannerPath);
+            }
+
+            $this->throwDuplicateTitleValidationExceptionIfNeeded($exception);
+
+            throw $exception;
+        }
 
         return redirect()->route('business.campaigns.index')->with('success', 'Campaign created.');
     }
@@ -114,7 +131,7 @@ class BusinessCampaignController extends Controller
     {
         $this->authorizeOwner($request, $campaign);
 
-        $validated = $this->validatedCampaign($request);
+        $validated = $this->validatedCampaign($request, $campaign->brand_id, $campaign);
         $oldBannerPath = $campaign->campaign_banner;
         $bannerPath = $campaign->campaign_banner;
 
@@ -122,12 +139,22 @@ class BusinessCampaignController extends Controller
             $bannerPath = $this->storeCampaignBanner($request->file('campaign_banner'));
         }
 
-        $campaign->update([
-            ...$validated,
-            'business_owner_id' => $request->user()->id,
-            'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
-            'campaign_banner' => $bannerPath,
-        ]);
+        try {
+            $campaign->update([
+                ...$validated,
+                'business_owner_id' => $request->user()->id,
+                'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
+                'campaign_banner' => $bannerPath,
+            ]);
+        } catch (QueryException $exception) {
+            if ($bannerPath && $bannerPath !== $oldBannerPath) {
+                Storage::disk('public')->delete($bannerPath);
+            }
+
+            $this->throwDuplicateTitleValidationExceptionIfNeeded($exception);
+
+            throw $exception;
+        }
 
         if ($oldBannerPath && $bannerPath !== $oldBannerPath) {
             Storage::disk('public')->delete($oldBannerPath);
@@ -202,9 +229,9 @@ class BusinessCampaignController extends Controller
         abort_unless((int) $campaign->business_owner_id === (int) $request->user()->id, 403);
     }
 
-    private function validatedCampaign(Request $request): array
+    private function validatedCampaign(Request $request, int $brandId, ?Campaign $campaign = null): array
     {
-        return $request->validate([
+        $validator = Validator::make($request->all(), [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:2000'],
             'category' => ['required', 'string', 'max:255'],
@@ -213,6 +240,46 @@ class BusinessCampaignController extends Controller
             'campaign_banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
             'status' => ['required', Rule::in($this->statuses())],
             'expires_at' => ['nullable', 'date'],
+        ]);
+
+        $validator->after(function ($validator) use ($brandId, $campaign) {
+            if ($validator->errors()->has('title')) {
+                return;
+            }
+
+            $data = $validator->getData();
+
+            if ($this->campaignTitleExists($brandId, $data['title'], $campaign?->id)) {
+                $validator->errors()->add('title', self::DUPLICATE_TITLE_MESSAGE);
+            }
+        });
+
+        return $validator->validate();
+    }
+
+    private function campaignTitleExists(int $brandId, string $title, ?int $ignoreCampaignId = null): bool
+    {
+        return Campaign::query()
+            ->where('brand_id', $brandId)
+            ->where('normalized_title', ImportKey::normalize($title))
+            ->when($ignoreCampaignId, fn ($query) => $query->whereKeyNot($ignoreCampaignId))
+            ->exists();
+    }
+
+    private function throwDuplicateTitleValidationExceptionIfNeeded(QueryException $exception): void
+    {
+        if (! $exception instanceof UniqueConstraintViolationException
+            && ! str_contains($exception->getMessage(), 'Duplicate entry')) {
+            return;
+        }
+
+        if (! str_contains($exception->getMessage(), 'campaigns_brand_normalized_title_unique')
+            && ! str_contains($exception->getMessage(), 'campaign_brand_normalized_title_unique')) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'title' => self::DUPLICATE_TITLE_MESSAGE,
         ]);
     }
 

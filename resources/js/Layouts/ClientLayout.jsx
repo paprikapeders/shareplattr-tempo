@@ -89,7 +89,7 @@ function getInitials(name = '') {
 function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
     const items = [
         { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
-        { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
+        { href: '/campaigns', label: 'Marketplace', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
         { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts'), icon: DashboardIconWallet },
     ];
 

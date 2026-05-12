@@ -1,14 +1,14 @@
 import { Link, useForm } from '@inertiajs/react';
 import AuthLayout from '../../Layouts/AuthLayout';
 
-export default function Register() {
+export default function Register({ prefill = {} }) {
     const { data, setData, post, processing, errors } = useForm({
         first_name: '',
         last_name: '',
-        email: '',
+        email: prefill.email ?? '',
         password: '',
         password_confirmation: '',
-        account_type: 'participant',
+        account_type: prefill.account_type ?? 'participant',
         terms_accepted: false,
     });
 

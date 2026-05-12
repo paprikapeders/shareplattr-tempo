@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm, usePage } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import OTPInput from '../../Components/OTPInput';
 import AuthLayout from '../../Layouts/AuthLayout';
 
@@ -20,7 +20,7 @@ function VerificationIcon() {
     );
 }
 
-export default function Verify({ email, expiresInSeconds }) {
+export default function Verify({ email, editRegistrationUrl, expiresInSeconds }) {
     const { flash = {} } = usePage().props;
     const { data, setData, post, processing, errors } = useForm({
         code: '',
@@ -66,10 +66,19 @@ export default function Verify({ email, expiresInSeconds }) {
                     Verify Your Account
                 </h2>
                 <p className="mt-2 max-w-[330px] text-center text-[14px] leading-6 text-[#101010] sm:text-[15px]">
-                    A six digit code has been sent to your email.
+                    We sent a 6-digit code to:
                 </p>
+                <p className="mt-1 max-w-[330px] break-all text-center text-[15px] font-semibold text-[#111111]">
+                    {email}
+                </p>
+                <Link
+                    href={editRegistrationUrl ?? '/register'}
+                    className="mt-2 text-center text-[14px] font-medium text-[#7a6cf2] underline underline-offset-4"
+                >
+                    Wrong email? Go back and edit
+                </Link>
 
-                <div className="mt-8">
+                <div className="mt-7">
                     <OTPInput
                         value={data.code}
                         onChange={(value) => setData('code', value)}

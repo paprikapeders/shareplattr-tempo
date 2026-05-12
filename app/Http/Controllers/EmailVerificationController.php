@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\VerifyEmailCode;
 use App\Models\EmailVerificationCode;
 use App\Models\User;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class EmailVerificationController extends Controller
 {
+    public function __construct(private EmailVerificationService $emailVerificationService)
+    {
+    }
+
     public function create(Request $request): Response|RedirectResponse
     {
         $user = $this->pendingUser($request);
@@ -32,6 +35,7 @@ class EmailVerificationController extends Controller
 
         return Inertia::render('Auth/Verify', [
             'email' => $user->email,
+            'editRegistrationUrl' => $this->editRegistrationUrl($user),
             'expiresInSeconds' => $this->secondsRemaining($user),
         ]);
     }
@@ -71,6 +75,8 @@ class EmailVerificationController extends Controller
             ])->save();
         });
 
+        $this->emailVerificationService->sendBusinessWelcomeEmailIfNeeded($user->fresh());
+
         $request->session()->forget(['pending_verification_user_id', 'pending_verification_email']);
 
         Auth::login($user);
@@ -93,26 +99,8 @@ class EmailVerificationController extends Controller
             return redirect()->route('login')->with('success', 'Your email is already verified. Please sign in.');
         }
 
-        $plainCode = DB::transaction(function () use ($user) {
-            EmailVerificationCode::query()
-                ->where('user_id', $user->id)
-                ->whereNull('used_at')
-                ->update([
-                    'used_at' => now(),
-                ]);
-
-            $plainCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-            EmailVerificationCode::create([
-                'user_id' => $user->id,
-                'code' => Hash::make($plainCode),
-                'expires_at' => now()->addMinutes(10),
-            ]);
-
-            return $plainCode;
-        });
-
-        Mail::to($user->email)->send(new VerifyEmailCode($user, $plainCode));
+        $plainCode = $this->emailVerificationService->issueCode($user);
+        $this->emailVerificationService->sendCode($user, $plainCode);
 
         return back()->with('success', 'A new verification code has been sent.');
     }
@@ -143,4 +131,14 @@ class EmailVerificationController extends Controller
         return max(0, now()->diffInSeconds($verificationCode->expires_at, false));
     }
 
+    private function editRegistrationUrl(User $user): string
+    {
+        $query = ['email' => $user->email];
+
+        if ($user->isBusinessOwner()) {
+            return route('register.business', $query);
+        }
+
+        return route('register', $query + ['account_type' => 'participant']);
+    }
 }

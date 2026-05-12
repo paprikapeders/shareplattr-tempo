@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\VerifyEmailCode;
-use App\Models\EmailVerificationCode;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AuthController extends Controller
 {
+    public function __construct(private EmailVerificationService $emailVerificationService)
+    {
+    }
+
     public function create(): Response
     {
         return Inertia::render('Auth/Login');
@@ -41,10 +41,10 @@ class AuthController extends Controller
             $request->session()->put('pending_verification_user_id', $user->id);
             $request->session()->put('pending_verification_email', $user->email);
 
-            $plainCode = $this->issueVerificationCodeIfNeeded($user->id);
+            $plainCode = $this->emailVerificationService->issueCodeIfNeeded($user);
 
             if ($plainCode) {
-                Mail::to($user->email)->send(new VerifyEmailCode($user, $plainCode));
+                $this->emailVerificationService->sendCode($user, $plainCode);
             }
 
             return redirect()->route('verify.notice')->with('error', 'Verify your email before signing in.');
@@ -82,35 +82,4 @@ class AuthController extends Controller
         return route('dashboard');
     }
 
-    private function issueVerificationCodeIfNeeded(int $userId): ?string
-    {
-        $hasActiveCode = EmailVerificationCode::query()
-            ->where('user_id', $userId)
-            ->whereNull('used_at')
-            ->where('expires_at', '>', now())
-            ->exists();
-
-        if ($hasActiveCode) {
-            return null;
-        }
-
-        return DB::transaction(function () use ($userId) {
-            EmailVerificationCode::query()
-                ->where('user_id', $userId)
-                ->whereNull('used_at')
-                ->update([
-                    'used_at' => now(),
-                ]);
-
-            $plainCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-            EmailVerificationCode::create([
-                'user_id' => $userId,
-                'code' => Hash::make($plainCode),
-                'expires_at' => now()->addMinutes(10),
-            ]);
-
-            return $plainCode;
-        });
-    }
 }

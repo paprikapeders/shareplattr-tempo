@@ -15,6 +15,8 @@ class AdminCampaignUpdateTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const DUPLICATE_TITLE_MESSAGE = 'A campaign with this title already exists for this brand.';
+
     public function test_admin_can_update_campaign_with_put_request(): void
     {
         $admin = User::factory()->admin()->create();
@@ -139,6 +141,113 @@ class AdminCampaignUpdateTest extends TestCase
             ->assertSessionHasErrors('campaign_banner');
     }
 
+    public function test_admin_cannot_create_duplicate_campaign_title_for_same_brand(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $brand = Brand::create([
+            'name' => 'Northstar Coffee',
+        ]);
+
+        Campaign::create($this->campaignAttributes($admin, $brand, [
+            'title' => 'Business Cards',
+        ]));
+
+        $this
+            ->actingAs($admin)
+            ->post(route('admin.campaigns.store'), $this->campaignRequestData($brand, [
+                'title' => 'Business   Cards',
+            ]))
+            ->assertSessionHasErrors([
+                'title' => self::DUPLICATE_TITLE_MESSAGE,
+            ]);
+
+        $this->assertSame(1, Campaign::count());
+    }
+
+    public function test_admin_can_create_same_campaign_title_under_different_brand(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $firstBrand = Brand::create([
+            'name' => 'Northstar Coffee',
+        ]);
+        $secondBrand = Brand::create([
+            'name' => 'Summit Studio',
+        ]);
+
+        Campaign::create($this->campaignAttributes($admin, $firstBrand, [
+            'title' => 'Business Cards',
+        ]));
+
+        $this
+            ->actingAs($admin)
+            ->post(route('admin.campaigns.store'), $this->campaignRequestData($secondBrand, [
+                'title' => 'Business Cards',
+            ]))
+            ->assertRedirect(route('admin.campaigns.index'))
+            ->assertSessionHas('success', 'Campaign created.');
+
+        $this->assertDatabaseHas('campaigns', [
+            'brand_id' => $secondBrand->id,
+            'title' => 'Business Cards',
+            'normalized_title' => 'business cards',
+        ]);
+    }
+
+    public function test_admin_can_update_campaign_without_failing_on_its_own_title(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $brand = Brand::create([
+            'name' => 'Northstar Coffee',
+        ]);
+        $campaign = Campaign::create($this->campaignAttributes($admin, $brand, [
+            'title' => 'Business Cards',
+        ]));
+
+        $this
+            ->actingAs($admin)
+            ->put(route('admin.campaigns.update', $campaign), $this->campaignRequestData($brand, [
+                'title' => 'Business   Cards',
+            ]))
+            ->assertRedirect(route('admin.campaigns.index'))
+            ->assertSessionHas('success', 'Campaign updated.');
+
+        $this->assertDatabaseHas('campaigns', [
+            'id' => $campaign->id,
+            'title' => 'Business   Cards',
+            'normalized_title' => 'business cards',
+        ]);
+    }
+
+    public function test_admin_cannot_update_campaign_to_duplicate_another_campaign_title_in_same_brand(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $brand = Brand::create([
+            'name' => 'Northstar Coffee',
+        ]);
+        Campaign::create($this->campaignAttributes($admin, $brand, [
+            'title' => 'Business Cards',
+        ]));
+        $campaign = Campaign::create($this->campaignAttributes($admin, $brand, [
+            'title' => 'Window Decals',
+            'destination_url' => 'https://example.com/window-decals',
+        ]));
+
+        $this
+            ->actingAs($admin)
+            ->put(route('admin.campaigns.update', $campaign), $this->campaignRequestData($brand, [
+                'title' => 'business cards',
+            ]))
+            ->assertSessionHasErrors([
+                'title' => self::DUPLICATE_TITLE_MESSAGE,
+            ]);
+
+        $this->assertDatabaseHas('campaigns', [
+            'id' => $campaign->id,
+            'title' => 'Window Decals',
+            'normalized_title' => 'window decals',
+        ]);
+    }
+
     public function test_campaign_pages_expose_campaign_banner_column_and_cache_busted_public_url(): void
     {
         $user = User::factory()->create();
@@ -178,5 +287,37 @@ class AdminCampaignUpdateTest extends TestCase
                 ->where('campaign.campaign_banner', $campaign->campaign_banner)
                 ->where('campaign.campaign_banner_url', $expectedUrl)
             );
+    }
+
+    private function campaignAttributes(User $admin, Brand $brand, array $overrides = []): array
+    {
+        return [
+            'created_by' => $admin->id,
+            'brand_id' => $brand->id,
+            'brand_name' => $brand->name,
+            'title' => 'Cold Brew Starter Pack',
+            'description' => 'A campaign for testing.',
+            'category' => 'Food & Drink',
+            'reward_amount' => 1200,
+            'destination_url' => 'https://example.com/campaign',
+            'status' => 'active',
+            'expires_at' => null,
+            ...$overrides,
+        ];
+    }
+
+    private function campaignRequestData(Brand $brand, array $overrides = []): array
+    {
+        return [
+            'brand_id' => $brand->id,
+            'title' => 'Cold Brew Starter Pack',
+            'description' => 'A campaign for testing.',
+            'category' => 'Food & Drink',
+            'reward_amount' => '12.00',
+            'destination_url' => 'https://example.com/campaign',
+            'status' => 'active',
+            'expires_at' => null,
+            ...$overrides,
+        ];
     }
 }

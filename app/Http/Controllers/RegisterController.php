@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\VerifyEmailCode;
-use App\Models\EmailVerificationCode;
 use App\Models\User;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
@@ -17,9 +14,30 @@ use Inertia\Response;
 
 class RegisterController extends Controller
 {
-    public function create(): Response
+    public function __construct(private EmailVerificationService $emailVerificationService)
     {
-        return Inertia::render('Auth/Register');
+    }
+
+    public function create(Request $request): Response
+    {
+        return Inertia::render('Auth/Register', [
+            'prefill' => [
+                'email' => (string) $request->query('email', ''),
+                'account_type' => $request->query('account_type') === 'business_owner'
+                    ? 'business_owner'
+                    : 'participant',
+            ],
+        ]);
+    }
+
+    public function createBusiness(Request $request): Response
+    {
+        return Inertia::render('Auth/Register', [
+            'prefill' => [
+                'email' => (string) $request->query('email', ''),
+                'account_type' => 'business_owner',
+            ],
+        ]);
     }
 
     public function success(): Response
@@ -29,11 +47,18 @@ class RegisterController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $pendingUser = $this->editablePendingUser($request);
+
         $validated = $request->validate(
             [
                 'first_name' => ['required', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+                'email' => [
+                    'required',
+                    'email',
+                    'max:255',
+                    Rule::unique('users', 'email')->ignore($pendingUser?->id),
+                ],
                 'password' => ['required', 'confirmed', Password::min(8)],
                 'account_type' => ['nullable', Rule::in(['participant', 'business_owner'])],
                 'terms_accepted' => ['accepted'],
@@ -44,20 +69,25 @@ class RegisterController extends Controller
             ],
         );
 
-        [$user, $plainCode] = DB::transaction(function () use ($validated) {
-            $user = User::create([
+        $user = DB::transaction(function () use ($validated, $pendingUser) {
+            $attributes = [
                 'name' => trim($validated['first_name'].' '.$validated['last_name']),
                 'email' => $validated['email'],
                 'password' => $validated['password'],
                 'user_type' => $validated['account_type'] ?? 'participant',
-            ]);
+            ];
 
-            $plainCode = $this->issueVerificationCode($user);
+            if ($pendingUser) {
+                $pendingUser->forceFill($attributes)->save();
 
-            return [$user, $plainCode];
+                return $pendingUser->fresh();
+            }
+
+            return User::create($attributes);
         });
 
-        Mail::to($user->email)->send(new VerifyEmailCode($user, $plainCode));
+        $plainCode = $this->emailVerificationService->issueCode($user);
+        $this->emailVerificationService->sendCode($user, $plainCode);
 
         $request->session()->put('pending_verification_user_id', $user->id);
         $request->session()->put('pending_verification_email', $user->email);
@@ -65,23 +95,17 @@ class RegisterController extends Controller
         return redirect()->route('verify.notice')->with('success', 'Account created. Enter the code sent to your email.');
     }
 
-    private function issueVerificationCode(User $user): string
+    private function editablePendingUser(Request $request): ?User
     {
-        EmailVerificationCode::query()
-            ->where('user_id', $user->id)
-            ->whereNull('used_at')
-            ->update([
-                'used_at' => now(),
-            ]);
+        $userId = $request->session()->get('pending_verification_user_id');
 
-        $plainCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        if (! $userId) {
+            return null;
+        }
 
-        EmailVerificationCode::create([
-            'user_id' => $user->id,
-            'code' => Hash::make($plainCode),
-            'expires_at' => now()->addMinutes(10),
-        ]);
-
-        return $plainCode;
+        return User::query()
+            ->whereKey($userId)
+            ->whereNull('email_verified_at')
+            ->first();
     }
 }

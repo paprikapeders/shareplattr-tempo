@@ -67,6 +67,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
     Route::post('/reset-password', [PasswordResetController::class, 'update'])->name('password.update');
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
+    Route::get('/register/business', [RegisterController::class, 'createBusiness'])->name('register.business');
     Route::post('/register', [RegisterController::class, 'store']);
     Route::get('/verify', [EmailVerificationController::class, 'create'])->name('verify.notice');
     Route::post('/verify', [EmailVerificationController::class, 'store'])->name('verify.store');

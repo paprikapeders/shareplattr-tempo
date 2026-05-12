@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Mail\BusinessWelcomeMail;
 use App\Mail\VerifyEmailCode;
+use App\Models\EmailVerificationCode;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AuthVerificationFlowTest extends TestCase
@@ -75,6 +78,92 @@ class AuthVerificationFlowTest extends TestCase
         Mail::assertSent(VerifyEmailCode::class);
     }
 
+    public function test_business_registration_creates_verification_code_sends_email_and_redirects_to_verify_screen(): void
+    {
+        Mail::fake();
+
+        $this->post(route('register'), [
+            'first_name' => 'Business',
+            'last_name' => 'Owner',
+            'email' => 'owner@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'account_type' => 'business_owner',
+            'terms_accepted' => true,
+        ])->assertRedirect(route('verify.notice'));
+
+        $user = User::where('email', 'owner@example.com')->firstOrFail();
+
+        $this->assertSame('business_owner', $user->user_type);
+        $this->assertNull($user->email_verified_at);
+        $this->assertDatabaseHas('email_verification_codes', [
+            'user_id' => $user->id,
+            'used_at' => null,
+        ]);
+        $this->assertGuest();
+
+        Mail::assertSent(VerifyEmailCode::class, function (VerifyEmailCode $mail) use ($user) {
+            return $mail->hasTo($user->email);
+        });
+
+        $this->get(route('verify.notice'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Auth/Verify')
+                ->where('email', 'owner@example.com')
+                ->where('editRegistrationUrl', route('register.business', ['email' => 'owner@example.com']))
+            );
+    }
+
+    public function test_business_welcome_email_is_sent_once_after_successful_verification(): void
+    {
+        Mail::fake();
+
+        $this->post(route('register'), [
+            'first_name' => 'Business',
+            'last_name' => 'Owner',
+            'email' => 'verified-owner@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'account_type' => 'business_owner',
+            'terms_accepted' => true,
+        ])->assertRedirect(route('verify.notice'));
+
+        $user = User::where('email', 'verified-owner@example.com')->firstOrFail();
+        $sentCode = null;
+
+        Mail::assertSent(VerifyEmailCode::class, function (VerifyEmailCode $mail) use ($user, &$sentCode) {
+            $sentCode = $mail->code;
+
+            return $mail->hasTo($user->email);
+        });
+
+        Mail::assertNotSent(BusinessWelcomeMail::class);
+
+        $this->withSession([
+            'pending_verification_user_id' => $user->id,
+            'pending_verification_email' => $user->email,
+        ])->post(route('verify.store'), [
+            'code' => $sentCode,
+        ])->assertRedirect(route('register.success'));
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
+        $this->assertNotNull($user->fresh()->welcome_email_sent_at);
+
+        Mail::assertSent(BusinessWelcomeMail::class, function (BusinessWelcomeMail $mail) use ($user) {
+            return $mail->hasTo($user->email);
+        });
+
+        $this->withSession([
+            'pending_verification_user_id' => $user->id,
+            'pending_verification_email' => $user->email,
+        ])->post(route('verify.store'), [
+            'code' => $sentCode,
+        ]);
+
+        Mail::assertSent(BusinessWelcomeMail::class, 1);
+    }
+
     public function test_unverified_user_can_verify_with_existing_registration_code_after_later_login(): void
     {
         Mail::fake();
@@ -133,5 +222,47 @@ class AuthVerificationFlowTest extends TestCase
         ]);
 
         $this->assertDatabaseCount('users', 1);
+    }
+
+    public function test_pending_registration_can_correct_email_without_creating_duplicate_user(): void
+    {
+        Mail::fake();
+
+        $this->post(route('register'), [
+            'first_name' => 'Taylor',
+            'last_name' => 'Smith',
+            'email' => 'mistyped@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'account_type' => 'business_owner',
+            'terms_accepted' => true,
+        ])->assertRedirect(route('verify.notice'));
+
+        $user = User::where('email', 'mistyped@example.com')->firstOrFail();
+        $oldCode = EmailVerificationCode::where('user_id', $user->id)->firstOrFail();
+
+        $this->post(route('register'), [
+            'first_name' => 'Taylor',
+            'last_name' => 'Smith',
+            'email' => 'corrected@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'account_type' => 'business_owner',
+            'terms_accepted' => true,
+        ])->assertRedirect(route('verify.notice'));
+
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'email' => 'corrected@example.com',
+            'user_type' => 'business_owner',
+        ]);
+        $this->assertNotNull($oldCode->fresh()->used_at);
+        $this->assertSame(1, EmailVerificationCode::where('user_id', $user->id)->whereNull('used_at')->count());
+
+        Mail::assertSent(VerifyEmailCode::class, 2);
+        Mail::assertSent(VerifyEmailCode::class, function (VerifyEmailCode $mail) {
+            return $mail->hasTo('corrected@example.com');
+        });
     }
 }

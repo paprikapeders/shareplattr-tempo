@@ -4,17 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Campaign;
+use App\Support\ImportKey;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use RuntimeException;
 
 class AdminCampaignController extends Controller
 {
+    private const DUPLICATE_TITLE_MESSAGE = 'A campaign with this title already exists for this brand.';
+
     /**
      * Show all campaigns for admin management.
      */
@@ -53,13 +60,23 @@ class AdminCampaignController extends Controller
             ? $this->storeCampaignBanner($request->file('campaign_banner'))
             : null;
 
-        Campaign::create([
-            ...$validated,
-            'created_by' => $request->user()->id,
-            'brand_name' => $brand->name,
-            'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
-            'campaign_banner' => $bannerPath,
-        ]);
+        try {
+            Campaign::create([
+                ...$validated,
+                'created_by' => $request->user()->id,
+                'brand_name' => $brand->name,
+                'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
+                'campaign_banner' => $bannerPath,
+            ]);
+        } catch (QueryException $exception) {
+            if ($bannerPath) {
+                Storage::disk('public')->delete($bannerPath);
+            }
+
+            $this->throwDuplicateTitleValidationExceptionIfNeeded($exception);
+
+            throw $exception;
+        }
 
         return redirect()->route('admin.campaigns.index')->with('success', 'Campaign created.');
     }
@@ -87,7 +104,7 @@ class AdminCampaignController extends Controller
      */
     public function update(Request $request, Campaign $campaign): RedirectResponse
     {
-        $validated = $this->validatedCampaign($request);
+        $validated = $this->validatedCampaign($request, $campaign);
         $brand = Brand::query()->findOrFail($validated['brand_id']);
         $oldBannerPath = $campaign->campaign_banner;
         $bannerPath = $campaign->campaign_banner;
@@ -96,12 +113,22 @@ class AdminCampaignController extends Controller
             $bannerPath = $this->storeCampaignBanner($request->file('campaign_banner'));
         }
 
-        $campaign->update([
-            ...$validated,
-            'brand_name' => $brand->name,
-            'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
-            'campaign_banner' => $bannerPath,
-        ]);
+        try {
+            $campaign->update([
+                ...$validated,
+                'brand_name' => $brand->name,
+                'reward_amount' => $this->dollarsToCents($validated['reward_amount']),
+                'campaign_banner' => $bannerPath,
+            ]);
+        } catch (QueryException $exception) {
+            if ($bannerPath && $bannerPath !== $oldBannerPath) {
+                Storage::disk('public')->delete($bannerPath);
+            }
+
+            $this->throwDuplicateTitleValidationExceptionIfNeeded($exception);
+
+            throw $exception;
+        }
 
         if ($oldBannerPath && $bannerPath !== $oldBannerPath) {
             Storage::disk('public')->delete($oldBannerPath);
@@ -110,9 +137,9 @@ class AdminCampaignController extends Controller
         return redirect()->route('admin.campaigns.index')->with('success', 'Campaign updated.');
     }
 
-    private function validatedCampaign(Request $request): array
+    private function validatedCampaign(Request $request, ?Campaign $campaign = null): array
     {
-        return $request->validate([
+        $validator = Validator::make($request->all(), [
             'brand_id' => ['required', 'exists:brands,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:2000'],
@@ -129,6 +156,46 @@ class AdminCampaignController extends Controller
             'campaign_banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
             'status' => ['required', Rule::in($this->statuses())],
             'expires_at' => ['nullable', 'date'],
+        ]);
+
+        $validator->after(function ($validator) use ($campaign) {
+            if ($validator->errors()->has('brand_id') || $validator->errors()->has('title')) {
+                return;
+            }
+
+            $data = $validator->getData();
+
+            if ($this->campaignTitleExists((int) $data['brand_id'], $data['title'], $campaign?->id)) {
+                $validator->errors()->add('title', self::DUPLICATE_TITLE_MESSAGE);
+            }
+        });
+
+        return $validator->validate();
+    }
+
+    private function campaignTitleExists(int $brandId, string $title, ?int $ignoreCampaignId = null): bool
+    {
+        return Campaign::query()
+            ->where('brand_id', $brandId)
+            ->where('normalized_title', ImportKey::normalize($title))
+            ->when($ignoreCampaignId, fn ($query) => $query->whereKeyNot($ignoreCampaignId))
+            ->exists();
+    }
+
+    private function throwDuplicateTitleValidationExceptionIfNeeded(QueryException $exception): void
+    {
+        if (! $exception instanceof UniqueConstraintViolationException
+            && ! str_contains($exception->getMessage(), 'Duplicate entry')) {
+            return;
+        }
+
+        if (! str_contains($exception->getMessage(), 'campaigns_brand_normalized_title_unique')
+            && ! str_contains($exception->getMessage(), 'campaign_brand_normalized_title_unique')) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'title' => self::DUPLICATE_TITLE_MESSAGE,
         ]);
     }
 
