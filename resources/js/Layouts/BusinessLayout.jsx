@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import FlashMessages from '../Components/FlashMessages';
+import useSidebarPreference from '../Support/useSidebarPreference';
 
 function IconMenu() {
     return (
@@ -112,7 +113,15 @@ function isActive(url, item) {
     return url === item.href || Boolean(item.matchPrefix && url?.startsWith(item.matchPrefix));
 }
 
-function sidebarLinkClass(active, expanded) {
+function sidebarLinkClass(active, expanded, primary = false) {
+    if (primary) {
+        return [
+            'group flex h-11 items-center rounded-xl text-sm font-semibold text-slate-950 shadow-sm shadow-cyan-950/15 transition hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/40',
+            expanded ? 'w-full justify-start gap-3 px-3 bg-cyan-400' : 'w-11 justify-center bg-cyan-400',
+            active ? 'ring-2 ring-cyan-200/50' : '',
+        ].join(' ');
+    }
+
     return [
         'group flex h-11 items-center rounded-xl text-sm font-semibold transition',
         expanded ? 'w-full justify-start gap-3 px-3' : 'w-11 justify-center',
@@ -124,7 +133,7 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {} }) {
     const items = [
         { href: '/business/dashboard', label: 'Dashboard', icon: IconGrid },
         { href: '/business/campaigns', label: 'My Campaigns', icon: IconList },
-        { href: '/business/campaigns/create', label: 'Create Campaign', icon: IconBolt },
+        { href: '/business/campaigns/create', label: 'Create Campaign', icon: IconBolt, primary: true },
         { href: '/business/payout-requests', label: 'Payout Requests', icon: IconWallet, matchPrefix: '/business/payout-requests' },
         { href: '/business/billing', label: 'Billing', icon: IconCard, matchPrefix: '/business/billing' },
         { href: '/business/profile', label: 'Profile', icon: IconProfile, matchPrefix: '/business/profile' },
@@ -174,7 +183,7 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {} }) {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={sidebarLinkClass(active, expanded)}
+                            className={sidebarLinkClass(active, expanded, item.primary)}
                             title={expanded ? undefined : item.label}
                             aria-label={item.label}
                             onClick={onNavigate}
@@ -266,7 +275,7 @@ function Header({ user, onMobileMenu }) {
 export default function BusinessLayout({ children }) {
     const page = usePage();
     const { auth = {} } = page.props;
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useSidebarPreference();
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (

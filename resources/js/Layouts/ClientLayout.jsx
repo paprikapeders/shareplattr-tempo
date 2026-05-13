@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import FlashMessages from '../Components/FlashMessages';
+import useSidebarPreference from '../Support/useSidebarPreference';
 
 function LogoIcon() {
     return (
@@ -316,7 +317,8 @@ export default function ClientLayout({ children }) {
     const page = usePage();
     const { auth = {} } = page.props;
     const url = page.url;
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+    const [sidebarExpanded, setSidebarExpanded] = useSidebarPreference();
+    const sidebarCollapsed = !sidebarExpanded;
 
     return (
         <div className="min-h-screen bg-[#f8fafc] text-slate-900">
@@ -326,7 +328,7 @@ export default function ClientLayout({ children }) {
                         <SidebarContent
                             url={url}
                             collapsed={sidebarCollapsed}
-                            onToggle={() => setSidebarCollapsed((current) => !current)}
+                            onToggle={() => setSidebarExpanded((current) => !current)}
                         />
                     </div>
                 </aside>
