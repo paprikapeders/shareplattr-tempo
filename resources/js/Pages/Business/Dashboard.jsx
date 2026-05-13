@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import BusinessSetupChecklist from '../../Components/BusinessSetupChecklist';
 import BusinessLayout from '../../Layouts/BusinessLayout';
 import { formatReward } from '../../Support/rewards';
 
@@ -182,7 +183,7 @@ function Actions({ campaign }) {
     );
 }
 
-export default function Dashboard({ stats, campaignPerformance, conversions, payoutLiabilities }) {
+export default function Dashboard({ stats, campaignPerformance, conversions, payoutLiabilities, setupChecklist }) {
     const [activeTab, setActiveTab] = useState('campaigns');
     const maxClicks = useMemo(
         () => Math.max(...campaignPerformance.map((campaign) => campaign.clicks), 0),
@@ -192,6 +193,8 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
     return (
         <BusinessLayout>
             <div className="mx-auto w-full max-w-screen-xl space-y-6">
+                <BusinessSetupChecklist checklist={setupChecklist} />
+
                 <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                     <div className="border-b border-slate-100 p-5 sm:p-6">
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-9">

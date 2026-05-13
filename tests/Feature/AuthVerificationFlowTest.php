@@ -164,6 +164,88 @@ class AuthVerificationFlowTest extends TestCase
         Mail::assertSent(BusinessWelcomeMail::class, 1);
     }
 
+    public function test_business_registration_verification_get_started_points_to_business_onboarding(): void
+    {
+        Mail::fake();
+
+        $this->post(route('register'), [
+            'first_name' => 'Business',
+            'last_name' => 'Owner',
+            'email' => 'business-start@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'account_type' => 'business_owner',
+            'terms_accepted' => true,
+        ])->assertRedirect(route('verify.notice'));
+
+        $user = User::where('email', 'business-start@example.com')->firstOrFail();
+        $sentCode = null;
+
+        Mail::assertSent(VerifyEmailCode::class, function (VerifyEmailCode $mail) use ($user, &$sentCode) {
+            $sentCode = $mail->code;
+
+            return $mail->hasTo($user->email);
+        });
+
+        $this->withSession([
+            'pending_verification_user_id' => $user->id,
+            'pending_verification_email' => $user->email,
+        ])->post(route('verify.store'), [
+            'code' => $sentCode,
+        ])->assertRedirect(route('register.success'));
+
+        $this->assertAuthenticatedAs($user->fresh());
+        $this->assertSame('business_owner', $user->fresh()->user_type);
+
+        $this->get(route('register.success'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Auth/RegisterSuccess')
+                ->where('redirectUrl', route('business.profile.edit'))
+            );
+    }
+
+    public function test_participant_registration_verification_get_started_points_to_client_dashboard(): void
+    {
+        Mail::fake();
+
+        $this->post(route('register'), [
+            'first_name' => 'Client',
+            'last_name' => 'User',
+            'email' => 'client-start@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'account_type' => 'participant',
+            'terms_accepted' => true,
+        ])->assertRedirect(route('verify.notice'));
+
+        $user = User::where('email', 'client-start@example.com')->firstOrFail();
+        $sentCode = null;
+
+        Mail::assertSent(VerifyEmailCode::class, function (VerifyEmailCode $mail) use ($user, &$sentCode) {
+            $sentCode = $mail->code;
+
+            return $mail->hasTo($user->email);
+        });
+
+        $this->withSession([
+            'pending_verification_user_id' => $user->id,
+            'pending_verification_email' => $user->email,
+        ])->post(route('verify.store'), [
+            'code' => $sentCode,
+        ])->assertRedirect(route('register.success'));
+
+        $this->assertAuthenticatedAs($user->fresh());
+        $this->assertSame('participant', $user->fresh()->user_type);
+
+        $this->get(route('register.success'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Auth/RegisterSuccess')
+                ->where('redirectUrl', route('dashboard'))
+            );
+    }
+
     public function test_unverified_user_can_verify_with_existing_registration_code_after_later_login(): void
     {
         Mail::fake();

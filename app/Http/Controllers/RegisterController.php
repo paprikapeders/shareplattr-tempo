@@ -40,9 +40,13 @@ class RegisterController extends Controller
         ]);
     }
 
-    public function success(): Response
+    public function success(Request $request): Response
     {
-        return Inertia::render('Auth/RegisterSuccess');
+        return Inertia::render('Auth/RegisterSuccess', [
+            'redirectUrl' => $request->user()
+                ? $this->redirectUrlFor($request->user())
+                : route('dashboard'),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -107,5 +111,20 @@ class RegisterController extends Controller
             ->whereKey($userId)
             ->whereNull('email_verified_at')
             ->first();
+    }
+
+    private function redirectUrlFor(User $user): string
+    {
+        if ($user->isAdmin()) {
+            return route('admin.dashboard');
+        }
+
+        if ($user->isBusinessOwner()) {
+            return $user->hasCompleteBusinessProfile()
+                ? route('business.dashboard')
+                : route('business.profile.edit');
+        }
+
+        return route('dashboard');
     }
 }

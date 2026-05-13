@@ -522,6 +522,96 @@ class BusinessOwnerModuleTest extends TestCase
             );
     }
 
+    public function test_new_business_owner_sees_setup_checklist_on_profile_page(): void
+    {
+        $owner = User::factory()->businessOwner()->create();
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.profile.edit'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Profile/Edit')
+                ->where('setupChecklist.shouldShow', true)
+                ->where('setupChecklist.completedCount', 0)
+                ->where('setupChecklist.totalCount', 4)
+                ->where('setupChecklist.steps.0.key', 'profile')
+                ->where('setupChecklist.steps.0.completed', false)
+            );
+    }
+
+    public function test_setup_checklist_marks_profile_step_complete(): void
+    {
+        [$owner] = $this->businessOwnerWithProfile();
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.profile.edit'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Profile/Edit')
+                ->where('setupChecklist.steps.0.key', 'profile')
+                ->where('setupChecklist.steps.0.completed', true)
+            );
+    }
+
+    public function test_setup_checklist_marks_campaign_step_complete(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        $this->campaignForOwner($owner, $profile, 'paused');
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Dashboard')
+                ->where('setupChecklist.steps.2.key', 'campaign')
+                ->where('setupChecklist.steps.2.completed', true)
+                ->where('setupChecklist.steps.3.completed', false)
+            );
+    }
+
+    public function test_setup_checklist_marks_go_live_step_complete_with_active_campaign(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        $this->campaignForOwner($owner, $profile, 'active');
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Dashboard')
+                ->where('setupChecklist.steps.3.key', 'go_live')
+                ->where('setupChecklist.steps.3.completed', true)
+            );
+    }
+
+    public function test_completed_setup_can_be_reviewed_from_dashboard(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        $owner->forceFill(['created_at' => now()->subDays(8)])->save();
+        $profile->update([
+            'stripe_customer_id' => 'cus_test_123',
+            'stripe_payment_method_id' => 'pm_test_123',
+            'stripe_billing_ready' => true,
+        ]);
+        $this->campaignForOwner($owner, $profile, 'active');
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Dashboard')
+                ->where('setupChecklist.shouldShow', false)
+                ->where('setupChecklist.completedCount', 4)
+                ->where('setupChecklist.totalCount', 4)
+                ->has('setupChecklist.steps', 4)
+            );
+    }
+
     public function test_business_layout_does_not_include_participant_tab(): void
     {
         $layout = file_get_contents(resource_path('js/Layouts/BusinessLayout.jsx'));
@@ -918,7 +1008,7 @@ class BusinessOwnerModuleTest extends TestCase
         return [$owner, $profile];
     }
 
-    private function campaignForOwner(User $owner, BusinessProfile $profile): Campaign
+    private function campaignForOwner(User $owner, BusinessProfile $profile, string $status = 'active'): Campaign
     {
         return Campaign::create([
             'created_by' => $owner->id,
@@ -931,7 +1021,7 @@ class BusinessOwnerModuleTest extends TestCase
             'category_key' => 'affiliate_push',
             'reward_amount' => 1000,
             'destination_url' => 'https://example.com',
-            'status' => 'active',
+            'status' => $status,
         ]);
     }
 

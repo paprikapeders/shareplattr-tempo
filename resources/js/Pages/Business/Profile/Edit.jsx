@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
+import BusinessSetupChecklist from '../../../Components/BusinessSetupChecklist';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
 import FieldLabel from '../../../Components/FieldLabel';
@@ -11,7 +12,7 @@ import SearchableSelect from '../../../Components/SearchableSelect';
 import { clearFieldError, isBlank, scrollToField } from '../../../Support/formValidation';
 import { INDUSTRY_OPTIONS, OTHER_KEY } from '../../../Support/taxonomy';
 
-export default function Edit({ profile }) {
+export default function Edit({ profile, setupChecklist }) {
     const { data, setData, post, processing, errors: serverErrors, clearErrors } = useForm({
         company_name: profile.company_name ?? '',
         contact_person_name: profile.contact_person_name ?? '',
@@ -78,6 +79,9 @@ export default function Edit({ profile }) {
     return (
         <BusinessLayout>
             <PageHeader title="Business Profile" eyebrow="Business" description="Complete the company details used for your campaigns." />
+
+            <div className="space-y-6">
+            <BusinessSetupChecklist checklist={setupChecklist} />
 
             <Card className="max-w-3xl p-6">
                 <form onSubmit={submit} className="space-y-5">
@@ -157,6 +161,7 @@ export default function Edit({ profile }) {
                     <Button type="submit" disabled={processing}>{processing ? 'Saving...' : 'Save Profile'}</Button>
                 </form>
             </Card>
+            </div>
         </BusinessLayout>
     );
 }

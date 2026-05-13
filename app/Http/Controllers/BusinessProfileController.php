@@ -38,6 +38,7 @@ class BusinessProfileController extends Controller
                 'description' => '',
                 'logo_url' => null,
             ],
+            'setupChecklist' => $this->businessSetupChecklist($request->user()),
         ]);
     }
 

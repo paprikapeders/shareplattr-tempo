@@ -97,6 +97,7 @@ class BusinessDashboardController extends Controller
             'campaignPerformance' => $campaignPerformance,
             'conversions' => $conversions,
             'payoutLiabilities' => $payoutLiabilities,
+            'setupChecklist' => $this->businessSetupChecklist($user),
         ]);
     }
 
