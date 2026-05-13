@@ -19,7 +19,7 @@ export default function CampaignSearchBar({
     onSubmit,
 }) {
     const categoryOptions = [
-        { value: 'all', label: 'Choose a category' },
+        { value: 'all', label: 'All Categories' },
         ...(categories?.length ? categories : CAMPAIGN_CATEGORY_OPTIONS),
     ];
 
@@ -31,10 +31,10 @@ export default function CampaignSearchBar({
                     value={category}
                     onChange={onCategoryChange}
                     options={categoryOptions}
-                    placeholder="Choose a category"
+                    placeholder="All Categories"
                     clearValueOnType={false}
-                    inputClassName="h-12 rounded-none border-0 px-5 text-sm font-medium text-slate-600 shadow-none focus:ring-0 sm:h-full"
-                    listboxClassName="left-0 w-full min-w-64 rounded-2xl border-slate-200 bg-white text-sm shadow-lg shadow-slate-950/10"
+                    inputClassName="h-12 rounded-none border-0 bg-transparent px-5 text-sm font-medium text-slate-600 shadow-none outline-none focus:border-0 focus:ring-0 sm:h-full"
+                    listboxClassName="min-w-64 rounded-2xl border-slate-200 bg-white text-sm shadow-lg shadow-slate-950/10"
                 />
             </div>
 
