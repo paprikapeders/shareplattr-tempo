@@ -14,6 +14,7 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                     <div>
                         <label className="block text-sm font-medium text-slate-700">Brand</label>
                         <Select
+                            name="brand_id"
                             value={data.brand_id}
                             onChange={(event) => setData('brand_id', event.target.value)}
                             className="mt-1"
@@ -29,6 +30,7 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                     <div>
                         <label className="block text-sm font-medium text-slate-700">Title</label>
                         <Input
+                            name="title"
                             value={data.title}
                             onChange={(event) => setData('title', event.target.value)}
                             className="mt-1"
@@ -83,6 +85,7 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                     <div>
                         <label className="block text-sm font-medium text-slate-700">Reward Amount</label>
                         <Input
+                            name="reward_amount"
                             type="number"
                             min="0.01"
                             step="0.01"
@@ -97,6 +100,7 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                     <div>
                         <label className="block text-sm font-medium text-slate-700">Status</label>
                         <Select
+                            name="status"
                             value={data.status}
                             onChange={(event) => setData('status', event.target.value)}
                             className="mt-1"
@@ -169,6 +173,7 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                     <div>
                         <label className="block text-sm font-medium text-slate-700">Destination URL</label>
                         <Input
+                            name="destination_url"
                             type="url"
                             value={data.destination_url}
                             onChange={(event) => setData('destination_url', event.target.value)}

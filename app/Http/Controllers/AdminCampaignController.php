@@ -303,10 +303,11 @@ class AdminCampaignController extends Controller
     {
         return Brand::query()
             ->orderBy('name')
-            ->get(['id', 'name'])
+            ->get(['id', 'name', 'logo', 'logo_url'])
             ->map(fn (Brand $brand) => [
                 'id' => $brand->id,
                 'name' => $brand->name,
+                'logo_url' => $brand->logo ? Storage::disk('public')->url($brand->logo) : $brand->logo_url,
             ])
             ->all();
     }

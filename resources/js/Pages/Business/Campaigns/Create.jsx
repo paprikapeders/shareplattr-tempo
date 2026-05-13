@@ -1,12 +1,23 @@
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
+import CampaignDraftPreview from '../../../Components/CampaignDraftPreview';
 import PageHeader from '../../../Components/PageHeader';
 import { clearFieldError, isBlank, scrollToField } from '../../../Support/formValidation';
 import { OTHER_KEY } from '../../../Support/taxonomy';
 import Form from './Form';
 
-export default function Create({ statuses }) {
+function StepIndicator({ step }) {
+    return (
+        <div className="mb-5 flex max-w-3xl items-center gap-3 text-sm font-semibold">
+            <span className={`rounded-full px-3 py-1 ${step === 'details' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-500'}`}>Step 1: Details</span>
+            <span className="h-px flex-1 bg-slate-200" />
+            <span className={`rounded-full px-3 py-1 ${step === 'preview' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-500'}`}>Step 2: Preview</span>
+        </div>
+    );
+}
+
+export default function Create({ statuses, brand }) {
     const { data, setData, post, processing, errors: serverErrors, clearErrors } = useForm({
         title: '',
         description: '',
@@ -21,6 +32,7 @@ export default function Create({ statuses }) {
         expires_at: '',
     });
     const [clientErrors, setClientErrors] = useState({});
+    const [step, setStep] = useState('details');
     const errors = { ...serverErrors, ...clientErrors };
 
     const updateField = (field, value) => {
@@ -84,19 +96,45 @@ export default function Create({ statuses }) {
         return true;
     };
 
-    const submit = (event) => {
+    const preview = (event) => {
         event.preventDefault();
         if (!validate()) {
             return;
         }
 
-        post('/business/campaigns', { forceFormData: true });
+        setStep('preview');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const submit = () => {
+        if (processing) {
+            return;
+        }
+
+        post('/business/campaigns', {
+            forceFormData: true,
+            onError: () => {
+                setStep('details');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+        });
     };
 
     return (
         <BusinessLayout>
             <PageHeader title="New Campaign" eyebrow="Business" description="Create a campaign for participants to promote." />
-            <Form data={data} setData={updateField} errors={errors} processing={processing} statuses={statuses} onSubmit={submit} submitLabel="Create Campaign" />
+            <StepIndicator step={step} />
+            {step === 'details' ? (
+                <Form data={data} setData={updateField} errors={errors} processing={processing} statuses={statuses} onSubmit={preview} submitLabel="Preview campaign" />
+            ) : (
+                <CampaignDraftPreview
+                    data={data}
+                    brand={brand}
+                    processing={processing}
+                    onEdit={() => setStep('details')}
+                    onConfirm={submit}
+                />
+            )}
         </BusinessLayout>
     );
 }

@@ -55,8 +55,14 @@ class BusinessCampaignController extends Controller
 
     public function create()
     {
+        $profile = request()->user()->businessProfile;
+
         return Inertia::render('Business/Campaigns/Create', [
             'statuses' => $this->statuses(),
+            'brand' => [
+                'name' => $profile?->company_name,
+                'logo_url' => $profile?->logo_path ? Storage::disk('public')->url($profile->logo_path) : null,
+            ],
         ]);
     }
 
