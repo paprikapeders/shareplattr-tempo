@@ -200,6 +200,29 @@ class CampaignController extends Controller
             'campaign_banner' => $campaign->campaign_banner,
             'campaign_banner_url' => $this->publicStorageUrl($campaign->campaign_banner, $campaign->updated_at?->timestamp),
             'referral_url' => $token ? route('referrals.show', $token->token) : null,
+            'brand_stats' => $this->brandStats($campaign),
+        ];
+    }
+
+    private function brandStats(Campaign $campaign): array
+    {
+        $campaigns = Campaign::query()
+            ->where('status', '!=', 'draft');
+
+        if ($campaign->brand_id) {
+            $campaigns->where('brand_id', $campaign->brand_id);
+        } elseif ($campaign->business_owner_id) {
+            $campaigns->where('business_owner_id', $campaign->business_owner_id);
+        } else {
+            return [
+                'campaigns_launched' => 0,
+                'average_rating' => null,
+            ];
+        }
+
+        return [
+            'campaigns_launched' => $campaigns->count(),
+            'average_rating' => null,
         ];
     }
 

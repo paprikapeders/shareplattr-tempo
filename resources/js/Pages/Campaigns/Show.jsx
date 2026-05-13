@@ -5,15 +5,6 @@ import BusinessLayout from '../../Layouts/BusinessLayout';
 import { formatReward } from '../../Support/rewards';
 import usePollingStats from '../../Support/usePollingStats';
 
-const DEMO_FALLBACKS = {
-    participants: 89,
-    clicks: 5200,
-    conversions: 201,
-    daysLeft: 24,
-    brandReach: '50k+',
-    brandRating: '4.7',
-};
-
 function compactNumber(value) {
     return new Intl.NumberFormat('en-US', {
         notation: 'compact',
@@ -133,10 +124,12 @@ function Hero({ campaign, reward, remainingDays }) {
                     <Pill className="bg-white/18 ring-1 ring-white/25">
                         {reward} / conversion
                     </Pill>
-                    <Pill className="bg-white/18 ring-1 ring-white/25">
-                        <span aria-hidden="true">h</span>
-                        {remainingDays} days left
-                    </Pill>
+                    {remainingDays !== null && (
+                        <Pill className="bg-white/18 ring-1 ring-white/25">
+                            <span aria-hidden="true">h</span>
+                            {remainingDays} days left
+                        </Pill>
+                    )}
                 </div>
             </div>
         </section>
@@ -237,12 +230,13 @@ export default function Show({ campaign, businessPreview = false }) {
     });
 
     const reward = useMemo(() => formatReward(campaign), [campaign]);
-    const remainingDays = daysLeft(campaign.expires_at) ?? DEMO_FALLBACKS.daysLeft;
+    const remainingDays = daysLeft(campaign.expires_at);
     const metrics = {
-        participants: liveStats?.participants_count ?? campaign.participants_count ?? DEMO_FALLBACKS.participants,
-        clicks: liveStats?.click_count ?? liveStats?.campaign?.click_count ?? campaign.click_count ?? DEMO_FALLBACKS.clicks,
-        conversions: liveStats?.conversion_count ?? liveStats?.campaign?.conversion_count ?? campaign.conversion_count ?? DEMO_FALLBACKS.conversions,
+        participants: liveStats?.participants_count ?? campaign.participants_count ?? 0,
+        clicks: liveStats?.click_count ?? liveStats?.campaign?.click_count ?? campaign.click_count ?? 0,
+        conversions: liveStats?.conversion_count ?? liveStats?.campaign?.conversion_count ?? campaign.conversion_count ?? 0,
     };
+    const brandCampaignsLaunched = Number(campaign.brand_stats?.campaigns_launched ?? 0);
 
     const referralUrl = (source = 'copy') => {
         if (!campaign.referral_url) {
@@ -421,7 +415,12 @@ export default function Show({ campaign, businessPreview = false }) {
                             <Card className="p-6 text-center">
                                 <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-500">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                                    Campaign active &middot; {remainingDays} days left
+                                    Campaign active
+                                    {remainingDays !== null && (
+                                        <>
+                                            {' '}&middot; {remainingDays} days left
+                                        </>
+                                    )}
                                 </div>
 
                                 <p className="mt-6 text-4xl font-extrabold tracking-tight text-slate-950">{reward}</p>
@@ -532,16 +531,16 @@ export default function Show({ campaign, businessPreview = false }) {
                                     </dl>
                                 )}
 
-                                <div className="mt-4 grid grid-cols-2 gap-3 text-center">
-                                    <div>
-                                        <p className="text-base font-extrabold text-slate-950">{DEMO_FALLBACKS.brandReach}</p>
-                                        <p className="text-xs text-slate-400">businesses</p>
+                                {brandCampaignsLaunched > 1 ? (
+                                    <div className="mt-4 border-t border-slate-100 pt-4 text-center">
+                                        <p className="text-base font-extrabold text-slate-950">{brandCampaignsLaunched}</p>
+                                        <p className="text-xs text-slate-400">campaigns launched</p>
                                     </div>
-                                    <div>
-                                        <p className="text-base font-extrabold text-slate-950">{DEMO_FALLBACKS.brandRating}&#9733;</p>
-                                        <p className="text-xs text-slate-400">brand rating</p>
-                                    </div>
-                                </div>
+                                ) : (
+                                    <p className="mt-4 border-t border-slate-100 pt-4 text-center text-xs font-semibold text-slate-400">
+                                        New to SharePlattr
+                                    </p>
+                                )}
                             </Card>
 
                             {!businessPreview && (
