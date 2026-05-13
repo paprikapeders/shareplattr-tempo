@@ -227,8 +227,8 @@ class BrandCampaignImport implements ToCollection
     {
         $industry = $data['Industry'] ?? null;
         $notes = $data['Notes'] ?? null;
-        [$categoryKey, $categoryOther] = Taxonomy::campaignCategoryFromValue($industry ?: 'Affiliate');
-        $category = Taxonomy::campaignCategoryLabel($categoryKey, $categoryOther) ?? ($industry ?: 'Affiliate');
+        $category = $industry ?: 'Affiliate';
+        [$categoryKey, $categoryOther] = Taxonomy::campaignCategoryFromValue($category);
 
         return [
             'created_by' => $this->adminId,

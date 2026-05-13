@@ -234,10 +234,12 @@ class CampaignAvailabilityTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Campaigns')
-                ->where('categories.0.value', 'product_launch')
-                ->where('categories.0.label', 'Product Launch')
-                ->where('categories.15.value', 'other')
-                ->where('categories.15.label', 'Other')
+                ->where('categories.0.value', 'all')
+                ->where('categories.0.label', 'All Categories')
+                ->where('categories.1.value', 'product_launch')
+                ->where('categories.1.label', 'Product Launch')
+                ->where('categories.16.value', 'other')
+                ->where('categories.16.label', 'Other')
             );
 
         $this
@@ -249,6 +251,61 @@ class CampaignAvailabilityTest extends TestCase
                 ->has('campaigns', 1)
                 ->where('campaigns.0.id', $matchingCampaign->id)
                 ->where('filters.category', 'product_launch')
+            );
+    }
+
+    public function test_marketplace_category_filter_supports_legacy_and_other_categories(): void
+    {
+        $user = User::factory()->create();
+        $legacyCampaign = $this->createCampaign([
+            'title' => 'Fintech Legacy Campaign',
+            'category' => 'Fintech',
+            'category_key' => null,
+            'category_other' => null,
+        ]);
+        $customCampaign = $this->createCampaign([
+            'title' => 'Campus Ambassador Campaign',
+            'category' => 'Campus Ambassadors',
+            'category_key' => 'other',
+            'category_other' => 'Campus Ambassadors',
+        ]);
+        $this->createCampaign([
+            'title' => 'Launch Campaign',
+            'category' => 'Product Launch',
+            'category_key' => 'product_launch',
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->where('categories.17.value', 'legacy:Campus Ambassadors')
+                ->where('categories.17.label', 'Campus Ambassadors')
+                ->where('categories.18.value', 'legacy:Fintech')
+                ->where('categories.18.label', 'Fintech')
+            );
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index', ['category' => 'legacy:Fintech']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->has('campaigns', 1)
+                ->where('campaigns.0.id', $legacyCampaign->id)
+                ->where('filters.category', 'legacy:Fintech')
+            );
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index', ['category' => 'other']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->has('campaigns', 2)
+                ->where('campaigns.1.id', $customCampaign->id)
             );
     }
 

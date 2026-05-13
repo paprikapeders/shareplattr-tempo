@@ -53,6 +53,9 @@ class AdminBrandCampaignImportTest extends TestCase
             'title' => 'Booking Test Affiliate Program',
             'normalized_title' => 'booking test affiliate program',
             'destination_url' => 'https://booking.test/affiliates',
+            'category' => 'Travel - Hotels',
+            'category_key' => 'other',
+            'category_other' => 'Travel - Hotels',
             'commission_details' => 'Up to 4% per booking',
         ]);
 

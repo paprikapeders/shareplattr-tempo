@@ -7,6 +7,7 @@ use App\Models\Reward;
 use App\Models\Click;
 use App\Support\Taxonomy;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -27,22 +28,9 @@ class CampaignController extends Controller
             ->with('brand:id,name,logo,logo_url,description,business_type,website_url,country_region,affiliate_url,contact_info,notes')
             ->with(['referralTokens' => fn ($query) => $query->where('user_id', $user->id)])
             ->withCount(['referralTokens', 'clicks', 'conversions'])
-            ->available()
-            ->when($category !== '' && $category !== 'all', function ($query) use ($category) {
-                if (array_key_exists($category, Taxonomy::CAMPAIGN_CATEGORIES)) {
-                    return $query->where(function ($query) use ($category) {
-                        $query
-                            ->where('category_key', $category)
-                            ->orWhere(function ($query) use ($category) {
-                                $query
-                                    ->whereNull('category_key')
-                                    ->where('category', Taxonomy::CAMPAIGN_CATEGORIES[$category]);
-                            });
-                    });
-                }
+            ->available();
 
-                return $query->where('category', $category);
-            });
+        $this->applyCategoryFilter($campaignQuery, $category);
 
         if ($hasSearch) {
             $normalizedSearch = strtolower($search);
@@ -55,6 +43,7 @@ class CampaignController extends Controller
                         ->whereRaw('LOWER(title) LIKE ?', [$like])
                         ->orWhereRaw('LOWER(brand_name) LIKE ?', [$like])
                         ->orWhereRaw('LOWER(category) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(category_other) LIKE ?', [$like])
                         ->orWhereRaw('LOWER(description) LIKE ?', [$like])
                         ->orWhereHas('brand', fn ($query) => $query->whereRaw('LOWER(name) LIKE ?', [$like]));
                 })
@@ -96,26 +85,10 @@ class CampaignController extends Controller
             ]);
         }
 
-        $legacyCategories = Campaign::query()
-            ->available()
-            ->whereNull('category_key')
-            ->whereNotNull('category')
-            ->distinct()
-            ->orderBy('category')
-            ->pluck('category')
-            ->reject(fn (string $category) => in_array($category, Taxonomy::CAMPAIGN_CATEGORIES, true))
-            ->map(fn (string $category) => ['value' => $category, 'label' => $category]);
-
-        $categories = collect(Taxonomy::CAMPAIGN_CATEGORIES)
-            ->map(fn (string $label, string $key) => ['value' => $key, 'label' => $label])
-            ->values()
-            ->merge($legacyCategories)
-            ->values();
-
         return Inertia::render('Campaigns', [
             'campaigns' => $campaigns,
             'searchResults' => $hasSearch ? $campaigns : [],
-            'categories' => $categories,
+            'categories' => $this->categoryOptions(),
             'filters' => [
                 'search' => $search,
                 'category' => $category ?: 'all',
@@ -228,6 +201,121 @@ class CampaignController extends Controller
             'campaign_banner_url' => $this->publicStorageUrl($campaign->campaign_banner, $campaign->updated_at?->timestamp),
             'referral_url' => $token ? route('referrals.show', $token->token) : null,
         ];
+    }
+
+    private function applyCategoryFilter($query, string $category): void
+    {
+        if ($category === '' || $category === 'all') {
+            return;
+        }
+
+        if (str_starts_with($category, 'legacy:')) {
+            $legacyCategory = substr($category, strlen('legacy:'));
+
+            $query->where(function ($query) use ($legacyCategory) {
+                $query
+                    ->where('category', $legacyCategory)
+                    ->orWhere('category_other', $legacyCategory);
+            });
+
+            return;
+        }
+
+        if ($category === Taxonomy::OTHER) {
+            $predefinedLabels = array_map(fn (string $label) => strtolower($label), Taxonomy::CAMPAIGN_CATEGORIES);
+
+            $query->where(function ($query) use ($predefinedLabels) {
+                $query
+                    ->where('category_key', Taxonomy::OTHER)
+                    ->orWhereNotNull('category_other')
+                    ->orWhere(function ($query) use ($predefinedLabels) {
+                        $query
+                            ->whereNull('category_key')
+                            ->whereNotNull('category')
+                            ->whereNotIn(DB::raw('LOWER(category)'), $predefinedLabels);
+                    });
+            });
+
+            return;
+        }
+
+        if (array_key_exists($category, Taxonomy::CAMPAIGN_CATEGORIES)) {
+            $label = Taxonomy::CAMPAIGN_CATEGORIES[$category];
+
+            $query->where(function ($query) use ($category, $label) {
+                $query
+                    ->where('category_key', $category)
+                    ->orWhere(function ($query) use ($label) {
+                        $query
+                            ->whereNull('category_key')
+                            ->where('category', $label);
+                    });
+            });
+
+            return;
+        }
+
+        $query->where('category', $category);
+    }
+
+    private function categoryOptions()
+    {
+        $options = collect([[
+            'value' => 'all',
+            'label' => 'All Categories',
+            'type' => 'all',
+        ]]);
+
+        $predefined = collect(Taxonomy::CAMPAIGN_CATEGORIES)
+            ->map(fn (string $label, string $key) => [
+                'value' => $key,
+                'label' => $label,
+                'type' => 'predefined',
+            ])
+            ->values();
+
+        $seenLabels = collect(Taxonomy::CAMPAIGN_CATEGORIES)
+            ->mapWithKeys(fn (string $label) => [strtolower($label) => true])
+            ->all();
+
+        $legacyValues = Campaign::query()
+            ->available()
+            ->where(function ($query) {
+                $query
+                    ->whereNotNull('category')
+                    ->orWhereNotNull('category_other');
+            })
+            ->get(['category', 'category_other'])
+            ->flatMap(fn (Campaign $campaign) => [$campaign->category, $campaign->category_other])
+            ->filter(fn ($value) => filled($value))
+            ->map(fn ($value) => trim((string) $value))
+            ->filter(fn (string $value) => $value !== '');
+
+        $legacyOptions = $legacyValues
+            ->unique(fn (string $value) => strtolower($value))
+            ->reject(function (string $value) use (&$seenLabels) {
+                $normalized = strtolower($value);
+
+                if (isset($seenLabels[$normalized])) {
+                    return true;
+                }
+
+                $seenLabels[$normalized] = true;
+
+                return false;
+            })
+            ->sortBy(fn (string $value) => strtolower($value))
+            ->map(fn (string $value) => [
+                'value' => 'legacy:'.$value,
+                'label' => $value,
+                'type' => 'legacy',
+            ])
+            ->values();
+
+        return $options
+            ->merge($predefined)
+            ->merge($legacyOptions)
+            ->values();
     }
 
     private function rewardDisplay(Campaign $campaign): string
