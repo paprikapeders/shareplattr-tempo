@@ -4,7 +4,7 @@ export function isBlank(value) {
 
 export function scrollToField(name) {
     window.requestAnimationFrame(() => {
-        const field = document.querySelector(`[name="${name}"]`);
+        const field = document.querySelector(`[data-field="${name}"], [name="${name}"]`);
 
         if (!field) {
             return;

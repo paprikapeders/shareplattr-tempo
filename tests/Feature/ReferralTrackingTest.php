@@ -273,6 +273,7 @@ class ReferralTrackingTest extends TestCase
             'company_name' => $companyName,
             'contact_person_name' => $business->name,
             'industry' => 'Retail',
+            'industry_key' => 'retail',
         ]);
 
         return $business;

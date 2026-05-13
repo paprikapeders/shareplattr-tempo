@@ -57,7 +57,7 @@ class BusinessOwnerModuleTest extends TestCase
                 'contact_person_name' => 'Taylor Smith',
                 'website_url' => 'https://example.com',
                 'phone' => '555-1000',
-                'industry' => 'Food and Drink',
+                'industry_key' => 'food_beverage',
                 'description' => 'Coffee products and subscriptions.',
             ])
             ->assertRedirect(route('business.dashboard'));
@@ -66,11 +66,13 @@ class BusinessOwnerModuleTest extends TestCase
             'user_id' => $owner->id,
             'company_name' => 'Northstar Coffee',
             'contact_person_name' => 'Taylor Smith',
+            'industry_key' => 'food_beverage',
+            'industry' => 'Food & Beverage',
         ]);
 
         $this->assertDatabaseHas('brands', [
             'name' => 'Northstar Coffee',
-            'business_type' => 'Food and Drink',
+            'business_type' => 'Food & Beverage',
         ]);
     }
 
@@ -83,7 +85,7 @@ class BusinessOwnerModuleTest extends TestCase
             ->post(route('business.campaigns.store'), [
                 'title' => 'Cold Brew Starter Pack',
                 'description' => 'Promote the starter pack.',
-                'category' => 'Food and Drink',
+                'category_key' => 'product_launch',
                 'reward_amount' => '15.50',
                 'destination_url' => 'https://example.com/cold-brew',
                 'status' => 'active',
@@ -110,9 +112,9 @@ class BusinessOwnerModuleTest extends TestCase
             $this
                 ->actingAs($owner)
                 ->post(route('business.campaigns.store'), [
-                    'title' => 'Same Day Expiry Campaign',
-                    'description' => 'This campaign should stay available until the selected day ends.',
-                    'category' => 'Food and Drink',
+                'title' => 'Same Day Expiry Campaign',
+                'description' => 'This campaign should stay available until the selected day ends.',
+                    'category_key' => 'limited_offer',
                     'reward_amount' => '15.50',
                     'destination_url' => 'https://example.com/same-day-expiry',
                     'status' => 'active',
@@ -168,7 +170,7 @@ class BusinessOwnerModuleTest extends TestCase
             ->post(route('business.campaigns.store'), [
                 'title' => 'Fixed Reward Campaign',
                 'description' => 'Promote a fixed reward offer.',
-                'category' => 'Retail',
+                'category_key' => 'affiliate_push',
                 'reward_type' => 'flat',
                 'reward_amount' => '14.00',
                 'destination_url' => 'https://example.com/fixed',
@@ -194,7 +196,7 @@ class BusinessOwnerModuleTest extends TestCase
             ->post(route('business.campaigns.store'), [
                 'title' => 'Percentage Reward Campaign',
                 'description' => 'Promote a percentage reward offer.',
-                'category' => 'Retail',
+                'category_key' => 'affiliate_push',
                 'reward_type' => 'percentage',
                 'reward_amount' => '15.5',
                 'destination_url' => 'https://example.com/percentage',
@@ -220,7 +222,7 @@ class BusinessOwnerModuleTest extends TestCase
             ->post(route('business.campaigns.store'), [
                 'title' => 'Invalid Percentage Campaign',
                 'description' => 'This should be rejected.',
-                'category' => 'Retail',
+                'category_key' => 'affiliate_push',
                 'reward_type' => 'percentage',
                 'reward_amount' => '100.01',
                 'destination_url' => 'https://example.com/invalid',
@@ -393,7 +395,7 @@ class BusinessOwnerModuleTest extends TestCase
             ->put(route('business.campaigns.update', $campaign), [
                 'title' => 'Updated Campaign',
                 'description' => 'Updated description.',
-                'category' => 'Retail',
+                'category_key' => 'brand_awareness',
                 'reward_amount' => '20.00',
                 'destination_url' => 'https://example.com/updated',
                 'status' => 'paused',
@@ -421,7 +423,7 @@ class BusinessOwnerModuleTest extends TestCase
             ->put(route('business.campaigns.update', $campaign), [
                 'title' => 'Hijacked Campaign',
                 'description' => 'Should not work.',
-                'category' => 'Retail',
+                'category_key' => 'brand_awareness',
                 'reward_amount' => '20.00',
                 'destination_url' => 'https://example.com/hijack',
                 'status' => 'active',
@@ -910,6 +912,7 @@ class BusinessOwnerModuleTest extends TestCase
             'company_name' => $companyName,
             'contact_person_name' => $ownerName,
             'industry' => 'Retail',
+            'industry_key' => 'retail',
         ]);
 
         return [$owner, $profile];
@@ -924,7 +927,8 @@ class BusinessOwnerModuleTest extends TestCase
             'brand_name' => $profile->company_name,
             'title' => $profile->company_name.' Campaign',
             'description' => 'A business campaign.',
-            'category' => 'Retail',
+            'category' => 'Affiliate Push',
+            'category_key' => 'affiliate_push',
             'reward_amount' => 1000,
             'destination_url' => 'https://example.com',
             'status' => 'active',

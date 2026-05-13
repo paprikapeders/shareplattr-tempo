@@ -7,7 +7,9 @@ import FieldLabel from '../../../Components/FieldLabel';
 import FileUpload from '../../../Components/FileUpload';
 import Input from '../../../Components/Input';
 import PageHeader from '../../../Components/PageHeader';
+import SearchableSelect from '../../../Components/SearchableSelect';
 import { clearFieldError, isBlank, scrollToField } from '../../../Support/formValidation';
+import { INDUSTRY_OPTIONS, OTHER_KEY } from '../../../Support/taxonomy';
 
 export default function Edit({ profile }) {
     const { data, setData, post, processing, errors: serverErrors, clearErrors } = useForm({
@@ -15,7 +17,8 @@ export default function Edit({ profile }) {
         contact_person_name: profile.contact_person_name ?? '',
         website_url: profile.website_url ?? '',
         phone: profile.phone ?? '',
-        industry: profile.industry ?? '',
+        industry_key: profile.industry_key ?? '',
+        industry_other: profile.industry_other ?? '',
         description: profile.description ?? '',
         logo: null,
     });
@@ -28,7 +31,7 @@ export default function Edit({ profile }) {
         setClientErrors((current) => {
             const next = clearFieldError(current, field);
 
-            if (!current[field] || !['company_name', 'contact_person_name', 'industry'].includes(field) || !isBlank(value)) {
+            if (!current[field] || !['company_name', 'contact_person_name', 'industry_key', 'industry_other'].includes(field) || !isBlank(value)) {
                 return next;
             }
 
@@ -47,8 +50,10 @@ export default function Edit({ profile }) {
             nextErrors.contact_person_name = 'Contact Person is required.';
         }
 
-        if (isBlank(data.industry)) {
-            nextErrors.industry = 'Industry is required.';
+        if (isBlank(data.industry_key)) {
+            nextErrors.industry_key = 'Industry is required.';
+        } else if (data.industry_key === OTHER_KEY && isBlank(data.industry_other)) {
+            nextErrors.industry_other = 'Industry is required.';
         }
 
         setClientErrors(nextErrors);
@@ -102,8 +107,33 @@ export default function Edit({ profile }) {
                         </div>
                         <div>
                             <FieldLabel required>Industry</FieldLabel>
-                            <Input name="industry" value={data.industry} onChange={(event) => updateField('industry', event.target.value)} error={Boolean(errors.industry)} className="mt-1" />
-                            {errors.industry && <p className="mt-1 text-sm text-rose-600">{errors.industry}</p>}
+                            <SearchableSelect
+                                name="industry_key"
+                                value={data.industry_key}
+                                onChange={(value) => {
+                                    updateField('industry_key', value);
+                                    if (value !== OTHER_KEY) {
+                                        updateField('industry_other', '');
+                                    }
+                                }}
+                                options={INDUSTRY_OPTIONS}
+                                placeholder="Search industry"
+                                error={Boolean(errors.industry_key)}
+                                className="mt-1"
+                            />
+                            {errors.industry_key && <p className="mt-1 text-sm text-rose-600">{errors.industry_key}</p>}
+                            {data.industry_key === OTHER_KEY && (
+                                <div className="mt-3">
+                                    <Input
+                                        name="industry_other"
+                                        value={data.industry_other}
+                                        onChange={(event) => updateField('industry_other', event.target.value)}
+                                        error={Boolean(errors.industry_other)}
+                                        placeholder="Enter industry"
+                                    />
+                                    {errors.industry_other && <p className="mt-1 text-sm text-rose-600">{errors.industry_other}</p>}
+                                </div>
+                            )}
                         </div>
                     </div>
 

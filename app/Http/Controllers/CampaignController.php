@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Campaign;
 use App\Models\Reward;
 use App\Models\Click;
+use App\Support\Taxonomy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -27,7 +28,21 @@ class CampaignController extends Controller
             ->with(['referralTokens' => fn ($query) => $query->where('user_id', $user->id)])
             ->withCount(['referralTokens', 'clicks', 'conversions'])
             ->available()
-            ->when($category !== '' && $category !== 'all', fn ($query) => $query->where('category', $category));
+            ->when($category !== '' && $category !== 'all', function ($query) use ($category) {
+                if (array_key_exists($category, Taxonomy::CAMPAIGN_CATEGORIES)) {
+                    return $query->where(function ($query) use ($category) {
+                        $query
+                            ->where('category_key', $category)
+                            ->orWhere(function ($query) use ($category) {
+                                $query
+                                    ->whereNull('category_key')
+                                    ->where('category', Taxonomy::CAMPAIGN_CATEGORIES[$category]);
+                            });
+                    });
+                }
+
+                return $query->where('category', $category);
+            });
 
         if ($hasSearch) {
             $normalizedSearch = strtolower($search);
@@ -81,12 +96,20 @@ class CampaignController extends Controller
             ]);
         }
 
-        $categories = Campaign::query()
+        $legacyCategories = Campaign::query()
             ->available()
+            ->whereNull('category_key')
             ->whereNotNull('category')
             ->distinct()
             ->orderBy('category')
             ->pluck('category')
+            ->reject(fn (string $category) => in_array($category, Taxonomy::CAMPAIGN_CATEGORIES, true))
+            ->map(fn (string $category) => ['value' => $category, 'label' => $category]);
+
+        $categories = collect(Taxonomy::CAMPAIGN_CATEGORIES)
+            ->map(fn (string $label, string $key) => ['value' => $key, 'label' => $label])
+            ->values()
+            ->merge($legacyCategories)
             ->values();
 
         return Inertia::render('Campaigns', [
@@ -181,6 +204,8 @@ class CampaignController extends Controller
             'title' => $campaign->title,
             'description' => $campaign->description,
             'category' => $campaign->category,
+            'category_key' => $campaign->category_key,
+            'category_other' => $campaign->category_other,
             'reward_type' => $campaign->reward_type ?? 'flat',
             'reward_amount' => $campaign->reward_amount,
             'reward_display' => $this->rewardDisplay($campaign),

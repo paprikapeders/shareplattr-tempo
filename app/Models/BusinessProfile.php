@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Model;
     'website_url',
     'phone',
     'industry',
+    'industry_key',
+    'industry_other',
     'description',
     'logo_path',
     'status',

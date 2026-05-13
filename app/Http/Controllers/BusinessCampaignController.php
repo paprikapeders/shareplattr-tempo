@@ -8,6 +8,7 @@ use App\Models\Conversion;
 use App\Models\ReferralToken;
 use App\Models\Reward;
 use App\Support\ImportKey;
+use App\Support\Taxonomy;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -244,7 +245,8 @@ class BusinessCampaignController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:2000'],
-            'category' => ['required', 'string', 'max:255'],
+            'category_key' => ['required', Rule::in(array_keys(Taxonomy::CAMPAIGN_CATEGORIES))],
+            'category_other' => ['nullable', 'string', 'max:255', 'required_if:category_key,other'],
             'reward_type' => ['required', Rule::in(['flat', 'percentage'])],
             'reward_amount' => ['required', 'numeric', 'min:0.01'],
             'destination_url' => ['required', 'url', 'max:2048'],
@@ -270,6 +272,14 @@ class BusinessCampaignController extends Controller
         });
 
         $validated = $validator->validate();
+        if ($validated['category_key'] !== Taxonomy::OTHER) {
+            $validated['category_other'] = null;
+        }
+
+        $validated['category'] = Taxonomy::campaignCategoryLabel(
+            $validated['category_key'],
+            $validated['category_other'] ?? null,
+        );
         $validated['expires_at'] = $this->normalizeExpiryDate($validated['expires_at'] ?? null);
 
         return $validated;
@@ -381,6 +391,8 @@ class BusinessCampaignController extends Controller
             'description' => $campaign->description,
             'brand_name' => $campaign->brand_name,
             'category' => $campaign->category,
+            'category_key' => $campaign->category_key,
+            'category_other' => $campaign->category_other,
             'slug' => $campaign->slug,
             'participant_campaign_url' => route('campaigns.show', $campaign->slug ?? $campaign->id),
             'business_preview_url' => route('business.campaigns.preview', $campaign),
@@ -411,6 +423,8 @@ class BusinessCampaignController extends Controller
             'title' => $campaign->title,
             'description' => $campaign->description,
             'category' => $campaign->category,
+            'category_key' => $campaign->category_key,
+            'category_other' => $campaign->category_other,
             'reward_type' => $campaign->reward_type ?? 'flat',
             'reward_amount' => $campaign->reward_amount,
             'reward_display' => $this->rewardDisplay($campaign),

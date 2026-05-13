@@ -3,13 +3,15 @@ import { useState } from 'react';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
 import PageHeader from '../../../Components/PageHeader';
 import { clearFieldError, isBlank, scrollToField } from '../../../Support/formValidation';
+import { OTHER_KEY } from '../../../Support/taxonomy';
 import Form from './Form';
 
 export default function Create({ statuses }) {
     const { data, setData, post, processing, errors: serverErrors, clearErrors } = useForm({
         title: '',
         description: '',
-        category: '',
+        category_key: '',
+        category_other: '',
         reward_type: 'flat',
         reward_amount: '',
         destination_url: '',
@@ -29,7 +31,7 @@ export default function Create({ statuses }) {
 
             if (
                 !current[field]
-                || !['title', 'description', 'category', 'reward_type', 'reward_amount', 'destination_url', 'status'].includes(field)
+                || !['title', 'description', 'category_key', 'category_other', 'reward_type', 'reward_amount', 'destination_url', 'status'].includes(field)
                 || !isBlank(value)
             ) {
                 return next;
@@ -46,8 +48,10 @@ export default function Create({ statuses }) {
             nextErrors.title = 'Campaign Title is required.';
         }
 
-        if (isBlank(data.category)) {
-            nextErrors.category = 'Category is required.';
+        if (isBlank(data.category_key)) {
+            nextErrors.category_key = 'Category is required.';
+        } else if (data.category_key === OTHER_KEY && isBlank(data.category_other)) {
+            nextErrors.category_other = 'Category is required.';
         }
 
         if (isBlank(data.description)) {

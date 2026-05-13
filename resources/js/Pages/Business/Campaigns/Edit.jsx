@@ -7,7 +7,8 @@ export default function Edit({ campaign, statuses }) {
     const { data, setData, post, processing, errors } = useForm({
         title: campaign.title,
         description: campaign.description ?? '',
-        category: campaign.category ?? '',
+        category_key: campaign.category_key ?? '',
+        category_other: campaign.category_other ?? '',
         reward_type: campaign.reward_type ?? 'flat',
         reward_amount: campaign.reward_amount_dollars,
         destination_url: campaign.destination_url,

@@ -19,6 +19,8 @@ use Illuminate\Support\Str;
     'slug',
     'description',
     'category',
+    'category_key',
+    'category_other',
     'reward_type',
     'reward_amount',
     'commission_details',

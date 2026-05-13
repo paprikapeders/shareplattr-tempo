@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
+use App\Support\Taxonomy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class BusinessProfileController extends Controller
@@ -21,6 +23,8 @@ class BusinessProfileController extends Controller
                 'website_url' => $profile->website_url,
                 'phone' => $profile->phone,
                 'industry' => $profile->industry,
+                'industry_key' => $profile->industry_key,
+                'industry_other' => $profile->industry_other,
                 'description' => $profile->description,
                 'logo_url' => $profile->logo_path ? Storage::disk('public')->url($profile->logo_path) : null,
             ] : [
@@ -29,6 +33,8 @@ class BusinessProfileController extends Controller
                 'website_url' => '',
                 'phone' => '',
                 'industry' => '',
+                'industry_key' => '',
+                'industry_other' => '',
                 'description' => '',
                 'logo_url' => null,
             ],
@@ -42,10 +48,20 @@ class BusinessProfileController extends Controller
             'contact_person_name' => ['required', 'string', 'max:255'],
             'website_url' => ['nullable', 'url', 'max:2048'],
             'phone' => ['nullable', 'string', 'max:50'],
-            'industry' => ['required', 'string', 'max:255'],
+            'industry_key' => ['required', Rule::in(array_keys(Taxonomy::INDUSTRIES))],
+            'industry_other' => ['nullable', 'string', 'max:255', 'required_if:industry_key,other'],
             'description' => ['nullable', 'string', 'max:2000'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
+
+        if ($validated['industry_key'] !== Taxonomy::OTHER) {
+            $validated['industry_other'] = null;
+        }
+
+        $validated['industry'] = Taxonomy::industryLabel(
+            $validated['industry_key'],
+            $validated['industry_other'] ?? null,
+        );
 
         $profileData = collect($validated)->except('logo')->all();
         $user = $request->user();

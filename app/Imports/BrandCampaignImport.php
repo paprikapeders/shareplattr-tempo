@@ -7,6 +7,7 @@ use App\Models\Campaign;
 use App\Models\ImportBatch;
 use App\Models\ImportBatchRow;
 use App\Support\ImportKey;
+use App\Support\Taxonomy;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -226,6 +227,8 @@ class BrandCampaignImport implements ToCollection
     {
         $industry = $data['Industry'] ?? null;
         $notes = $data['Notes'] ?? null;
+        [$categoryKey, $categoryOther] = Taxonomy::campaignCategoryFromValue($industry ?: 'Affiliate');
+        $category = Taxonomy::campaignCategoryLabel($categoryKey, $categoryOther) ?? ($industry ?: 'Affiliate');
 
         return [
             'created_by' => $this->adminId,
@@ -234,7 +237,9 @@ class BrandCampaignImport implements ToCollection
             'title' => $title,
             'normalized_title' => $normalizedTitle,
             'description' => $notes ?: $this->campaignDescription($brand->name, $data),
-            'category' => $industry ?: 'Affiliate',
+            'category' => $category,
+            'category_key' => $categoryKey,
+            'category_other' => $categoryOther,
             'reward_amount' => $rewardAmount,
             'commission_details' => $data['Commission'] ?? null,
             'cookie_duration' => $data['Cookie Duration'] ?? null,

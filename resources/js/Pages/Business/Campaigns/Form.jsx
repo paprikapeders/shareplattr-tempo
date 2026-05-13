@@ -3,7 +3,9 @@ import Card from '../../../Components/Card';
 import FieldLabel from '../../../Components/FieldLabel';
 import FileUpload from '../../../Components/FileUpload';
 import Input from '../../../Components/Input';
+import SearchableSelect from '../../../Components/SearchableSelect';
 import Select from '../../../Components/Select';
+import { CAMPAIGN_CATEGORY_OPTIONS, OTHER_KEY } from '../../../Support/taxonomy';
 
 export default function Form({ data, setData, errors, processing, statuses, onSubmit, submitLabel }) {
     const isPercentage = data.reward_type === 'percentage';
@@ -19,9 +21,34 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
                     </div>
 
                     <div>
-                        <FieldLabel required>Category</FieldLabel>
-                        <Input name="category" value={data.category} onChange={(event) => setData('category', event.target.value)} error={Boolean(errors.category)} className="mt-1" />
-                        {errors.category && <p className="mt-1 text-sm text-rose-600">{errors.category}</p>}
+                        <FieldLabel required>Campaign Category</FieldLabel>
+                        <SearchableSelect
+                            name="category_key"
+                            value={data.category_key}
+                            onChange={(value) => {
+                                setData('category_key', value);
+                                if (value !== OTHER_KEY) {
+                                    setData('category_other', '');
+                                }
+                            }}
+                            options={CAMPAIGN_CATEGORY_OPTIONS}
+                            placeholder="Search category"
+                            error={Boolean(errors.category_key)}
+                            className="mt-1"
+                        />
+                        {errors.category_key && <p className="mt-1 text-sm text-rose-600">{errors.category_key}</p>}
+                        {data.category_key === OTHER_KEY && (
+                            <div className="mt-3">
+                                <Input
+                                    name="category_other"
+                                    value={data.category_other}
+                                    onChange={(event) => setData('category_other', event.target.value)}
+                                    error={Boolean(errors.category_other)}
+                                    placeholder="Enter category"
+                                />
+                                {errors.category_other && <p className="mt-1 text-sm text-rose-600">{errors.category_other}</p>}
+                            </div>
+                        )}
                     </div>
                 </div>
 

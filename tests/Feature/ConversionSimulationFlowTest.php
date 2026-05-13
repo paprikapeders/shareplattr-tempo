@@ -131,6 +131,7 @@ class ConversionSimulationFlowTest extends TestCase
             'company_name' => 'Demo Business',
             'contact_person_name' => $owner->name,
             'industry' => 'Retail',
+            'industry_key' => 'retail',
         ]);
 
         return [$owner, $profile];

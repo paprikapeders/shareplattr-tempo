@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Campaign;
 use App\Support\ImportKey;
+use App\Support\Taxonomy;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -144,7 +145,8 @@ class AdminCampaignController extends Controller
             'brand_id' => ['required', 'exists:brands,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:2000'],
-            'category' => ['required', 'string', 'max:255'],
+            'category_key' => ['required', Rule::in(array_keys(Taxonomy::CAMPAIGN_CATEGORIES))],
+            'category_other' => ['nullable', 'string', 'max:255', 'required_if:category_key,other'],
             'reward_amount' => ['required', 'numeric', 'min:0.01'],
             'commission_details' => ['nullable', 'string', 'max:2000'],
             'cookie_duration' => ['nullable', 'string', 'max:255'],
@@ -172,6 +174,14 @@ class AdminCampaignController extends Controller
         });
 
         $validated = $validator->validate();
+        if ($validated['category_key'] !== Taxonomy::OTHER) {
+            $validated['category_other'] = null;
+        }
+
+        $validated['category'] = Taxonomy::campaignCategoryLabel(
+            $validated['category_key'],
+            $validated['category_other'] ?? null,
+        );
         $validated['expires_at'] = $this->normalizeExpiryDate($validated['expires_at'] ?? null);
 
         return $validated;
@@ -268,6 +278,8 @@ class AdminCampaignController extends Controller
             'title' => $campaign->title,
             'description' => $campaign->description,
             'category' => $campaign->category,
+            'category_key' => $campaign->category_key,
+            'category_other' => $campaign->category_other,
             'reward_amount' => $campaign->reward_amount,
             'commission_details' => $campaign->commission_details,
             'cookie_duration' => $campaign->cookie_duration,

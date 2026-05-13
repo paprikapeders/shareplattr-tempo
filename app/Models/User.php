@@ -136,7 +136,14 @@ class User extends Authenticatable
         }
 
         return collect($fields)
-            ->filter(fn (string $label, string $field) => blank($profile->{$field}))
+            ->filter(function (string $label, string $field) use ($profile) {
+                if ($field !== 'industry') {
+                    return blank($profile->{$field});
+                }
+
+                return blank($profile->industry_key)
+                    || ($profile->industry_key === 'other' && blank($profile->industry_other));
+            })
             ->all();
     }
 }

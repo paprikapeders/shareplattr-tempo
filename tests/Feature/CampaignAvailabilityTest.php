@@ -214,6 +214,44 @@ class CampaignAvailabilityTest extends TestCase
             );
     }
 
+    public function test_marketplace_category_filter_includes_full_predefined_category_list(): void
+    {
+        $user = User::factory()->create();
+        $matchingCampaign = $this->createCampaign([
+            'title' => 'Launch Campaign',
+            'category' => 'Product Launch',
+            'category_key' => 'product_launch',
+        ]);
+        $this->createCampaign([
+            'title' => 'Other Campaign',
+            'category' => 'Other',
+            'category_key' => 'other',
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->where('categories.0.value', 'product_launch')
+                ->where('categories.0.label', 'Product Launch')
+                ->where('categories.15.value', 'other')
+                ->where('categories.15.label', 'Other')
+            );
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index', ['category' => 'product_launch']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->has('campaigns', 1)
+                ->where('campaigns.0.id', $matchingCampaign->id)
+                ->where('filters.category', 'product_launch')
+            );
+    }
+
     private function createCampaign(array $overrides = []): Campaign
     {
         return Campaign::create(array_merge([
