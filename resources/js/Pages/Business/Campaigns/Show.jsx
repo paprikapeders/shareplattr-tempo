@@ -3,6 +3,7 @@ import BusinessLayout from '../../../Layouts/BusinessLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
 import ConversionLabel from '../../../Components/ConversionLabel';
+import Tooltip from '../../../Components/Tooltip';
 import { formatReward } from '../../../Support/rewards';
 import usePollingStats from '../../../Support/usePollingStats';
 
@@ -85,8 +86,11 @@ function ChannelStats({ sources = [] }) {
                     </div>
                 ))}
 
-                <p className="border-t border-slate-100 pt-4 text-xs font-medium text-slate-400">
-                    Channel attribution is estimated/unavailable until tracking data is available.
+                <p className="flex items-center gap-1.5 border-t border-slate-100 pt-4 text-xs font-medium text-slate-400">
+                    <span>Channel attribution is estimated</span>
+                    <Tooltip label="Explain channel attribution">
+                        SharePlattr appends UTM parameters to participant links when possible. Channel attribution is estimated from those UTM values and referral click data, so it may not be exact.
+                    </Tooltip>
                 </p>
             </div>
         </Card>
@@ -101,7 +105,20 @@ function ConversionApprovalQueue({ conversions = [] }) {
             </div>
 
             {conversions.length === 0 ? (
-                <div className="px-5 py-8 text-sm text-slate-500">No conversions waiting for approval.</div>
+                <div className="px-5 py-8">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-5">
+                        <p className="max-w-2xl text-sm leading-6 text-slate-600">
+                            When a participant achieves a conversion, it will appear here for your review. Approve to release payment, or reject if the conversion is invalid.
+                        </p>
+                        <button
+                            type="button"
+                            className="mt-3 text-sm font-semibold text-cyan-700 transition hover:text-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-400/30"
+                            aria-label="Learn more about conversions"
+                        >
+                            Learn more about conversions
+                        </button>
+                    </div>
+                </div>
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[720px] divide-y divide-slate-100 text-sm">
