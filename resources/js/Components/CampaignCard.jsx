@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { formatExpiryDate } from '../Support/dates';
 import { formatReward } from '../Support/rewards';
 
 function firstLetter(value = '') {
@@ -60,6 +61,11 @@ export default function CampaignCard({ campaign }) {
                 <p className="mt-2 line-clamp-2 text-[11px] font-medium leading-4 text-white/90">
                     {campaign.description}
                 </p>
+                {campaign.expires_at && (
+                    <p className="mt-2 text-[11px] font-bold text-white/85">
+                        {formatExpiryDate(campaign.expires_at)}
+                    </p>
+                )}
             </div>
         </Link>
     );

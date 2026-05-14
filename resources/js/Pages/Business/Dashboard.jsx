@@ -4,6 +4,7 @@ import BusinessSetupChecklist from '../../Components/BusinessSetupChecklist';
 import ConversionLabel, { CONVERSION_HELP_TEXT } from '../../Components/ConversionLabel';
 import Tooltip from '../../Components/Tooltip';
 import BusinessLayout from '../../Layouts/BusinessLayout';
+import { formatExpiryDate } from '../../Support/dates';
 import { formatReward } from '../../Support/rewards';
 
 const CAMPAIGNS_COLLAPSED_KEY = 'shareplattr.dashboard.campaigns.collapsed';
@@ -117,7 +118,7 @@ function CampaignCard({ campaign, index }) {
                             </span>
                         </div>
                         {campaign.expires_at && (
-                            <p className="mt-1 text-xs font-medium text-slate-500">Expires {campaign.expires_at}</p>
+                            <p className="mt-1 text-xs font-medium text-slate-500">{formatExpiryDate(campaign.expires_at)}</p>
                         )}
                     </div>
                 </div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Button from './Button';
 import Card from './Card';
+import { formatExpiryDate } from '../Support/dates';
 import { formatReward } from '../Support/rewards';
 import { CAMPAIGN_CATEGORY_OPTIONS, OTHER_KEY, optionLabel } from '../Support/taxonomy';
 
@@ -140,7 +141,7 @@ export default function CampaignDraftPreview({
                             <p className="mt-2 text-sm text-slate-400">earned per verified conversion</p>
                             {previewCampaign.expires_at && (
                                 <p className="mt-5 text-xs font-medium text-slate-400">
-                                    Expires {previewCampaign.expires_at}
+                                    {formatExpiryDate(previewCampaign.expires_at)}
                                 </p>
                             )}
                         </aside>

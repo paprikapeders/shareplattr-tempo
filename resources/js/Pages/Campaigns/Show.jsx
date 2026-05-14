@@ -4,6 +4,7 @@ import ClientLayout from '../../Layouts/ClientLayout';
 import BusinessLayout from '../../Layouts/BusinessLayout';
 import CopyCampaignLinkButton from '../../Components/CopyCampaignLinkButton';
 import ConversionLabel from '../../Components/ConversionLabel';
+import { formatExpiryDate } from '../../Support/dates';
 import { formatReward } from '../../Support/rewards';
 import usePollingStats from '../../Support/usePollingStats';
 
@@ -12,21 +13,6 @@ function compactNumber(value) {
         notation: 'compact',
         maximumFractionDigits: 1,
     }).format(value);
-}
-
-function daysLeft(expiresAt) {
-    if (!expiresAt) {
-        return null;
-    }
-
-    const end = new Date(expiresAt);
-    const diff = end.getTime() - Date.now();
-
-    if (Number.isNaN(diff)) {
-        return null;
-    }
-
-    return Math.max(0, Math.ceil(diff / 86400000));
 }
 
 function initials(name = '') {
@@ -85,7 +71,9 @@ function Pill({ children, className = '' }) {
     );
 }
 
-function Hero({ campaign, reward, remainingDays }) {
+function Hero({ campaign, reward }) {
+    const expiryLabel = formatExpiryDate(campaign.expires_at, null);
+
     return (
         <section className="relative min-h-[255px] overflow-hidden rounded-none bg-slate-900 sm:rounded-2xl">
             {campaign.campaign_banner_url ? (
@@ -126,10 +114,9 @@ function Hero({ campaign, reward, remainingDays }) {
                     <Pill className="bg-white/18 ring-1 ring-white/25">
                         {reward} / conversion
                     </Pill>
-                    {remainingDays !== null && (
+                    {expiryLabel && (
                         <Pill className="bg-white/18 ring-1 ring-white/25">
-                            <span aria-hidden="true">h</span>
-                            {remainingDays} days left
+                            {expiryLabel}
                         </Pill>
                     )}
                 </div>
@@ -234,7 +221,7 @@ export default function Show({ campaign, businessPreview = false }) {
     });
 
     const reward = useMemo(() => formatReward(campaign), [campaign]);
-    const remainingDays = daysLeft(campaign.expires_at);
+    const expiryLabel = formatExpiryDate(campaign.expires_at, null);
     const metrics = {
         participants: liveStats?.participants_count ?? campaign.participants_count ?? 0,
         clicks: liveStats?.click_count ?? liveStats?.campaign?.click_count ?? campaign.click_count ?? 0,
@@ -366,7 +353,7 @@ export default function Show({ campaign, businessPreview = false }) {
                 </div>
 
                 <div className="px-4 py-6 sm:px-6 lg:px-8">
-                    <Hero campaign={campaign} reward={reward} remainingDays={remainingDays} />
+                    <Hero campaign={campaign} reward={reward} />
 
                     <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] xl:items-start">
                         <div className="space-y-6">
@@ -425,9 +412,9 @@ export default function Show({ campaign, businessPreview = false }) {
                                 <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-500">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
                                     Campaign active
-                                    {remainingDays !== null && (
+                                    {expiryLabel && (
                                         <>
-                                            {' '}&middot; {remainingDays} days left
+                                            {' '}&middot; {expiryLabel}
                                         </>
                                     )}
                                 </div>

@@ -4,6 +4,7 @@ import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
 import ConversionLabel from '../../../Components/ConversionLabel';
 import Tooltip from '../../../Components/Tooltip';
+import { formatDisplayDate, formatExpiryDate } from '../../../Support/dates';
 import { formatReward } from '../../../Support/rewards';
 import usePollingStats from '../../../Support/usePollingStats';
 
@@ -211,7 +212,7 @@ export default function Show({ campaign }) {
                             <MetaItem>{campaign.brand_name || 'Business'}</MetaItem>
                             <MetaItem>{campaign.category}</MetaItem>
                             <MetaItem>{campaign.created_at ? `Created ${campaign.created_at}` : null}</MetaItem>
-                            <MetaItem>{campaign.expires_at ? `Expires ${campaign.expires_at}` : 'No expiry'}</MetaItem>
+                            <MetaItem>{formatExpiryDate(campaign.expires_at, 'No expiry')}</MetaItem>
                         </div>
                     </div>
 
@@ -288,7 +289,7 @@ export default function Show({ campaign }) {
                     <h2 className="text-sm font-bold text-slate-950">Campaign Details</h2>
                     <dl className="mt-4 grid gap-5 sm:grid-cols-2">
                         <DetailItem label="Category">{campaign.category || 'Uncategorized'}</DetailItem>
-                        <DetailItem label="Expires At">{campaign.expires_at || 'No expiry'}</DetailItem>
+                        <DetailItem label="Expires At">{formatDisplayDate(campaign.expires_at, 'No expiry date')}</DetailItem>
                         <DetailItem label="Destination URL" wide>
                             {campaign.destination_url ? (
                                 <a

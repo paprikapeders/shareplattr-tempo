@@ -1,6 +1,7 @@
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
 import CharacterCounter from '../../../Components/CharacterCounter';
+import DatePicker from '../../../Components/DatePicker';
 import FieldLabel from '../../../Components/FieldLabel';
 import FileUpload from '../../../Components/FileUpload';
 import Input from '../../../Components/Input';
@@ -100,7 +101,7 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
 
                     <div>
                         <FieldLabel>Expires At</FieldLabel>
-                        <Input name="expires_at" type="date" value={data.expires_at} onChange={(event) => setData('expires_at', event.target.value)} error={Boolean(errors.expires_at)} className="mt-1" />
+                        <DatePicker name="expires_at" value={data.expires_at} onChange={(value) => setData('expires_at', value)} error={Boolean(errors.expires_at)} />
                         {errors.expires_at && <p className="mt-1 text-sm text-rose-600">{errors.expires_at}</p>}
                     </div>
                 </div>

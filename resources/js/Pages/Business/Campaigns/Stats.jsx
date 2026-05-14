@@ -1,6 +1,7 @@
 import CopyCampaignLinkButton from '../../../Components/CopyCampaignLinkButton';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
 import ConversionLabel from '../../../Components/ConversionLabel';
+import { formatExpiryDate } from '../../../Support/dates';
 import { formatReward } from '../../../Support/rewards';
 import usePollingStats from '../../../Support/usePollingStats';
 
@@ -52,6 +53,7 @@ export default function Stats({ campaign, stats, recentClicks, recentConversions
                         <p className="text-xs font-bold uppercase text-slate-500">Business Campaign</p>
                         <h1 className="mt-1 break-words text-3xl font-bold text-slate-950">{campaign.title} Stats</h1>
                         <p className="mt-2 text-sm text-slate-500">Campaign performance scoped to your business only.</p>
+                        <p className="mt-1 text-sm font-medium text-slate-500">{formatExpiryDate(campaign.expires_at)}</p>
                         {lastUpdatedAt && (
                             <p className="mt-2 text-xs font-medium text-slate-400">
                                 Last updated {lastUpdatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
