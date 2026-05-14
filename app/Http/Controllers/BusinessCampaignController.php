@@ -420,6 +420,7 @@ class BusinessCampaignController extends Controller
         return [
             'id' => $campaign->id,
             'slug' => $campaign->slug,
+            'participant_campaign_url' => route('campaigns.show', $campaign->slug ?? $campaign->id),
             'brand_name' => $campaign->brand?->name ?? $campaign->brand_name,
             'brand_logo_url' => $campaign->brand?->logo ? Storage::disk('public')->url($campaign->brand->logo) : $campaign->brand?->logo_url,
             'brand_industry' => $campaign->brand?->business_type,

@@ -1,3 +1,4 @@
+import CopyCampaignLinkButton from '../../../Components/CopyCampaignLinkButton';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
 import ConversionLabel from '../../../Components/ConversionLabel';
 import { formatReward } from '../../../Support/rewards';
@@ -46,15 +47,18 @@ export default function Stats({ campaign, stats, recentClicks, recentConversions
     return (
         <BusinessLayout>
             <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
-                <header className="mb-6">
-                    <p className="text-xs font-bold uppercase text-slate-500">Business Campaign</p>
-                    <h1 className="mt-1 text-3xl font-bold text-slate-950">{campaign.title} Stats</h1>
-                    <p className="mt-2 text-sm text-slate-500">Campaign performance scoped to your business only.</p>
-                    {lastUpdatedAt && (
-                        <p className="mt-2 text-xs font-medium text-slate-400">
-                            Last updated {lastUpdatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
-                        </p>
-                    )}
+                <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                        <p className="text-xs font-bold uppercase text-slate-500">Business Campaign</p>
+                        <h1 className="mt-1 break-words text-3xl font-bold text-slate-950">{campaign.title} Stats</h1>
+                        <p className="mt-2 text-sm text-slate-500">Campaign performance scoped to your business only.</p>
+                        {lastUpdatedAt && (
+                            <p className="mt-2 text-xs font-medium text-slate-400">
+                                Last updated {lastUpdatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                            </p>
+                        )}
+                    </div>
+                    <CopyCampaignLinkButton url={campaign.participant_campaign_url} className="shrink-0" />
                 </header>
 
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">

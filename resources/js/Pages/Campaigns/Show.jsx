@@ -2,6 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import ClientLayout from '../../Layouts/ClientLayout';
 import BusinessLayout from '../../Layouts/BusinessLayout';
+import CopyCampaignLinkButton from '../../Components/CopyCampaignLinkButton';
 import ConversionLabel from '../../Components/ConversionLabel';
 import { formatReward } from '../../Support/rewards';
 import usePollingStats from '../../Support/usePollingStats';
@@ -347,15 +348,20 @@ export default function Show({ campaign, businessPreview = false }) {
 
             <div className="-mx-4 -mt-6 bg-[#f8fafc] sm:-mx-6 lg:-mx-8">
                 <div className="border-b border-slate-200/80 bg-white px-4 py-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-wrap items-center gap-3 text-sm">
-                        <Link href={businessPreview ? `/business/campaigns/${campaign.id}` : '/campaigns'} className="flex items-center gap-2 font-medium text-slate-600 transition hover:text-slate-950">
-                            <span aria-hidden="true">&lsaquo;</span>
-                            Back
-                        </Link>
-                        <span className="h-5 w-px bg-slate-200" />
-                        <span className="text-slate-400">Marketplace</span>
-                        <span className="text-slate-300">&rsaquo;</span>
-                        <span className="font-bold text-slate-950">{campaign.title}</span>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-wrap items-center gap-3 text-sm">
+                            <Link href={businessPreview ? `/business/campaigns/${campaign.id}` : '/campaigns'} className="flex items-center gap-2 font-medium text-slate-600 transition hover:text-slate-950">
+                                <span aria-hidden="true">&lsaquo;</span>
+                                Back
+                            </Link>
+                            <span className="h-5 w-px bg-slate-200" />
+                            <span className="text-slate-400">Marketplace</span>
+                            <span className="text-slate-300">&rsaquo;</span>
+                            <span className="font-bold text-slate-950">{campaign.title}</span>
+                        </div>
+                        {businessPreview && (
+                            <CopyCampaignLinkButton url={campaign.participant_campaign_url} className="shrink-0" />
+                        )}
                     </div>
                 </div>
 
