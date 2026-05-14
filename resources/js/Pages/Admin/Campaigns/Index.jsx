@@ -83,7 +83,7 @@ export default function Index({ campaigns }) {
                                         <td className="whitespace-nowrap px-5 py-4 text-right text-sm text-slate-700">{campaign.click_count}</td>
                                         <td className="whitespace-nowrap px-5 py-4 text-right text-sm text-slate-700">{campaign.conversion_count}</td>
                                         <td className="whitespace-nowrap px-5 py-4 text-right">
-                                            <Button as={Link} href={`/admin/campaigns/${campaign.id}/edit`} variant="secondary">
+                                            <Button as={Link} href={`/admin/campaigns/${campaign.id}/edit`} variant="secondary" aria-label="Edit campaign" title="Edit campaign">
                                                 Edit
                                             </Button>
                                         </td>

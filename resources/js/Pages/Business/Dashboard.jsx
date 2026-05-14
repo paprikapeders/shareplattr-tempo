@@ -174,15 +174,33 @@ function PillTab({ active, children, onClick, tooltip }) {
 
 function Actions({ campaign }) {
     return (
-        <div className="flex justify-end gap-3 text-slate-400">
-            <Link href={`/business/campaigns/${campaign.id}/edit`} className="hover:text-slate-800" aria-label="Edit campaign">
+        <div className="flex justify-end gap-2 text-slate-500">
+            <Link
+                href={`/business/campaigns/${campaign.id}/edit`}
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 font-semibold transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400/30"
+                aria-label="Edit campaign"
+                title="Edit campaign"
+            >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4"><path d="M12 20h9" /><path d="m16.5 3.5 4 4L8 20H4v-4L16.5 3.5Z" /></svg>
+                <span className="hidden xl:inline">Edit</span>
             </Link>
-            <Link href={`/business/campaigns/${campaign.id}`} className="hover:text-slate-800" aria-label="View campaign">
+            <Link
+                href={`/business/campaigns/${campaign.id}`}
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 font-semibold transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400/30"
+                aria-label="View campaign"
+                title="View campaign"
+            >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" /><circle cx="12" cy="12" r="2.5" /></svg>
+                <span className="hidden xl:inline">View</span>
             </Link>
-            <Link href={`/business/campaigns/${campaign.id}/stats`} className="hover:text-slate-800" aria-label="View stats">
+            <Link
+                href={`/business/campaigns/${campaign.id}/stats`}
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 font-semibold transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400/30"
+                aria-label="View campaign stats"
+                title="View campaign stats"
+            >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4"><path d="M4 19V5M9 19v-8M14 19V8M19 19v-5" /></svg>
+                <span className="hidden xl:inline">Stats</span>
             </Link>
         </div>
     );

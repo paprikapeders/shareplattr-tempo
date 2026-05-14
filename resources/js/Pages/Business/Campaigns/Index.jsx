@@ -40,9 +40,9 @@ export default function Index({ campaigns }) {
                                         <td className="px-5 py-4 text-right text-sm text-slate-600">{campaign.click_count}</td>
                                         <td className="px-5 py-4">
                                             <div className="flex justify-end gap-2">
-                                                <Button as={Link} href={`/business/campaigns/${campaign.id}`} variant="secondary">View</Button>
-                                                <Button as={Link} href={`/business/campaigns/${campaign.id}/stats`} variant="secondary">Stats</Button>
-                                                <Button as={Link} href={`/business/campaigns/${campaign.id}/edit`} variant="secondary">Edit</Button>
+                                                <Button as={Link} href={`/business/campaigns/${campaign.id}`} variant="secondary" aria-label="View campaign" title="View campaign">View</Button>
+                                                <Button as={Link} href={`/business/campaigns/${campaign.id}/stats`} variant="secondary" aria-label="View campaign stats" title="View campaign stats">Stats</Button>
+                                                <Button as={Link} href={`/business/campaigns/${campaign.id}/edit`} variant="secondary" aria-label="Edit campaign" title="Edit campaign">Edit</Button>
                                             </div>
                                         </td>
                                     </tr>

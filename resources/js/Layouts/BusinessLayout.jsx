@@ -116,17 +116,25 @@ function isActive(url, item) {
 function sidebarLinkClass(active, expanded, primary = false) {
     if (primary) {
         return [
-            'group flex h-11 items-center rounded-xl text-sm font-semibold text-slate-950 shadow-sm shadow-cyan-950/15 transition hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/40',
+            'group relative flex h-11 items-center rounded-xl text-sm font-semibold text-slate-950 shadow-sm shadow-cyan-950/15 transition hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/40',
             expanded ? 'w-full justify-start gap-3 px-3 bg-cyan-400' : 'w-11 justify-center bg-cyan-400',
             active ? 'ring-2 ring-cyan-200/50' : '',
         ].join(' ');
     }
 
     return [
-        'group flex h-11 items-center rounded-xl text-sm font-semibold transition',
+        'group relative flex h-11 items-center rounded-xl text-sm font-semibold transition',
         expanded ? 'w-full justify-start gap-3 px-3' : 'w-11 justify-center',
         active ? 'bg-slate-700 text-white shadow-sm shadow-black/10' : 'text-slate-500 hover:bg-slate-800 hover:text-white',
     ].join(' ');
+}
+
+function SidebarTooltip({ children }) {
+    return (
+        <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus:opacity-100">
+            {children}
+        </span>
+    );
 }
 
 function SidebarContent({ url, expanded, onToggle, onNavigate = () => {} }) {
@@ -138,7 +146,7 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {} }) {
         { href: '/business/billing', label: 'Billing', icon: IconCard, matchPrefix: '/business/billing' },
         { href: '/business/profile', label: 'Profile', icon: IconProfile, matchPrefix: '/business/profile' },
     ];
-    const toggleLabel = expanded ? 'Collapse menu' : 'Expand menu';
+    const toggleLabel = expanded ? 'Collapse sidebar' : 'Expand sidebar';
     const ToggleIcon = expanded ? IconPanelClose : IconPanelOpen;
 
     return (
@@ -190,6 +198,7 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {} }) {
                         >
                             <Icon />
                             {expanded && <span className="truncate">{item.label}</span>}
+                            {!expanded && <SidebarTooltip>{item.label}</SidebarTooltip>}
                         </Link>
                     );
                 })}
@@ -200,7 +209,7 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {} }) {
                 method="post"
                 as="button"
                 className={[
-                    'mt-6 flex h-11 items-center rounded-xl text-sm font-semibold text-slate-500 transition hover:bg-slate-800 hover:text-white',
+                    'group relative mt-6 flex h-11 items-center rounded-xl text-sm font-semibold text-slate-500 transition hover:bg-slate-800 hover:text-white',
                     expanded ? 'w-full justify-start gap-3 px-3' : 'w-11 justify-center self-center',
                 ].join(' ')}
                 aria-label="Logout"
@@ -208,6 +217,7 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {} }) {
             >
                 <IconLogout />
                 {expanded && <span>Logout</span>}
+                {!expanded && <SidebarTooltip>Logout</SidebarTooltip>}
             </Link>
         </div>
     );

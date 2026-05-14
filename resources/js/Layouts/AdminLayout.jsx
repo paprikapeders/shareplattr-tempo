@@ -135,7 +135,7 @@ export default function AdminLayout({ children }) {
                                     type="button"
                                     onClick={() => setMobileOpen((current) => !current)}
                                     className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 lg:hidden"
-                                    aria-label="Toggle admin navigation"
+                                    aria-label={mobileOpen ? 'Close admin navigation' : 'Open admin navigation'}
                                 >
                                     {mobileOpen ? <CloseIcon /> : <MenuIcon />}
                                 </button>
