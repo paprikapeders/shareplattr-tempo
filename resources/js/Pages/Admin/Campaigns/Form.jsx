@@ -1,5 +1,6 @@
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
+import CharacterCounter from '../../../Components/CharacterCounter';
 import FileUpload from '../../../Components/FileUpload';
 import Input from '../../../Components/Input';
 import SearchableSelect from '../../../Components/SearchableSelect';
@@ -46,9 +47,11 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                     <textarea
                         value={data.description}
                         onChange={(event) => setData('description', event.target.value)}
+                        maxLength={500}
                         className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-950/5 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
                         rows="4"
                     />
+                    <CharacterCounter value={data.description} max={500} />
                     {errors.description && <p className="mt-1 text-sm text-rose-600">{errors.description}</p>}
                 </div>
 

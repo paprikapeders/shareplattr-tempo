@@ -250,7 +250,7 @@ class BusinessCampaignController extends Controller
 
         $validator = Validator::make($request->all(), [
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string', 'max:2000'],
+            'description' => ['nullable', 'string', 'max:500'],
             'category_key' => ['required', Rule::in(array_keys(Taxonomy::CAMPAIGN_CATEGORIES))],
             'category_other' => ['nullable', 'string', 'max:255', 'required_if:category_key,other'],
             'reward_type' => ['required', Rule::in(['flat', 'percentage'])],

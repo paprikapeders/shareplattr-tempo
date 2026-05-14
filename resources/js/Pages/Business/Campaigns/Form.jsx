@@ -1,5 +1,6 @@
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
+import CharacterCounter from '../../../Components/CharacterCounter';
 import FieldLabel from '../../../Components/FieldLabel';
 import FileUpload from '../../../Components/FileUpload';
 import Input from '../../../Components/Input';
@@ -58,10 +59,12 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
                         name="description"
                         value={data.description}
                         onChange={(event) => setData('description', event.target.value)}
+                        maxLength={500}
                         rows="4"
                         className={`mt-1 w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-950/5 outline-none transition focus:ring-4 ${errors.description ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100' : 'border-slate-200 focus:border-slate-400 focus:ring-slate-100'}`}
                         aria-invalid={errors.description ? 'true' : undefined}
                     />
+                    <CharacterCounter value={data.description} max={500} />
                     {errors.description && <p className="mt-1 text-sm text-rose-600">{errors.description}</p>}
                 </div>
 

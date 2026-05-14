@@ -51,7 +51,7 @@ class BusinessProfileController extends Controller
             'phone' => ['nullable', 'string', 'max:50'],
             'industry_key' => ['required', Rule::in(array_keys(Taxonomy::INDUSTRIES))],
             'industry_other' => ['nullable', 'string', 'max:255', 'required_if:industry_key,other'],
-            'description' => ['nullable', 'string', 'max:2000'],
+            'description' => ['nullable', 'string', 'max:300'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
 
