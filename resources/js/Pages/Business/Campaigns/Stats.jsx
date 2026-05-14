@@ -1,4 +1,5 @@
 import BusinessLayout from '../../../Layouts/BusinessLayout';
+import ConversionLabel from '../../../Components/ConversionLabel';
 import { formatReward } from '../../../Support/rewards';
 import usePollingStats from '../../../Support/usePollingStats';
 
@@ -9,7 +10,9 @@ function dollars(cents) {
 function Stat({ label, value }) {
     return (
         <div className="min-h-[120px] rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">{label}</p>
+            <p className="text-sm font-medium text-slate-500">
+                {label === 'Conversions' ? <ConversionLabel>{label}</ConversionLabel> : label}
+            </p>
             <p className="mt-3 text-3xl font-bold text-slate-950">{value}</p>
         </div>
     );
@@ -18,7 +21,9 @@ function Stat({ label, value }) {
 function RecentCard({ title, children, empty }) {
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-base font-semibold text-slate-950">{title}</h2>
+            <h2 className="mb-4 text-base font-semibold text-slate-950">
+                {title === 'Recent Conversions' ? <ConversionLabel>{title}</ConversionLabel> : title}
+            </h2>
             {empty ? (
                 <div className="border-t border-slate-100 pt-5 text-sm text-slate-500">{empty}</div>
             ) : (

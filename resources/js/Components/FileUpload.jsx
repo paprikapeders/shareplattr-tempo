@@ -43,6 +43,7 @@ export default function FileUpload({
     currentImageUrl = null,
     currentImageLabel = 'Current image',
     uploadLabel,
+    helperText,
 }) {
     const inputId = useId();
     const inputRef = useRef(null);
@@ -105,6 +106,7 @@ export default function FileUpload({
     return (
         <div>
             {label && <label htmlFor={inputId} className="block text-sm font-medium text-slate-700">{label}</label>}
+            {helperText && <p className="mt-1 text-xs text-slate-500">{helperText}</p>}
 
             {currentImageUrl && (
                 <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3">

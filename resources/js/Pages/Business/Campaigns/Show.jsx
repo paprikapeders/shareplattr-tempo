@@ -2,6 +2,7 @@ import { Link, router, useForm } from '@inertiajs/react';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
+import ConversionLabel from '../../../Components/ConversionLabel';
 import { formatReward } from '../../../Support/rewards';
 import usePollingStats from '../../../Support/usePollingStats';
 
@@ -44,7 +45,9 @@ function MetaItem({ children }) {
 function MetricCard({ label, value, children }) {
     return (
         <Card className="p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+            <p className="text-xs font-semibold uppercase text-slate-500">
+                {label === 'Conversions' ? <ConversionLabel>{label}</ConversionLabel> : label}
+            </p>
             <div className="mt-2 text-2xl font-bold text-slate-950">{children ?? value}</div>
         </Card>
     );

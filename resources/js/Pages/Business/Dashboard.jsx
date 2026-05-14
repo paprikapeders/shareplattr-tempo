@@ -1,6 +1,8 @@
 import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import BusinessSetupChecklist from '../../Components/BusinessSetupChecklist';
+import ConversionLabel, { CONVERSION_HELP_TEXT } from '../../Components/ConversionLabel';
+import Tooltip from '../../Components/Tooltip';
 import BusinessLayout from '../../Layouts/BusinessLayout';
 import { formatReward } from '../../Support/rewards';
 
@@ -155,15 +157,18 @@ function SummaryMetric({ label, value }) {
     );
 }
 
-function PillTab({ active, children, onClick }) {
+function PillTab({ active, children, onClick, tooltip }) {
     return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={`rounded-full border px-5 py-2 text-xs font-bold uppercase transition ${active ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
-        >
-            {children}
-        </button>
+        <span className="inline-flex items-center gap-1">
+            <button
+                type="button"
+                onClick={onClick}
+                className={`rounded-full border px-5 py-2 text-xs font-bold uppercase transition ${active ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+                {children}
+            </button>
+            {tooltip && <Tooltip label={`${children} definition`}>{tooltip}</Tooltip>}
+        </span>
     );
 }
 
@@ -202,7 +207,7 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
                             <SummaryMetric label="Active" value={stats.active_campaigns} />
                             <SummaryMetric label="Clicks" value={stats.total_clicks} />
                             <SummaryMetric label="Unique" value={stats.unique_clicks} />
-                            <SummaryMetric label="Conversions" value={stats.total_conversions} />
+                            <SummaryMetric label={<ConversionLabel>Conversions</ConversionLabel>} value={stats.total_conversions} />
                             <SummaryMetric label="Avg CVR" value={`${stats.average_conversion_rate}%`} />
                             <SummaryMetric label="Generated" value={dollars(stats.rewards_generated)} />
                             <SummaryMetric label="Pending" value={dollars(stats.pending_payout_liability)} />
@@ -235,7 +240,7 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
                 <section className="space-y-4">
                     <div className="flex flex-wrap items-center gap-2">
                         <PillTab active={activeTab === 'campaigns'} onClick={() => setActiveTab('campaigns')}>Campaigns</PillTab>
-                        <PillTab active={activeTab === 'conversions'} onClick={() => setActiveTab('conversions')}>Conversions</PillTab>
+                        <PillTab active={activeTab === 'conversions'} onClick={() => setActiveTab('conversions')} tooltip={CONVERSION_HELP_TEXT}>Conversions</PillTab>
                         <PillTab active={activeTab === 'payouts'} onClick={() => setActiveTab('payouts')}>Payout Liability</PillTab>
                     </div>
 
@@ -243,7 +248,7 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
                         <div className="border-b border-slate-100 px-5 py-5">
                             <h2 className="text-sm font-bold text-slate-950">
                                 {activeTab === 'campaigns' && 'Campaigns'}
-                                {activeTab === 'conversions' && 'Campaign Conversions'}
+                                {activeTab === 'conversions' && <ConversionLabel>Campaign Conversions</ConversionLabel>}
                                 {activeTab === 'payouts' && 'Payout Liability'}
                             </h2>
                         </div>
@@ -267,7 +272,9 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
                                         <th className="px-5 py-3">Campaign</th>
                                         <th className="px-5 py-3 text-right">Clicks</th>
                                         <th className="px-5 py-3 text-right">Unique</th>
-                                        <th className="px-5 py-3 text-right">Conversions</th>
+                                        <th className="px-5 py-3 text-right">
+                                            <ConversionLabel className="justify-end">Conversions</ConversionLabel>
+                                        </th>
                                         <th className="px-5 py-3 text-right">CVR</th>
                                         <th className="px-5 py-3 text-right">Reward</th>
                                         <th className="px-5 py-3 text-right">Total Generated</th>

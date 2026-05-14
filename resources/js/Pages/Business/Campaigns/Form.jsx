@@ -82,7 +82,7 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
                             {isPercentage && <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-slate-400">%</span>}
                         </div>
                         <p className="mt-1 text-xs text-slate-500">
-                            {isPercentage ? 'Enter the conversion reward percentage.' : 'Enter the fixed USD amount paid per conversion.'}
+                            {isPercentage ? 'Percentage of the verified order/conversion value paid per referral.' : 'Enter the fixed USD amount paid per conversion.'}
                         </p>
                         {errors.reward_amount && <p className="mt-1 text-sm text-rose-600">{errors.reward_amount}</p>}
                     </div>
@@ -105,6 +105,9 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
                 <div>
                     <FieldLabel required>Destination URL</FieldLabel>
                     <Input name="destination_url" type="url" value={data.destination_url} onChange={(event) => setData('destination_url', event.target.value)} error={Boolean(errors.destination_url)} className="mt-1" />
+                    <p className="mt-1 text-xs text-slate-500">
+                        The landing page participants will send traffic to. SharePlattr will append UTM parameters automatically.
+                    </p>
                     {errors.destination_url && <p className="mt-1 text-sm text-rose-600">{errors.destination_url}</p>}
                 </div>
 
@@ -114,6 +117,7 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
                         name="campaign_banner"
                         currentImageUrl={data.campaign_banner_url}
                         currentImageLabel="Current campaign banner"
+                        helperText="Optional. Recommended size: 1200x400px. PNG or JPG."
                         onChange={(file) => setData('campaign_banner', file)}
                         error={errors.campaign_banner}
                     />

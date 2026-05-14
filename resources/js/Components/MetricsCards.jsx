@@ -1,3 +1,5 @@
+import ConversionLabel from './ConversionLabel';
+
 function compactNumber(value) {
     if (value >= 1000000) {
         return `${(value / 1000000).toFixed(1)}m`;
@@ -93,7 +95,9 @@ export default function MetricsCards({ stats }) {
                         className="flex min-h-[112px] items-start justify-between rounded-[22px] bg-white px-4 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 sm:px-5"
                     >
                         <div>
-                            <p className="text-[15px] text-slate-700">{card.label}</p>
+                            <p className="text-[15px] text-slate-700">
+                                {card.key === 'total_conversions' ? <ConversionLabel>{card.label}</ConversionLabel> : card.label}
+                            </p>
                             <p className="mt-2 text-[20px] font-bold leading-none text-[#2a3041] sm:text-[22px]">
                                 {card.formatter(stats[card.key] ?? 0)}
                             </p>

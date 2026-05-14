@@ -2,6 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import ClientLayout from '../../Layouts/ClientLayout';
 import BusinessLayout from '../../Layouts/BusinessLayout';
+import ConversionLabel from '../../Components/ConversionLabel';
 import { formatReward } from '../../Support/rewards';
 import usePollingStats from '../../Support/usePollingStats';
 
@@ -139,7 +140,9 @@ function Hero({ campaign, reward, remainingDays }) {
 function StatCard({ label, value, helper }) {
     return (
         <Card className="p-5">
-            <p className="text-xs font-medium text-slate-400">{label}</p>
+            <p className="text-xs font-medium text-slate-400">
+                {label === 'Conversions' ? <ConversionLabel>{label}</ConversionLabel> : label}
+            </p>
             <p className="mt-2 text-2xl font-extrabold leading-none text-slate-950">{value}</p>
             <p className="mt-2 text-sm text-slate-400">{helper}</p>
         </Card>

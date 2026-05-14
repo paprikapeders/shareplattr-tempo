@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import EmptyState from './EmptyState';
 import FilterBar from './FilterBar';
 import TablePagination from './TablePagination';
+import ConversionLabel from './ConversionLabel';
 
 function dollars(cents) {
     return new Intl.NumberFormat('en-US', {
@@ -71,7 +72,9 @@ function MobileCard({ row }) {
                     <p className="mt-1 text-base font-semibold text-[#2a3041]">{row.clicks_count}</p>
                 </div>
                 <div>
-                    <p className="text-xs uppercase tracking-[0.18em]">Conversions</p>
+                    <p className="text-xs uppercase tracking-[0.18em]">
+                        <ConversionLabel>Conversions</ConversionLabel>
+                    </p>
                     <p className="mt-1 text-base font-semibold text-[#2a3041]">{row.conversions_count}</p>
                 </div>
                 <div>
@@ -132,7 +135,9 @@ export default function ReferralsTable({
                                 <tr className="text-left text-[13px] uppercase tracking-[0.18em] text-[#5a5d74]">
                                     <th className="px-6 py-4">Campaign</th>
                                     <th className="px-6 py-4 text-center">Clicks</th>
-                                    <th className="px-6 py-4 text-center">Conversions</th>
+                                    <th className="px-6 py-4 text-center">
+                                        <ConversionLabel className="justify-center">Conversions</ConversionLabel>
+                                    </th>
                                     <th className="px-6 py-4 text-center">Total Earned</th>
                                     <th className="px-6 py-4 text-center">Status</th>
                                     <th className="px-6 py-4 text-right">Actions</th>

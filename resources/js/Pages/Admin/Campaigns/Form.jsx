@@ -7,6 +7,8 @@ import Select from '../../../Components/Select';
 import { CAMPAIGN_CATEGORY_OPTIONS, OTHER_KEY } from '../../../Support/taxonomy';
 
 export default function Form({ data, setData, errors, processing, statuses, brands, onSubmit, submitLabel }) {
+    const isPercentage = data.reward_type === 'percentage';
+
     return (
         <Card className="max-w-3xl p-6">
             <form onSubmit={onSubmit} className="space-y-5">
@@ -93,7 +95,9 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                             onChange={(event) => setData('reward_amount', event.target.value)}
                             className="mt-1"
                         />
-                        <p className="mt-1 text-xs text-slate-500">Enter dollars, for example 12.00.</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                            {isPercentage ? 'Percentage of the verified order/conversion value paid per referral.' : 'Enter the fixed USD amount paid per conversion.'}
+                        </p>
                         {errors.reward_amount && <p className="mt-1 text-sm text-rose-600">{errors.reward_amount}</p>}
                     </div>
 
@@ -179,6 +183,9 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                             onChange={(event) => setData('destination_url', event.target.value)}
                             className="mt-1"
                         />
+                        <p className="mt-1 text-xs text-slate-500">
+                            The landing page participants will send traffic to. SharePlattr will append UTM parameters automatically.
+                        </p>
                         {errors.destination_url && <p className="mt-1 text-sm text-rose-600">{errors.destination_url}</p>}
                     </div>
 
@@ -200,6 +207,7 @@ export default function Form({ data, setData, errors, processing, statuses, bran
                         name="campaign_banner"
                         currentImageUrl={data.campaign_banner_url}
                         currentImageLabel="Current campaign banner"
+                        helperText="Optional. Recommended size: 1200x400px. PNG or JPG."
                         onChange={(file) => setData('campaign_banner', file)}
                         error={errors.campaign_banner}
                     />

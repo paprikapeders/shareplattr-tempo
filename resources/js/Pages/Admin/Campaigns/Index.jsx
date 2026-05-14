@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
+import ConversionLabel from '../../../Components/ConversionLabel';
 import EmptyState from '../../../Components/EmptyState';
 import PageHeader from '../../../Components/PageHeader';
 
@@ -49,7 +50,9 @@ export default function Index({ campaigns }) {
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Reward</th>
                                     <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase text-slate-500">Status</th>
                                     <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase text-slate-500">Clicks</th>
-                                    <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase text-slate-500">Conversions</th>
+                                    <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase text-slate-500">
+                                        <ConversionLabel className="justify-end">Conversions</ConversionLabel>
+                                    </th>
                                     <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase text-slate-500">Action</th>
                                 </tr>
                             </thead>
