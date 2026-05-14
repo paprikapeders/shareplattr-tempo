@@ -122,7 +122,7 @@ export default function Create({ statuses, brand }) {
 
     return (
         <BusinessLayout>
-            <PageHeader title="New Campaign" eyebrow="Business" description="Create a campaign for participants to promote." />
+            <PageHeader title="Create Campaign" eyebrow="Business" description="Create a campaign for participants to promote." />
             <StepIndicator step={step} />
             {step === 'details' ? (
                 <Form data={data} setData={updateField} errors={errors} processing={processing} statuses={statuses} onSubmit={preview} submitLabel="Preview campaign" />

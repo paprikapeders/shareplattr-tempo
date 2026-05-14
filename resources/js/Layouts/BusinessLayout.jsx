@@ -132,7 +132,7 @@ function sidebarLinkClass(active, expanded, primary = false) {
 function SidebarContent({ url, expanded, onToggle, onNavigate = () => {} }) {
     const items = [
         { href: '/business/dashboard', label: 'Dashboard', icon: IconGrid },
-        { href: '/business/campaigns', label: 'My Campaigns', icon: IconList },
+        { href: '/business/campaigns', label: 'Campaigns', icon: IconList },
         { href: '/business/campaigns/create', label: 'Create Campaign', icon: IconBolt, primary: true },
         { href: '/business/payout-requests', label: 'Payout Requests', icon: IconWallet, matchPrefix: '/business/payout-requests' },
         { href: '/business/billing', label: 'Billing', icon: IconCard, matchPrefix: '/business/billing' },
@@ -236,7 +236,9 @@ function MobileSidebar({ url, open, onClose }) {
     );
 }
 
-function Header({ user, onMobileMenu }) {
+function Header({ user, url, onMobileMenu }) {
+    const dashboardActive = url === '/business/dashboard';
+
     return (
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
             <div className="flex h-12 items-center justify-between px-5">
@@ -249,10 +251,15 @@ function Header({ user, onMobileMenu }) {
                     >
                         <IconMenu />
                     </button>
-                    <Link href="/business/dashboard" className="text-sm font-medium text-slate-600">
-                        Home
-                    </Link>
-                    <Link href="/business/dashboard" className="flex h-full items-center gap-2 border-b-2 border-violet-600 px-1 text-sm font-bold text-slate-950">
+                    <Link
+                        href="/business/dashboard"
+                        className={[
+                            'flex h-full items-center gap-2 border-b-2 px-1 text-sm font-bold transition',
+                            dashboardActive
+                                ? 'border-violet-600 text-slate-950'
+                                : 'border-transparent text-slate-600 hover:text-slate-950',
+                        ].join(' ')}
+                    >
                         <IconBag />
                         Dashboard
                     </Link>
@@ -284,7 +291,7 @@ export default function BusinessLayout({ children }) {
             <MobileSidebar url={page.url} open={mobileOpen} onClose={() => setMobileOpen(false)} />
 
             <div className={`min-w-0 transition-all duration-200 ${expanded ? 'lg:pl-56' : 'lg:pl-14'}`}>
-                <Header user={auth.user} onMobileMenu={() => setMobileOpen(true)} />
+                <Header user={auth.user} url={page.url} onMobileMenu={() => setMobileOpen(true)} />
                 <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
                     <FlashMessages className="mb-6" />
                     {children}

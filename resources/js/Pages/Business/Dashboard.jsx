@@ -227,7 +227,7 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
 
                     <div className="border-t border-slate-100 px-5 py-4 text-center">
                         <Link href="/business/campaigns" className="text-sm font-semibold text-cyan-600">
-                            View all campaigns -
+                            View all campaigns
                         </Link>
                     </div>
                 </section>
@@ -242,7 +242,7 @@ export default function Dashboard({ stats, campaignPerformance, conversions, pay
                     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                         <div className="border-b border-slate-100 px-5 py-5">
                             <h2 className="text-sm font-bold text-slate-950">
-                                {activeTab === 'campaigns' && 'My Campaigns'}
+                                {activeTab === 'campaigns' && 'Campaigns'}
                                 {activeTab === 'conversions' && 'Campaign Conversions'}
                                 {activeTab === 'payouts' && 'Payout Liability'}
                             </h2>

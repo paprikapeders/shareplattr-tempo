@@ -10,7 +10,7 @@ export default function Index({ campaigns }) {
     return (
         <BusinessLayout>
             <PageHeader title="Campaigns" eyebrow="Business" description="Create and manage campaigns owned by your business.">
-                <Button as={Link} href="/business/campaigns/create">New Campaign</Button>
+                <Button as={Link} href="/business/campaigns/create">Create Campaign</Button>
             </PageHeader>
 
             {campaigns.length === 0 ? (
