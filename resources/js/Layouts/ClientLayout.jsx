@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import FlashMessages from '../Components/FlashMessages';
-import useSidebarPreference from '../Support/useSidebarPreference';
+import useSidebarPreference, { CLIENT_SIDEBAR_STORAGE_KEY } from '../Support/useSidebarPreference';
 
 function LogoIcon() {
     return (
@@ -70,10 +70,18 @@ function ChevronDownIcon() {
 
 function navItemClasses(active, collapsed) {
     return [
-        'group flex h-10 items-center rounded-xl text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/25',
+        'group relative flex h-10 items-center rounded-xl text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/25',
         collapsed ? 'w-10 justify-center' : 'w-full justify-start gap-3 px-3',
         active ? 'bg-slate-700 text-white shadow-sm shadow-black/10' : 'text-slate-400 hover:bg-slate-800/70 hover:text-white',
     ].join(' ');
+}
+
+function SidebarTooltip({ children }) {
+    return (
+        <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus:opacity-100">
+            {children}
+        </span>
+    );
 }
 
 function getInitials(name = '') {
@@ -90,7 +98,7 @@ function getInitials(name = '') {
 function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
     const items = [
         { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
-        { href: '/campaigns', label: 'Marketplace', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
+        { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
         { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts'), icon: DashboardIconWallet },
     ];
 
@@ -98,6 +106,9 @@ function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
         <div className="flex h-full flex-col">
             <div className={`flex items-center ${collapsed ? 'flex-col gap-3' : 'justify-between gap-3'}`}>
                 <Link href="/dashboard" className="flex min-w-0 items-center gap-3 text-white" onClick={onNavigate} aria-label="SharePlattr dashboard" title="SharePlattr">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08c4c4] text-white">
+                        <LogoIcon />
+                    </span>
                     {!collapsed && <span className="truncate text-sm font-semibold">SharePlattr</span>}
                 </Link>
 
@@ -129,6 +140,7 @@ function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
                         >
                             <Icon />
                             {!collapsed && <span className="truncate">{item.label}</span>}
+                            {collapsed && <SidebarTooltip>{item.label}</SidebarTooltip>}
                         </Link>
                     );
                 })}
@@ -145,6 +157,7 @@ function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
                 >
                     <DashboardIconLogout />
                     {!collapsed && <span>Logout</span>}
+                    {collapsed && <SidebarTooltip>Logout</SidebarTooltip>}
                 </Link>
             </div>
         </div>
@@ -163,7 +176,7 @@ function MobileSidebarContent({ url, onNavigate = () => {} }) {
             <nav className="mt-7 flex flex-1 flex-col items-center gap-2">
                 {[
                     { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
-                    { href: '/campaigns', label: 'Marketplace', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
+                    { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
                     { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts'), icon: DashboardIconWallet },
                 ].map((item) => {
                     const Icon = item.icon;
@@ -178,6 +191,7 @@ function MobileSidebarContent({ url, onNavigate = () => {} }) {
                             title={item.label}
                         >
                             <Icon />
+                            <SidebarTooltip>{item.label}</SidebarTooltip>
                         </Link>
                     );
                 })}
@@ -187,11 +201,12 @@ function MobileSidebarContent({ url, onNavigate = () => {} }) {
                 href="/logout"
                 method="post"
                 as="button"
-                className="mt-6 flex h-10 w-10 items-center justify-center self-center rounded-xl text-slate-400 transition hover:bg-slate-800/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/25"
+                className="group relative mt-6 flex h-10 w-10 items-center justify-center self-center rounded-xl text-slate-400 transition hover:bg-slate-800/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/25"
                 aria-label="Logout"
                 title="Logout"
             >
                 <DashboardIconLogout />
+                <SidebarTooltip>Logout</SidebarTooltip>
             </Link>
         </div>
     );
@@ -317,7 +332,7 @@ export default function ClientLayout({ children }) {
     const page = usePage();
     const { auth = {} } = page.props;
     const url = page.url;
-    const [sidebarExpanded, setSidebarExpanded] = useSidebarPreference();
+    const [sidebarExpanded, setSidebarExpanded] = useSidebarPreference(CLIENT_SIDEBAR_STORAGE_KEY);
     const sidebarCollapsed = !sidebarExpanded;
 
     return (

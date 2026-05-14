@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import FlashMessages from '../Components/FlashMessages';
-import useSidebarPreference from '../Support/useSidebarPreference';
+import useSidebarPreference, { BUSINESS_SIDEBAR_STORAGE_KEY } from '../Support/useSidebarPreference';
 
 function IconMenu() {
     return (
@@ -292,7 +292,7 @@ function Header({ user, url, onMobileMenu }) {
 export default function BusinessLayout({ children }) {
     const page = usePage();
     const { auth = {} } = page.props;
-    const [expanded, setExpanded] = useSidebarPreference();
+    const [expanded, setExpanded] = useSidebarPreference(BUSINESS_SIDEBAR_STORAGE_KEY);
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
