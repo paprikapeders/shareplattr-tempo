@@ -22,14 +22,14 @@ function Stat({ label, value }) {
 
 function RecentCard({ title, children, empty }) {
     return (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <h2 className="mb-4 text-base font-semibold text-slate-950">
                 {title === 'Recent Conversions' ? <ConversionLabel>{title}</ConversionLabel> : title}
             </h2>
             {empty ? (
                 <div className="border-t border-slate-100 pt-5 text-sm text-slate-500">{empty}</div>
             ) : (
-                <div className="overflow-hidden border-t border-slate-100">{children}</div>
+                <div className="overflow-x-auto border-t border-slate-100">{children}</div>
             )}
         </section>
     );
@@ -47,7 +47,7 @@ export default function Stats({ campaign, stats, recentClicks, recentConversions
 
     return (
         <BusinessLayout>
-            <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
+            <div className="mx-auto max-w-6xl space-y-6 py-4 sm:py-6">
                 <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                         <p className="text-xs font-bold uppercase text-slate-500">Business Campaign</p>
@@ -75,7 +75,7 @@ export default function Stats({ campaign, stats, recentClicks, recentConversions
 
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                     <RecentCard title="Recent Clicks" empty={liveRecentClicks.length === 0 ? 'No clicks yet.' : null}>
-                        <table className="w-full table-auto divide-y divide-slate-100">
+                        <table className="w-full min-w-[520px] table-auto divide-y divide-slate-100">
                             <tbody className="divide-y divide-slate-100">
                                 {liveRecentClicks.map((click) => (
                                     <tr key={click.id}>
@@ -89,7 +89,7 @@ export default function Stats({ campaign, stats, recentClicks, recentConversions
                     </RecentCard>
 
                     <RecentCard title="Recent Conversions" empty={liveRecentConversions.length === 0 ? 'No conversions yet.' : null}>
-                        <table className="w-full table-auto divide-y divide-slate-100">
+                        <table className="w-full min-w-[520px] table-auto divide-y divide-slate-100">
                             <tbody className="divide-y divide-slate-100">
                                 {liveRecentConversions.map((conversion) => (
                                     <tr key={conversion.id}>

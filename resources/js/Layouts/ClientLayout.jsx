@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import FlashMessages from '../Components/FlashMessages';
+import MobileNavDrawer from '../Components/MobileNavDrawer';
 import useSidebarPreference, { CLIENT_SIDEBAR_STORAGE_KEY } from '../Support/useSidebarPreference';
 
 function LogoIcon() {
@@ -68,6 +69,26 @@ function ChevronDownIcon() {
     );
 }
 
+function MenuIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-5 w-5">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+    );
+}
+
+function getClientPageTitle(url) {
+    if (url?.startsWith('/campaigns')) {
+        return 'Campaigns';
+    }
+
+    if (url?.startsWith('/payouts')) {
+        return 'Payouts';
+    }
+
+    return 'Dashboard';
+}
+
 function navItemClasses(active, collapsed) {
     return [
         'group relative flex h-10 items-center rounded-xl text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/25',
@@ -95,7 +116,7 @@ function getInitials(name = '') {
     return initials || 'SP';
 }
 
-function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
+function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {}, showBrand = true }) {
     const items = [
         { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
         { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
@@ -105,12 +126,14 @@ function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
     return (
         <div className="flex h-full flex-col">
             <div className={`flex items-center ${collapsed ? 'flex-col gap-3' : 'justify-between gap-3'}`}>
-                <Link href="/dashboard" className="flex min-w-0 items-center gap-3 text-white" onClick={onNavigate} aria-label="SharePlattr dashboard" title="SharePlattr">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08c4c4] text-white">
-                        <LogoIcon />
-                    </span>
-                    {!collapsed && <span className="truncate text-sm font-semibold">SharePlattr</span>}
-                </Link>
+                {showBrand && (
+                    <Link href="/dashboard" className="flex min-w-0 items-center gap-3 text-white" onClick={onNavigate} aria-label="SharePlattr dashboard" title="SharePlattr">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08c4c4] text-white">
+                            <LogoIcon />
+                        </span>
+                        {!collapsed && <span className="truncate text-sm font-semibold">SharePlattr</span>}
+                    </Link>
+                )}
 
                 <button
                     type="button"
@@ -164,56 +187,9 @@ function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {} }) {
     );
 }
 
-function MobileSidebarContent({ url, onNavigate = () => {} }) {
-    return (
-        <div className="flex h-full flex-col">
-            <Link href="/dashboard" className="flex justify-center rounded-2xl text-white" onClick={onNavigate} aria-label="SharePlattr dashboard" title="SharePlattr">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#08c4c4]">
-                    <LogoIcon />
-                </span>
-            </Link>
-
-            <nav className="mt-7 flex flex-1 flex-col items-center gap-2">
-                {[
-                    { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
-                    { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
-                    { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts'), icon: DashboardIconWallet },
-                ].map((item) => {
-                    const Icon = item.icon;
-
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={navItemClasses(item.active, true)}
-                            onClick={onNavigate}
-                            aria-label={item.label}
-                            title={item.label}
-                        >
-                            <Icon />
-                            <SidebarTooltip>{item.label}</SidebarTooltip>
-                        </Link>
-                    );
-                })}
-            </nav>
-
-            <Link
-                href="/logout"
-                method="post"
-                as="button"
-                className="group relative mt-6 flex h-10 w-10 items-center justify-center self-center rounded-xl text-slate-400 transition hover:bg-slate-800/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/25"
-                aria-label="Logout"
-                title="Logout"
-            >
-                <DashboardIconLogout />
-                <SidebarTooltip>Logout</SidebarTooltip>
-            </Link>
-        </div>
-    );
-}
-
-function ClientTopBar({ url, user }) {
+function ClientTopBar({ url, user, onMobileMenu }) {
     const name = user?.name || 'SharePlattr user';
+    const pageTitle = getClientPageTitle(url);
     const activityFeedActive = url === '/dashboard#activity';
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef(null);
@@ -248,14 +224,27 @@ function ClientTopBar({ url, user }) {
         <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white px-4 py-3 shadow-sm sm:px-6">
             <div className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-4">
+                    <button
+                        type="button"
+                        onClick={onMobileMenu}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 lg:hidden"
+                        aria-label="Open participant navigation"
+                    >
+                        <MenuIcon />
+                    </button>
+
                     <Link href="/dashboard" className="flex items-center gap-3 text-[#08bcbc]" aria-label="SharePlattr dashboard">
                         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#08c4c4] text-white shadow-sm">
                             <LogoIcon />
                         </span>
-                        <span className="hidden text-sm font-bold text-slate-900 sm:inline">SharePlattr</span>
+                        <span className="hidden text-sm font-bold text-slate-900 sm:inline lg:hidden">SharePlattr</span>
                     </Link>
 
-                    <nav className="flex items-center" aria-label="Main navigation">
+                    <div className="min-w-0 lg:hidden">
+                        <p className="truncate text-sm font-semibold text-slate-950">{pageTitle}</p>
+                    </div>
+
+                    <nav className="hidden items-center lg:flex" aria-label="Main navigation">
                         <Link
                             href="/dashboard#activity"
                             className={[
@@ -333,10 +322,11 @@ export default function ClientLayout({ children }) {
     const { auth = {} } = page.props;
     const url = page.url;
     const [sidebarExpanded, setSidebarExpanded] = useSidebarPreference(CLIENT_SIDEBAR_STORAGE_KEY);
+    const [mobileOpen, setMobileOpen] = useState(false);
     const sidebarCollapsed = !sidebarExpanded;
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] text-slate-900">
+        <div className="min-h-screen overflow-x-hidden bg-[#f8fafc] text-slate-900">
             <div className="flex min-h-screen">
                 <aside className="hidden bg-slate-900 lg:block">
                     <div className={`sticky top-0 flex min-h-screen flex-col px-3 py-5 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-[220px]'}`}>
@@ -348,13 +338,27 @@ export default function ClientLayout({ children }) {
                     </div>
                 </aside>
 
-                <aside className="fixed inset-y-0 left-0 z-40 w-16 bg-slate-900 px-3 py-5 lg:hidden">
-                    <MobileSidebarContent url={url} />
-                </aside>
+                <MobileNavDrawer
+                    open={mobileOpen}
+                    onClose={() => setMobileOpen(false)}
+                    title="SharePlattr"
+                    subtitle="Participant"
+                    homeHref="/dashboard"
+                    logo={<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08c4c4] text-white"><LogoIcon /></span>}
+                    navLabel="Participant navigation"
+                >
+                    <SidebarContent
+                        url={url}
+                        collapsed={false}
+                        onToggle={() => setMobileOpen(false)}
+                        onNavigate={() => setMobileOpen(false)}
+                        showBrand={false}
+                    />
+                </MobileNavDrawer>
 
-                <div className="min-w-0 flex-1 pl-16 lg:pl-0">
-                    <ClientTopBar url={url} user={auth.user} />
-                    <main className="mx-auto max-w-[1500px] space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+                <div className="min-w-0 flex-1">
+                    <ClientTopBar url={url} user={auth.user} onMobileMenu={() => setMobileOpen(true)} />
+                    <main className="mx-auto max-w-[1500px] space-y-5 px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
                         <FlashMessages />
                         {children}
                     </main>

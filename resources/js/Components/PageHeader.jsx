@@ -10,7 +10,7 @@ export default function PageHeader({ title, eyebrow, description, children }) {
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{description}</p>
                 )}
             </div>
-            {children && <div className="flex items-center gap-3">{children}</div>}
+            {children && <div className="flex flex-wrap items-center gap-3">{children}</div>}
         </div>
     );
 }

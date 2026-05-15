@@ -106,7 +106,7 @@ export default function Index({ summary, duplicateImport }) {
                     </div>
 
                     {summary.failed_rows?.length > 0 && (
-                        <div className="mt-5 overflow-hidden rounded-lg border border-rose-100">
+                        <div className="mt-5 overflow-x-auto rounded-lg border border-rose-100">
                             <table className="min-w-full divide-y divide-rose-100">
                                 <thead className="bg-rose-50">
                                     <tr>
