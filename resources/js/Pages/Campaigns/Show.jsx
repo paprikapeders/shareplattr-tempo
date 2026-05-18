@@ -259,9 +259,9 @@ export default function Show({ campaign, businessPreview = false }) {
         setShareMessageText(campaign.share_message ?? '');
     }, [campaign.share_message]);
 
-    const showToast = (message) => {
+    const showToast = (message, duration = 1800) => {
         setToast(message);
-        window.setTimeout(() => setToast(null), 1800);
+        window.setTimeout(() => setToast(null), duration);
     };
 
     const generateLink = () => {
@@ -309,6 +309,49 @@ export default function Show({ campaign, businessPreview = false }) {
         window.open(url, '_blank', 'noopener,noreferrer');
     };
 
+    const handleInstagramShare = async () => {
+        const instagramWebUrl = 'https://www.instagram.com/';
+        const instagramAppUrl = 'instagram://app';
+        const message = composedMessage('instagram');
+        let copiedToClipboard = false;
+
+        try {
+            await navigator.clipboard.writeText(message);
+            copiedToClipboard = true;
+        } catch (error) {
+            copiedToClipboard = false;
+        }
+
+        const userAgent = window.navigator.userAgent || '';
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(userAgent);
+        const feedback = copiedToClipboard
+            ? 'Message and link copied. Paste it into Instagram.'
+            : 'Copy failed. Select the message or referral link, then paste it into Instagram.';
+
+        showToast(feedback, 3200);
+
+        if (!isMobile) {
+            openShare(instagramWebUrl);
+            return;
+        }
+
+        let pageHidden = false;
+        const markHidden = () => {
+            pageHidden = true;
+        };
+
+        document.addEventListener('visibilitychange', markHidden, { once: true });
+        window.location.href = instagramAppUrl;
+
+        window.setTimeout(() => {
+            document.removeEventListener('visibilitychange', markHidden);
+
+            if (!pageHidden) {
+                window.location.href = instagramWebUrl;
+            }
+        }, 900);
+    };
+
     const nativeShare = async () => {
         const text = composedMessage('direct');
 
@@ -338,10 +381,10 @@ export default function Show({ campaign, businessPreview = false }) {
             onClick: () => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(composedMessage('x'))}`),
         },
         {
-            label: 'Copy Instagram message',
+            label: 'Copy message & open Instagram',
             source: 'Instagram',
             icon: InstagramIcon,
-            onClick: () => copyMessage('instagram', 'Instagram message'),
+            onClick: handleInstagramShare,
         },
         {
             label: 'Copy TikTok message',

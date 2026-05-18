@@ -124,6 +124,18 @@ class CampaignAvailabilityTest extends TestCase
             );
     }
 
+    public function test_instagram_share_uses_dedicated_clipboard_first_handler(): void
+    {
+        $page = file_get_contents(resource_path('js/Pages/Campaigns/Show.jsx'));
+
+        $this->assertStringContainsString('const handleInstagramShare = async () => {', $page);
+        $this->assertStringContainsString("const instagramAppUrl = 'instagram://app';", $page);
+        $this->assertStringContainsString("const instagramWebUrl = 'https://www.instagram.com/';", $page);
+        $this->assertStringContainsString("label: 'Copy message & open Instagram'", $page);
+        $this->assertStringNotContainsString('instagram.com/share', $page);
+        $this->assertStringNotContainsString('instagram.com/intent', $page);
+    }
+
     public function test_admin_conversion_rejects_expired_campaign(): void
     {
         $admin = User::factory()->admin()->create();
