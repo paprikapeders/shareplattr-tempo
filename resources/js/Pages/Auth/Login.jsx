@@ -71,13 +71,12 @@ export default function Login() {
                     disabled={processing}
                     className="mt-0.5 h-11 w-full whitespace-nowrap rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:opacity-50 lg:mt-2 lg:h-12"
                 >
-                    {processing ? 'Signing In...' : 'Sign In'}
+                    {processing ? 'Signing In...' : 'Log In to My Account'}
                 </button>
 
                 <p className="text-center text-[14px] leading-5 text-[#101010] lg:text-[15px] lg:leading-6">
-                    Don&apos;t have an account yet?<br />
                     <Link href="/register" className="font-medium">
-                        Create right now
+                        Don&apos;t have an account? Get started &rarr;
                     </Link>
                 </p>
             </form>

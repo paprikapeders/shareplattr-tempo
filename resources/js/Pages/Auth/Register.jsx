@@ -259,13 +259,12 @@ export default function Register({ prefill = {} }) {
                     disabled={processing}
                     className="mt-8 h-12 w-full whitespace-nowrap rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:opacity-50 lg:mt-8"
                 >
-                    {processing ? 'Creating...' : 'Next'}
+                    {processing ? 'Creating...' : 'Create My Account'}
                 </button>
 
                 <p className="text-center text-[15px] text-[#101010] lg:hidden">
-                    Already have an account?{' '}
                     <Link href="/login" className="font-medium">
-                        Login
+                        Already have an account? Sign in &rarr;
                     </Link>
                 </p>
             </form>
