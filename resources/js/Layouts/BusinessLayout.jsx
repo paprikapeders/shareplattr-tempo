@@ -260,8 +260,10 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {}, showBr
 
 function DesktopSidebar({ url, expanded, onToggle }) {
     return (
-        <aside className={`fixed inset-y-0 left-0 z-40 hidden bg-slate-900 px-3 py-4 text-slate-500 transition-all duration-200 lg:block ${expanded ? 'w-56' : 'w-14'}`}>
-            <SidebarContent url={url} expanded={expanded} onToggle={onToggle} />
+        <aside className={`hidden bg-slate-900 text-slate-500 transition-all duration-200 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:h-screen lg:flex-col ${expanded ? 'lg:w-56' : 'lg:w-14'}`}>
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-3 py-4">
+                <SidebarContent url={url} expanded={expanded} onToggle={onToggle} />
+            </div>
         </aside>
     );
 }
@@ -380,9 +382,9 @@ export default function BusinessLayout({ children }) {
                 />
             </MobileNavDrawer>
 
-            <div className={`min-w-0 transition-all duration-200 ${expanded ? 'lg:pl-56' : 'lg:pl-14'}`}>
+            <div className={`min-w-0 overflow-x-hidden transition-all duration-200 ${expanded ? 'lg:pl-56' : 'lg:pl-14'}`}>
                 <Header user={auth.user} url={page.url} onMobileMenu={() => setMobileOpen(true)} />
-                <main className="mx-auto w-full max-w-[1500px] px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
+                <main className="mx-auto min-h-screen w-full max-w-[1500px] px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
                     <FlashMessages className="mb-6" />
                     {children}
                 </main>

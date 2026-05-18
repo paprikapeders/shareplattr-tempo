@@ -185,15 +185,14 @@ export default function AdminLayout({ children }) {
 
     return (
         <div className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-900">
-            <div className="lg:grid lg:min-h-screen lg:grid-cols-[260px_minmax(0,1fr)]">
-                <aside className="hidden border-r border-slate-200 bg-white lg:block">
-                    <div className="sticky top-0 h-screen px-5 py-6">
-                        <AdminSidebar url={url} />
-                    </div>
-                </aside>
+            <aside className="hidden border-r border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:h-screen lg:w-[260px] lg:flex-col">
+                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-5 py-6">
+                    <AdminSidebar url={url} />
+                </div>
+            </aside>
 
-                <div className="min-w-0">
-                    <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+            <div className="min-w-0 overflow-x-hidden lg:pl-[260px]">
+                <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
                         <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                             <div className="flex min-w-0 items-center gap-3">
                                 <button
@@ -247,27 +246,26 @@ export default function AdminLayout({ children }) {
                                 )}
                             </div>
                         </div>
-                    </header>
+                </header>
 
-                    <MobileNavDrawer
-                        open={mobileOpen}
-                        onClose={() => setMobileOpen(false)}
-                        title="SharePlattr"
-                        subtitle="Admin"
-                        homeHref="/admin/campaigns"
-                        logo={<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-bold text-slate-950">S</span>}
-                        navLabel="Admin navigation"
-                    >
-                        <AdminSidebar url={url} onNavigate={() => setMobileOpen(false)} showBrand={false} dark />
-                    </MobileNavDrawer>
+                <MobileNavDrawer
+                    open={mobileOpen}
+                    onClose={() => setMobileOpen(false)}
+                    title="SharePlattr"
+                    subtitle="Admin"
+                    homeHref="/admin/campaigns"
+                    logo={<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-bold text-slate-950">S</span>}
+                    navLabel="Admin navigation"
+                >
+                    <AdminSidebar url={url} onNavigate={() => setMobileOpen(false)} showBrand={false} dark />
+                </MobileNavDrawer>
 
-                    <main className="px-4 py-4 sm:px-6 lg:px-8 lg:py-8">
-                        <div className="mx-auto w-full max-w-7xl space-y-6">
-                            <FlashMessages />
-                            {children}
-                        </div>
-                    </main>
-                </div>
+                <main className="min-h-screen px-4 py-4 sm:px-6 lg:px-8 lg:py-8">
+                    <div className="mx-auto w-full max-w-7xl space-y-6">
+                        <FlashMessages />
+                        {children}
+                    </div>
+                </main>
             </div>
         </div>
     );

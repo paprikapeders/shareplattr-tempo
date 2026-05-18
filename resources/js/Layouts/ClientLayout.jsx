@@ -327,42 +327,40 @@ export default function ClientLayout({ children }) {
 
     return (
         <div className="min-h-screen overflow-x-hidden bg-[#f8fafc] text-slate-900">
-            <div className="flex min-h-screen">
-                <aside className="hidden bg-slate-900 lg:block">
-                    <div className={`sticky top-0 flex min-h-screen flex-col px-3 py-5 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-[220px]'}`}>
-                        <SidebarContent
-                            url={url}
-                            collapsed={sidebarCollapsed}
-                            onToggle={() => setSidebarExpanded((current) => !current)}
-                        />
-                    </div>
-                </aside>
-
-                <MobileNavDrawer
-                    open={mobileOpen}
-                    onClose={() => setMobileOpen(false)}
-                    title="SharePlattr"
-                    subtitle="Participant"
-                    homeHref="/dashboard"
-                    logo={<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08c4c4] text-white"><LogoIcon /></span>}
-                    navLabel="Participant navigation"
-                >
+            <aside className={`hidden bg-slate-900 transition-all duration-300 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:h-screen lg:flex-col ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-[220px]'}`}>
+                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-3 py-5">
                     <SidebarContent
                         url={url}
-                        collapsed={false}
-                        onToggle={() => setMobileOpen(false)}
-                        onNavigate={() => setMobileOpen(false)}
-                        showBrand={false}
+                        collapsed={sidebarCollapsed}
+                        onToggle={() => setSidebarExpanded((current) => !current)}
                     />
-                </MobileNavDrawer>
-
-                <div className="min-w-0 flex-1">
-                    <ClientTopBar url={url} user={auth.user} onMobileMenu={() => setMobileOpen(true)} />
-                    <main className="mx-auto max-w-[1500px] space-y-5 px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
-                        <FlashMessages />
-                        {children}
-                    </main>
                 </div>
+            </aside>
+
+            <MobileNavDrawer
+                open={mobileOpen}
+                onClose={() => setMobileOpen(false)}
+                title="SharePlattr"
+                subtitle="Participant"
+                homeHref="/dashboard"
+                logo={<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08c4c4] text-white"><LogoIcon /></span>}
+                navLabel="Participant navigation"
+            >
+                <SidebarContent
+                    url={url}
+                    collapsed={false}
+                    onToggle={() => setMobileOpen(false)}
+                    onNavigate={() => setMobileOpen(false)}
+                    showBrand={false}
+                />
+            </MobileNavDrawer>
+
+            <div className={`min-w-0 overflow-x-hidden transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[220px]'}`}>
+                <ClientTopBar url={url} user={auth.user} onMobileMenu={() => setMobileOpen(true)} />
+                <main className="mx-auto min-h-screen max-w-[1500px] space-y-5 px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
+                    <FlashMessages />
+                    {children}
+                </main>
             </div>
         </div>
     );
