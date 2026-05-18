@@ -88,7 +88,9 @@ class DashboardController extends Controller
         $hasClick = Click::query()->where('user_id', $user->id)->exists();
         $hasReward = Reward::query()->where('user_id', $user->id)->exists();
         $hasPayoutRequest = PayoutRequest::query()->where('user_id', $user->id)->exists();
-        $hasPayoutMethod = $user->payoutMethod()->exists();
+        $payoutMethod = $user->payoutMethod;
+        $hasPayoutMethod = filled($payoutMethod?->paypal_email)
+            || filled($payoutMethod?->stripe_payment_method_id);
 
         return [
             'show' => ! ($hasReferralToken || $hasClick || $hasReward || $hasPayoutRequest),

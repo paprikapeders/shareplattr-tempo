@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\BusinessProfile;
+use App\Models\PayoutMethod;
 use App\Models\PayoutRequest;
 use App\Models\User;
 use RuntimeException;
@@ -63,6 +64,62 @@ class StripeBillingService
             'stripe_card_exp_month' => $card?->exp_month,
             'stripe_card_exp_year' => $card?->exp_year,
             'stripe_billing_ready' => true,
+        ]);
+
+        return [
+            'payment_method_id' => $paymentMethod->id,
+            'brand' => $card?->brand,
+            'last4' => $card?->last4,
+            'exp_month' => $card?->exp_month,
+            'exp_year' => $card?->exp_year,
+        ];
+    }
+
+    public function createParticipantSetupIntent(PayoutMethod $payoutMethod, User $user): array
+    {
+        $stripe = $this->client();
+        $customerId = $payoutMethod->stripe_customer_id;
+
+        if (! $customerId) {
+            $customer = $stripe->customers->create([
+                'email' => $user->email,
+                'name' => $user->name,
+                'metadata' => [
+                    'payout_method_id' => (string) $payoutMethod->id,
+                    'user_id' => (string) $user->id,
+                    'role' => 'participant',
+                ],
+            ]);
+
+            $customerId = $customer->id;
+            $payoutMethod->update(['stripe_customer_id' => $customerId]);
+        }
+
+        $setupIntent = $stripe->setupIntents->create([
+            'customer' => $customerId,
+            'payment_method_types' => ['card'],
+            'usage' => 'off_session',
+        ]);
+
+        return [
+            'client_secret' => $setupIntent->client_secret,
+        ];
+    }
+
+    public function saveParticipantPaymentMethod(PayoutMethod $payoutMethod, string $paymentMethodId): array
+    {
+        $stripe = $this->client();
+        $paymentMethod = $stripe->paymentMethods->retrieve($paymentMethodId);
+        $card = $paymentMethod->card;
+
+        $payoutMethod->update([
+            'type' => filled($payoutMethod->paypal_email) ? $payoutMethod->type : 'stripe',
+            'stripe_payment_method_id' => $paymentMethod->id,
+            'stripe_card_brand' => $card?->brand,
+            'stripe_card_last4' => $card?->last4,
+            'stripe_card_exp_month' => $card?->exp_month,
+            'stripe_card_exp_year' => $card?->exp_year,
+            'verified_at' => $payoutMethod->verified_at ?? now(),
         ]);
 
         return [

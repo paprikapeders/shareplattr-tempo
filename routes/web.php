@@ -84,6 +84,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/campaigns/{campaign}/referral-link', [ReferralLinkController::class, 'store'])
         ->name('campaigns.referral-link.store');
     Route::get('/payouts', [PayoutRequestController::class, 'index'])->name('payouts.index');
+    Route::post('/payouts/setup-intent', [PayoutRequestController::class, 'setupIntent'])->name('payouts.setup-intent');
+    Route::post('/payouts/payment-method', [PayoutRequestController::class, 'savePaymentMethod'])->name('payouts.payment-method');
     Route::post('/payout-requests', [PayoutRequestController::class, 'store'])->name('payout-requests.store');
 });
 

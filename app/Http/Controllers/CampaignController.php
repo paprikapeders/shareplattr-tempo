@@ -120,8 +120,14 @@ class CampaignController extends Controller
         ]);
         $campaign->loadCount(['referralTokens', 'clicks', 'conversions']);
 
+        $payoutMethod = $request->user()->payoutMethod;
+
         return Inertia::render('Campaigns/Show', [
-            'campaign' => $this->campaignPayload($campaign),
+            'campaign' => $this->campaignPayload($campaign, [
+                'has_payout_method' => filled($payoutMethod?->paypal_email)
+                    || filled($payoutMethod?->stripe_payment_method_id),
+                'payout_settings_url' => route('payouts.index'),
+            ]),
             'topPerformers' => $this->topPerformers($campaign),
         ]);
     }
@@ -163,7 +169,7 @@ class CampaignController extends Controller
         ]);
     }
 
-    private function campaignPayload(Campaign $campaign): array
+    private function campaignPayload(Campaign $campaign, ?array $participantState = null): array
     {
         $token = $campaign->referralTokens->first();
 
@@ -204,6 +210,8 @@ class CampaignController extends Controller
             'campaign_banner_url' => $this->publicStorageUrl($campaign->campaign_banner, $campaign->updated_at?->timestamp),
             'referral_url' => $token ? route('referrals.show', $token->token) : null,
             'share_message' => $token ? $this->shareMessage($campaign, route('referrals.show', $token->token)) : null,
+            'has_payout_method' => (bool) ($participantState['has_payout_method'] ?? false),
+            'payout_settings_url' => $participantState['payout_settings_url'] ?? route('payouts.index'),
             'brand_stats' => $this->brandStats($campaign),
         ];
     }

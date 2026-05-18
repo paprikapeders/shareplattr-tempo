@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\Campaign;
+use App\Models\PayoutMethod;
 use App\Models\ReferralToken;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -124,6 +125,82 @@ class CampaignAvailabilityTest extends TestCase
             );
     }
 
+    public function test_campaign_detail_exposes_missing_payout_method_state_after_join(): void
+    {
+        $user = User::factory()->create();
+        $campaign = $this->createCampaign();
+        $token = ReferralToken::create([
+            'user_id' => $user->id,
+            'campaign_id' => $campaign->id,
+            'token' => 'nopayouttoken',
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.show', $campaign->slug))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns/Show')
+                ->where('campaign.referral_url', route('referrals.show', $token->token))
+                ->where('campaign.has_payout_method', false)
+                ->where('campaign.payout_settings_url', route('payouts.index'))
+            );
+    }
+
+    public function test_campaign_detail_skips_payout_prompt_state_when_payout_method_exists(): void
+    {
+        $user = User::factory()->create();
+        $campaign = $this->createCampaign();
+        ReferralToken::create([
+            'user_id' => $user->id,
+            'campaign_id' => $campaign->id,
+            'token' => 'haspayouttoken',
+        ]);
+        PayoutMethod::create([
+            'user_id' => $user->id,
+            'type' => 'paypal',
+            'paypal_email' => 'participant@example.com',
+            'verified_at' => now(),
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.show', $campaign->slug))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns/Show')
+                ->where('campaign.has_payout_method', true)
+            );
+    }
+
+    public function test_campaign_detail_skips_payout_prompt_state_when_stripe_card_exists(): void
+    {
+        $user = User::factory()->create();
+        $campaign = $this->createCampaign();
+        ReferralToken::create([
+            'user_id' => $user->id,
+            'campaign_id' => $campaign->id,
+            'token' => 'stripecardtoken',
+        ]);
+        PayoutMethod::create([
+            'user_id' => $user->id,
+            'type' => 'stripe',
+            'paypal_email' => '',
+            'stripe_payment_method_id' => 'pm_participant_123',
+            'stripe_card_brand' => 'visa',
+            'stripe_card_last4' => '4242',
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.show', $campaign->slug))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns/Show')
+                ->where('campaign.has_payout_method', true)
+            );
+    }
+
     public function test_instagram_share_uses_dedicated_clipboard_first_handler(): void
     {
         $page = file_get_contents(resource_path('js/Pages/Campaigns/Show.jsx'));
@@ -146,6 +223,17 @@ class CampaignAvailabilityTest extends TestCase
         $this->assertStringContainsString("const body = composedMessage('email');", $page);
         $this->assertStringContainsString('mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}', $page);
         $this->assertStringContainsString("label: 'Share by Email'", $page);
+    }
+
+    public function test_payout_prompt_uses_session_storage_dismissal(): void
+    {
+        $page = file_get_contents(resource_path('js/Pages/Campaigns/Show.jsx'));
+
+        $this->assertStringContainsString('dismissedPayoutPrompt:${campaign.id}', $page);
+        $this->assertStringContainsString('window.sessionStorage.getItem(payoutPromptKey)', $page);
+        $this->assertStringContainsString('window.sessionStorage.setItem(payoutPromptKey, \'true\')', $page);
+        $this->assertStringContainsString('Set up your payout method so you can receive your rewards.', $page);
+        $this->assertStringContainsString('Set up payout method', $page);
     }
 
     public function test_admin_conversion_rejects_expired_campaign(): void

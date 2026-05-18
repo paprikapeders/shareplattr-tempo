@@ -127,6 +127,30 @@ class ReferralTrackingTest extends TestCase
             );
     }
 
+    public function test_participant_dashboard_onboarding_marks_stripe_card_complete(): void
+    {
+        $participant = User::factory()->create();
+
+        PayoutMethod::create([
+            'user_id' => $participant->id,
+            'type' => 'stripe',
+            'paypal_email' => '',
+            'stripe_payment_method_id' => 'pm_participant_123',
+            'stripe_card_brand' => 'visa',
+            'stripe_card_last4' => '4242',
+        ]);
+
+        $this
+            ->actingAs($participant)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Dashboard')
+                ->where('onboarding.show', true)
+                ->where('onboarding.steps.2.completed', true)
+            );
+    }
+
     public function test_participant_dashboard_with_referral_token_shows_normal_dashboard_mode(): void
     {
         [, $token, $participant] = $this->createReferralToken();

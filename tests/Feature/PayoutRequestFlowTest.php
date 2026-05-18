@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Campaign;
 use App\Models\Conversion;
+use App\Models\PayoutMethod;
 use App\Models\PayoutRequest;
 use App\Models\Reward;
 use App\Models\User;
@@ -207,6 +208,38 @@ class PayoutRequestFlowTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('stats.available_balance', $verifiedReward->amount)
+            );
+    }
+
+    public function test_participant_payout_page_exposes_stripe_card_setup_state(): void
+    {
+        config(['services.stripe.key' => 'pk_test_shareplattr']);
+
+        $participant = User::factory()->create();
+
+        PayoutMethod::create([
+            'user_id' => $participant->id,
+            'type' => 'stripe',
+            'paypal_email' => '',
+            'stripe_customer_id' => 'cus_participant_123',
+            'stripe_payment_method_id' => 'pm_participant_123',
+            'stripe_card_brand' => 'visa',
+            'stripe_card_last4' => '4242',
+            'stripe_card_exp_month' => 12,
+            'stripe_card_exp_year' => 2030,
+        ]);
+
+        $this
+            ->actingAs($participant)
+            ->get(route('payouts.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Payouts/Index')
+                ->where('stripeKey', 'pk_test_shareplattr')
+                ->where('payoutMethod.has_paypal', false)
+                ->where('payoutMethod.has_stripe_card', true)
+                ->where('payoutMethod.card_brand', 'visa')
+                ->where('payoutMethod.card_last4', '4242')
             );
     }
 

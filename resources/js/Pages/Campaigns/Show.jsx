@@ -228,6 +228,7 @@ export default function Show({ campaign, businessPreview = false }) {
     const [generating, setGenerating] = useState(false);
     const [toast, setToast] = useState(null);
     const [shareMessageText, setShareMessageText] = useState(campaign.share_message ?? '');
+    const [payoutPromptDismissed, setPayoutPromptDismissed] = useState(false);
     const Layout = businessPreview ? BusinessLayout : ClientLayout;
     const statsUrl = businessPreview
         ? `/business/campaigns/${campaign.id}/stats-summary`
@@ -263,6 +264,12 @@ export default function Show({ campaign, businessPreview = false }) {
         setShareMessageText(campaign.share_message ?? '');
     }, [campaign.share_message]);
 
+    const payoutPromptKey = `dismissedPayoutPrompt:${campaign.id}`;
+
+    useEffect(() => {
+        setPayoutPromptDismissed(window.sessionStorage.getItem(payoutPromptKey) === 'true');
+    }, [payoutPromptKey]);
+
     const showToast = (message, duration = 1800) => {
         setToast(message);
         window.setTimeout(() => setToast(null), duration);
@@ -287,6 +294,11 @@ export default function Show({ campaign, businessPreview = false }) {
         setCopied(true);
         showToast('Referral link copied');
         window.setTimeout(() => setCopied(false), 1800);
+    };
+
+    const dismissPayoutPrompt = () => {
+        window.sessionStorage.setItem(payoutPromptKey, 'true');
+        setPayoutPromptDismissed(true);
     };
 
     const composedMessage = (source = 'copy') => {
@@ -444,6 +456,10 @@ export default function Show({ campaign, businessPreview = false }) {
             onClick: () => copyMessage('discord', 'Discord message'),
         },
     ];
+    const showPayoutPrompt = !businessPreview
+        && Boolean(campaign.referral_url)
+        && !campaign.has_payout_method
+        && !payoutPromptDismissed;
 
     return (
         <Layout>
@@ -568,6 +584,33 @@ export default function Show({ campaign, businessPreview = false }) {
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {showPayoutPrompt && (
+                                            <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-left">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-sm font-extrabold text-slate-950">Set up payouts</p>
+                                                        <p className="mt-1 text-sm leading-5 text-slate-600">
+                                                            Set up your payout method so you can receive your rewards.
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={dismissPayoutPrompt}
+                                                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white hover:text-slate-700"
+                                                        aria-label="Dismiss payout setup prompt"
+                                                    >
+                                                        x
+                                                    </button>
+                                                </div>
+                                                <Link
+                                                    href={campaign.payout_settings_url ?? '/payouts'}
+                                                    className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
+                                                >
+                                                    Set up payout method
+                                                </Link>
+                                            </div>
+                                        )}
 
                                         <div className="rounded-xl border border-slate-200 bg-white p-4 text-left">
                                             <p className="text-sm font-extrabold text-slate-950">Share this campaign</p>

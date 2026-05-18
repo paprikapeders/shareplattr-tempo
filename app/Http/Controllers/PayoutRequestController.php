@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PayoutMethod;
 use App\Models\PayoutRequest;
 use App\Models\Reward;
+use App\Services\StripeBillingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +14,10 @@ use Inertia\Inertia;
 
 class PayoutRequestController extends Controller
 {
+    public function __construct(private StripeBillingService $stripe)
+    {
+    }
+
     /**
      * Show the participant payout page.
      */
@@ -18,6 +25,7 @@ class PayoutRequestController extends Controller
     {
         $user = $request->user();
         abort_unless($user->isParticipant(), 403);
+        $payoutMethod = $user->payoutMethod;
 
         $availableBalance = Reward::query()
             ->where('user_id', $user->id)
@@ -66,14 +74,63 @@ class PayoutRequestController extends Controller
             ]);
 
         return Inertia::render('Payouts/Index', [
+            'stripeKey' => config('services.stripe.key'),
             'stats' => [
                 'available_balance' => (int) $availableBalance,
                 'pending_rewards_count' => (int) $rewardCounts->pending_count,
                 'processing_rewards_count' => (int) $rewardCounts->processing_count,
                 'paid_rewards_count' => (int) $rewardCounts->paid_count,
             ],
+            'payoutMethod' => [
+                'has_paypal' => filled($payoutMethod?->paypal_email),
+                'paypal_email' => filled($payoutMethod?->paypal_email) ? $payoutMethod->paypal_email : null,
+                'has_stripe_card' => filled($payoutMethod?->stripe_payment_method_id),
+                'card_brand' => $payoutMethod?->stripe_card_brand,
+                'card_last4' => $payoutMethod?->stripe_card_last4,
+                'card_exp_month' => $payoutMethod?->stripe_card_exp_month,
+                'card_exp_year' => $payoutMethod?->stripe_card_exp_year,
+            ],
             'payoutRequests' => $payoutRequests,
         ]);
+    }
+
+    public function setupIntent(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user->isParticipant(), 403);
+
+        abort_if(blank(config('services.stripe.secret')), 422, 'Stripe is not configured.');
+
+        $payoutMethod = PayoutMethod::query()->firstOrCreate(
+            ['user_id' => $user->id],
+            ['type' => 'stripe', 'paypal_email' => ''],
+        );
+
+        return response()->json(
+            $this->stripe->createParticipantSetupIntent($payoutMethod, $user),
+        );
+    }
+
+    public function savePaymentMethod(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->isParticipant(), 403);
+
+        $validated = $request->validate([
+            'payment_method_id' => ['required', 'string', 'max:255'],
+        ]);
+
+        $payoutMethod = PayoutMethod::query()->firstOrCreate(
+            ['user_id' => $user->id],
+            ['type' => 'stripe', 'paypal_email' => ''],
+        );
+
+        $this->stripe->saveParticipantPaymentMethod(
+            $payoutMethod,
+            $validated['payment_method_id'],
+        );
+
+        return back()->with('success', 'Payment method saved.');
     }
 
     /**
