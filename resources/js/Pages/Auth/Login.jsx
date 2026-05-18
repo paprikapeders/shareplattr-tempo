@@ -1,5 +1,6 @@
 import { Link, useForm, usePage } from '@inertiajs/react';
 import AuthLayout from '../../Layouts/AuthLayout';
+import PasswordInput from '../../Components/PasswordInput';
 
 export default function Login() {
     const { flash = {} } = usePage().props;
@@ -50,12 +51,12 @@ export default function Login() {
                 />
                 {errors.email && <p className="-mt-2 text-sm text-red-600">{errors.email}</p>}
 
-                <input
-                    type="password"
+                <PasswordInput
                     placeholder="Password"
                     value={data.password}
                     onChange={(event) => setData('password', event.target.value)}
                     className="h-11 w-full rounded-full border-0 bg-white px-5 text-[15px] text-[#111111] shadow-[0_10px_24px_rgba(15,23,42,0.10)] outline-none placeholder:text-[#6f7280] lg:h-12"
+                    error={Boolean(errors.password)}
                 />
                 {errors.password && <p className="-mt-2 text-sm text-red-600">{errors.password}</p>}
 
