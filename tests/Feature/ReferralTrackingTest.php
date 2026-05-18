@@ -7,9 +7,11 @@ use App\Models\Brand;
 use App\Models\BusinessProfile;
 use App\Models\Campaign;
 use App\Models\Click;
+use App\Models\PayoutMethod;
 use App\Models\ReferralToken;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ReferralTrackingTest extends TestCase
@@ -79,6 +81,66 @@ class ReferralTrackingTest extends TestCase
             ->assertJsonPath('referralLinks.0.id', $token->id)
             ->assertJsonPath('referralLinks.0.clicks_count', 1)
             ->assertJsonPath('referralLinks.0.unique_clicks_count', 1);
+    }
+
+    public function test_new_participant_dashboard_shows_onboarding_empty_state(): void
+    {
+        $participant = User::factory()->create();
+
+        $this
+            ->actingAs($participant)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Dashboard')
+                ->where('onboarding.show', true)
+                ->where('onboarding.steps.0.key', 'browse_campaigns')
+                ->where('onboarding.steps.0.href', route('campaigns.index'))
+                ->where('onboarding.steps.0.completed', false)
+                ->where('onboarding.steps.1.key', 'join_first_campaign')
+                ->where('onboarding.steps.1.completed', false)
+                ->where('onboarding.steps.2.key', 'add_payout_method')
+                ->where('onboarding.steps.2.href', route('payouts.index'))
+                ->where('onboarding.steps.2.completed', false)
+            );
+    }
+
+    public function test_participant_dashboard_onboarding_marks_payout_method_complete(): void
+    {
+        $participant = User::factory()->create();
+
+        PayoutMethod::create([
+            'user_id' => $participant->id,
+            'type' => 'paypal',
+            'paypal_email' => 'participant@example.com',
+            'verified_at' => now(),
+        ]);
+
+        $this
+            ->actingAs($participant)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Dashboard')
+                ->where('onboarding.show', true)
+                ->where('onboarding.steps.2.completed', true)
+            );
+    }
+
+    public function test_participant_dashboard_with_referral_token_shows_normal_dashboard_mode(): void
+    {
+        [, $token, $participant] = $this->createReferralToken();
+
+        $this
+            ->actingAs($participant)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Dashboard')
+                ->where('onboarding.show', false)
+                ->where('onboarding.steps.1.completed', true)
+                ->where('referralLinks.0.id', $token->id)
+            );
     }
 
     public function test_business_campaign_stats_summary_returns_updated_click_count_after_referral_visit(): void

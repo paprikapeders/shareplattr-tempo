@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Click;
+use App\Models\PayoutRequest;
 use App\Models\ReferralToken;
 use App\Models\Reward;
 use Illuminate\Http\Request;
@@ -36,6 +37,7 @@ class DashboardController extends Controller
                 'created_at' => $link['created_at'],
             ])->values(),
             'activities' => $summary['activities'],
+            'onboarding' => $summary['onboarding'],
         ]);
     }
 
@@ -47,6 +49,7 @@ class DashboardController extends Controller
             'stats' => $summary['stats'],
             'referralLinks' => $summary['referralLinks']->values(),
             'activities' => $summary['activities'],
+            'onboarding' => $summary['onboarding'],
         ]);
     }
 
@@ -61,6 +64,7 @@ class DashboardController extends Controller
                 COALESCE(SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END), 0) as paid_total
             ")
             ->first();
+        $onboarding = $this->onboardingStatus($user, $referralLinks);
 
         return [
             'stats' => [
@@ -74,6 +78,40 @@ class DashboardController extends Controller
             ],
             'referralLinks' => $referralLinks,
             'activities' => $this->activities($user, $referralLinks),
+            'onboarding' => $onboarding,
+        ];
+    }
+
+    private function onboardingStatus($user, $referralLinks): array
+    {
+        $hasReferralToken = $referralLinks->isNotEmpty();
+        $hasClick = Click::query()->where('user_id', $user->id)->exists();
+        $hasReward = Reward::query()->where('user_id', $user->id)->exists();
+        $hasPayoutRequest = PayoutRequest::query()->where('user_id', $user->id)->exists();
+        $hasPayoutMethod = $user->payoutMethod()->exists();
+
+        return [
+            'show' => ! ($hasReferralToken || $hasClick || $hasReward || $hasPayoutRequest),
+            'steps' => [
+                [
+                    'key' => 'browse_campaigns',
+                    'label' => 'Browse campaigns',
+                    'href' => route('campaigns.index'),
+                    'completed' => false,
+                ],
+                [
+                    'key' => 'join_first_campaign',
+                    'label' => 'Join your first campaign / Generate your first referral link',
+                    'href' => route('campaigns.index'),
+                    'completed' => $hasReferralToken,
+                ],
+                [
+                    'key' => 'add_payout_method',
+                    'label' => 'Add your payout method',
+                    'href' => route('payouts.index'),
+                    'completed' => $hasPayoutMethod,
+                ],
+            ],
         ];
     }
 

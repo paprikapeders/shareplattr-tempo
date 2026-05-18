@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import ActivityFeed from '../Components/ActivityFeed';
+import Button from '../Components/Button';
 import DashboardLayout from '../Components/DashboardLayout';
 import GeneratedLinksTable from '../Components/GeneratedLinksTable';
 import MetricsCards from '../Components/MetricsCards';
@@ -69,11 +70,70 @@ function dollars(cents) {
     }).format(cents / 100);
 }
 
-export default function Dashboard({ stats, referralLinks, activities }) {
+function CheckIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" className="h-4 w-4">
+            <path d="M5 12.5 10 17l9-10" />
+        </svg>
+    );
+}
+
+function OnboardingChecklist({ steps }) {
+    return (
+        <div className="rounded-[22px] bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 sm:p-6">
+            <h2 className="text-lg font-bold text-[#2a3041]">Get ready to earn</h2>
+            <div className="mt-5 space-y-3">
+                {steps.map((step, index) => (
+                    <Link
+                        key={step.key}
+                        href={step.href}
+                        className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 transition hover:border-slate-200 hover:bg-white"
+                    >
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${step.completed ? 'bg-[#08bcbc] text-white' : 'bg-white text-slate-500 ring-1 ring-slate-200'}`}>
+                            {step.completed ? <CheckIcon /> : index + 1}
+                        </span>
+                        <span className={`text-sm font-semibold ${step.completed ? 'text-slate-500 line-through' : 'text-[#2a3041]'}`}>
+                            {step.label}
+                        </span>
+                    </Link>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function OnboardingEmptyState({ onboarding }) {
+    return (
+        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+            <section className="min-w-0 rounded-[28px] bg-white px-6 py-8 shadow-[0_18px_45px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 sm:px-8 sm:py-10">
+                <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#08bcbc]">Welcome to SharePlattr</p>
+                <h1 className="mt-4 max-w-2xl text-3xl font-black leading-tight text-[#111111] sm:text-4xl">
+                    Start by choosing a campaign to share.
+                </h1>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+                    Browse live campaigns, generate your first referral link, then add your payout method when you are ready to receive rewards.
+                </p>
+                <div className="mt-7 flex flex-wrap gap-3">
+                    <Button as={Link} href="/campaigns" className="rounded-full px-6 py-3 text-base">
+                        Browse campaigns
+                    </Button>
+                    <Button as={Link} href="/payouts" variant="secondary" className="rounded-full px-6 py-3 text-base">
+                        Payouts
+                    </Button>
+                </div>
+            </section>
+
+            <OnboardingChecklist steps={onboarding.steps ?? []} />
+        </div>
+    );
+}
+
+export default function Dashboard({ stats, referralLinks, activities, onboarding }) {
     const { stats: liveSummary, lastUpdatedAt } = usePollingStats('/dashboard/stats-summary', {
         stats,
         referralLinks,
         activities,
+        onboarding,
     });
     const [referralFilters, setReferralFilters] = useState({
         status: 'all',
@@ -91,6 +151,7 @@ export default function Dashboard({ stats, referralLinks, activities }) {
     const liveStats = liveSummary?.stats ?? stats;
     const liveReferralLinks = liveSummary?.referralLinks ?? referralLinks;
     const liveActivities = liveSummary?.activities ?? activities;
+    const liveOnboarding = liveSummary?.onboarding ?? onboarding;
 
     const filteredReferrals = useMemo(() => applyFilters(liveReferralLinks, referralFilters), [liveReferralLinks, referralFilters]);
     const filteredGeneratedLinks = useMemo(() => applyFilters(liveReferralLinks, generatedFilters), [liveReferralLinks, generatedFilters]);
@@ -144,7 +205,10 @@ export default function Dashboard({ stats, referralLinks, activities }) {
 
     return (
         <DashboardLayout>
-            <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+            {liveOnboarding?.show ? (
+                <OnboardingEmptyState onboarding={liveOnboarding} />
+            ) : (
+                <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
                 <div className="min-w-0 space-y-5">
                     <MetricsCards stats={liveStats} />
                     {lastUpdatedAt && (
@@ -206,7 +270,8 @@ export default function Dashboard({ stats, referralLinks, activities }) {
                 </div>
 
                 <ActivityFeed activities={liveActivities} />
-            </div>
+                </div>
+            )}
         </DashboardLayout>
     );
 }
