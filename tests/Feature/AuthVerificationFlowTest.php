@@ -58,6 +58,65 @@ class AuthVerificationFlowTest extends TestCase
         ]);
     }
 
+    public function test_registration_accepts_minimal_account_fields(): void
+    {
+        Mail::fake();
+
+        $this->post(route('register'), [
+            'first_name' => 'Minimal',
+            'last_name' => 'User',
+            'email' => 'minimal@example.com',
+            'password' => 'password123',
+        ])->assertRedirect(route('verify.notice'));
+
+        $this->assertDatabaseHas('users', [
+            'name' => 'Minimal User',
+            'email' => 'minimal@example.com',
+            'user_type' => 'participant',
+        ]);
+
+        Mail::assertSent(VerifyEmailCode::class);
+    }
+
+    public function test_business_registration_accepts_minimal_account_fields_and_starts_onboarding_after_verification(): void
+    {
+        Mail::fake();
+
+        $this->post(route('register'), [
+            'first_name' => 'Business',
+            'last_name' => 'Minimal',
+            'email' => 'business-minimal@example.com',
+            'password' => 'password123',
+            'account_type' => 'business_owner',
+        ])->assertRedirect(route('verify.notice'));
+
+        $user = User::where('email', 'business-minimal@example.com')->firstOrFail();
+        $sentCode = null;
+
+        $this->assertSame('business_owner', $user->user_type);
+        $this->assertNull($user->businessProfile);
+
+        Mail::assertSent(VerifyEmailCode::class, function (VerifyEmailCode $mail) use ($user, &$sentCode) {
+            $sentCode = $mail->code;
+
+            return $mail->hasTo($user->email);
+        });
+
+        $this->withSession([
+            'pending_verification_user_id' => $user->id,
+            'pending_verification_email' => $user->email,
+        ])->post(route('verify.store'), [
+            'code' => $sentCode,
+        ])->assertRedirect(route('register.success'));
+
+        $this->get(route('register.success'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Auth/RegisterSuccess')
+                ->where('redirectUrl', route('business.profile.edit'))
+            );
+    }
+
     public function test_unverified_user_login_redirects_to_verification(): void
     {
         Mail::fake();

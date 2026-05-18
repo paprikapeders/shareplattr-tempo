@@ -63,13 +63,11 @@ class RegisterController extends Controller
                     'max:255',
                     Rule::unique('users', 'email')->ignore($pendingUser?->id),
                 ],
-                'password' => ['required', 'confirmed', Password::min(8)],
+                'password' => ['required', Password::min(8)],
                 'account_type' => ['nullable', Rule::in(['participant', 'business_owner'])],
-                'terms_accepted' => ['accepted'],
             ],
             [
                 'email.unique' => 'This email is already registered. Please sign in or reset your password.',
-                'terms_accepted.accepted' => 'Please agree to the Terms of Use and Privacy Policy.',
             ],
         );
 

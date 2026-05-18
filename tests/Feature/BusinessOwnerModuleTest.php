@@ -33,8 +33,6 @@ class BusinessOwnerModuleTest extends TestCase
             'last_name' => 'Owner',
             'email' => 'owner@example.com',
             'password' => 'password123',
-            'password_confirmation' => 'password123',
-            'terms_accepted' => true,
         ])->assertRedirect(route('verify.notice'));
 
         $this->assertDatabaseHas('users', [
