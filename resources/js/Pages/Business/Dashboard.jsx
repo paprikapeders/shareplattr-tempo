@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { useId, useState } from 'react';
 import BusinessSetupChecklist from '../../Components/BusinessSetupChecklist';
 import ConversionLabel, { CONVERSION_HELP_TEXT } from '../../Components/ConversionLabel';
+import ImageWithFallback from '../../Components/ImageWithFallback';
 import Tooltip from '../../Components/Tooltip';
 import BusinessLayout from '../../Layouts/BusinessLayout';
 import { formatExpiryDate } from '../../Support/dates';
@@ -45,19 +46,15 @@ function statusLabel(status) {
     return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Inactive';
 }
 
-function iconColor(index) {
-    return ['bg-violet-100 text-violet-700', 'bg-cyan-100 text-cyan-700', 'bg-rose-100 text-rose-700', 'bg-emerald-100 text-emerald-700'][index % 4];
-}
-
-function CampaignThumb({ campaign, index }) {
-    if (campaign.banner_url) {
-        return <img src={campaign.banner_url} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />;
-    }
-
+function CampaignThumb({ campaign }) {
     return (
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${iconColor(index)}`}>
-            {campaign.title?.slice(0, 2).toUpperCase() || 'SP'}
-        </div>
+        <ImageWithFallback
+            src={campaign.banner_url}
+            alt=""
+            fallbackLabel={campaign.title}
+            className="h-10 w-10 shrink-0 rounded-lg object-cover"
+            showFallbackText={false}
+        />
     );
 }
 

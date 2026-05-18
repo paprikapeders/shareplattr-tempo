@@ -1,19 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import Button from './Button';
 import Card from './Card';
+import ImageWithFallback from './ImageWithFallback';
 import { formatExpiryDate } from '../Support/dates';
 import { formatReward } from '../Support/rewards';
 import { CAMPAIGN_CATEGORY_OPTIONS, OTHER_KEY, optionLabel } from '../Support/taxonomy';
-
-function initials(name = '') {
-    return name
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((part) => part[0])
-        .join('')
-        .toUpperCase() || 'S';
-}
 
 function rewardAmountForPreview(data) {
     const amount = Number.parseFloat(data.reward_amount);
@@ -83,22 +74,24 @@ export default function CampaignDraftPreview({
 
                 <div className="bg-slate-50 p-4 sm:p-6">
                     <section className="relative min-h-[255px] overflow-hidden rounded-2xl bg-slate-900">
-                        {previewCampaign.campaign_banner_url ? (
-                            <img src={previewCampaign.campaign_banner_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                        ) : (
-                            <div className="absolute inset-0 bg-[linear-gradient(135deg,#0f172a_0%,#0e7490_48%,#7c3aed_100%)]" />
-                        )}
+                        <ImageWithFallback
+                            src={previewCampaign.campaign_banner_url}
+                            alt=""
+                            fallbackLabel={previewCampaign.brand_name || previewCampaign.title}
+                            className="absolute inset-0 h-full w-full object-cover"
+                            initialsClassName="h-20 w-20 rounded-2xl text-3xl"
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/38 to-black/12" />
 
                         <div className="relative flex min-h-[255px] flex-col justify-end gap-5 p-5 text-white sm:p-8 lg:flex-row lg:items-end lg:justify-between">
                             <div className="flex min-w-0 items-end gap-4">
-                                {previewCampaign.brand_logo_url ? (
-                                    <img src={previewCampaign.brand_logo_url} alt="" className="h-14 w-14 shrink-0 rounded-2xl bg-white object-cover text-lg shadow-xl ring-1 ring-white/70 sm:h-16 sm:w-16" />
-                                ) : (
-                                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-lg font-extrabold text-[#08bcbc] shadow-xl ring-1 ring-white/70 sm:h-16 sm:w-16">
-                                        {initials(previewCampaign.brand_name || previewCampaign.title)}
-                                    </div>
-                                )}
+                                <ImageWithFallback
+                                    src={previewCampaign.brand_logo_url}
+                                    alt=""
+                                    fallbackLabel={previewCampaign.brand_name || previewCampaign.title}
+                                    className="h-14 w-14 shrink-0 rounded-2xl bg-white object-cover text-lg shadow-xl ring-1 ring-white/70 sm:h-16 sm:w-16"
+                                    showFallbackText={false}
+                                />
                                 <div className="min-w-0 pb-1">
                                     <div className="flex flex-wrap items-center gap-2">
                                         <span className="rounded-full bg-[#08bcbc]/90 px-3 py-1 text-xs font-bold text-white">

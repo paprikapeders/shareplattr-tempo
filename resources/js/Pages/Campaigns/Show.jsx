@@ -4,6 +4,7 @@ import ClientLayout from '../../Layouts/ClientLayout';
 import BusinessLayout from '../../Layouts/BusinessLayout';
 import CopyCampaignLinkButton from '../../Components/CopyCampaignLinkButton';
 import ConversionLabel from '../../Components/ConversionLabel';
+import ImageWithFallback from '../../Components/ImageWithFallback';
 import { formatExpiryDate } from '../../Support/dates';
 import { formatReward } from '../../Support/rewards';
 import usePollingStats from '../../Support/usePollingStats';
@@ -13,16 +14,6 @@ function compactNumber(value) {
         notation: 'compact',
         maximumFractionDigits: 1,
     }).format(value);
-}
-
-function initials(name = '') {
-    return name
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((part) => part[0])
-        .join('')
-        .toUpperCase() || 'S';
 }
 
 function Toast({ message }) {
@@ -38,20 +29,14 @@ function Toast({ message }) {
 }
 
 function BrandAvatar({ campaign, className = '' }) {
-    if (campaign.brand_logo_url) {
-        return (
-            <img
-                src={campaign.brand_logo_url}
-                alt=""
-                className={`object-cover ${className}`}
-            />
-        );
-    }
-
     return (
-        <div className={`flex items-center justify-center bg-cyan-50 font-extrabold text-[#08bcbc] ${className}`}>
-            {initials(campaign.brand_name || campaign.title)}
-        </div>
+        <ImageWithFallback
+            src={campaign.brand_logo_url}
+            alt=""
+            fallbackLabel={campaign.brand_name || campaign.title}
+            className={`object-cover ${className}`}
+            showFallbackText={false}
+        />
     );
 }
 
@@ -76,15 +61,13 @@ function Hero({ campaign, reward }) {
 
     return (
         <section className="relative min-h-[255px] overflow-hidden rounded-none bg-slate-900 sm:rounded-2xl">
-            {campaign.campaign_banner_url ? (
-                <img
-                    src={campaign.campaign_banner_url}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover"
-                />
-            ) : (
-                <div className="absolute inset-0 bg-[linear-gradient(135deg,#0f172a_0%,#0e7490_48%,#7c3aed_100%)]" />
-            )}
+            <ImageWithFallback
+                src={campaign.campaign_banner_url}
+                alt=""
+                fallbackLabel={campaign.brand_name || campaign.title}
+                className="absolute inset-0 h-full w-full object-cover"
+                initialsClassName="h-20 w-20 rounded-2xl text-3xl"
+            />
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/38 to-black/12" />
 
@@ -209,6 +192,69 @@ function ShareButton({ label, source, icon: Icon, onClick }) {
     );
 }
 
+const celebrationParticles = [
+    { left: '12%', top: '24%', color: '#08bcbc', delay: '0ms' },
+    { left: '24%', top: '14%', color: '#8b5cf6', delay: '110ms' },
+    { left: '42%', top: '22%', color: '#f59e0b', delay: '70ms' },
+    { left: '64%', top: '13%', color: '#ec4899', delay: '150ms' },
+    { left: '82%', top: '25%', color: '#10b981', delay: '40ms' },
+    { left: '72%', top: '43%', color: '#06b6d4', delay: '210ms' },
+];
+
+function CelebrationPanel({ campaignTitle, justJoined }) {
+    return (
+        <div className="relative overflow-hidden rounded-xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-white to-violet-50 p-4 text-left shadow-sm shadow-cyan-900/5">
+            <style>{`
+                @keyframes shareplattr-check-pop {
+                    0% { opacity: 0; transform: scale(.72) rotate(-10deg); }
+                    70% { opacity: 1; transform: scale(1.08) rotate(3deg); }
+                    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+                }
+                @keyframes shareplattr-confetti-float {
+                    0% { opacity: 0; transform: translateY(0) rotate(0deg) scale(.8); }
+                    20% { opacity: 1; }
+                    100% { opacity: 0; transform: translateY(32px) rotate(150deg) scale(1); }
+                }
+            `}</style>
+
+            <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                {celebrationParticles.map((particle) => (
+                    <span
+                        key={`${particle.left}-${particle.top}`}
+                        className="absolute h-2 w-1.5 rounded-full"
+                        style={{
+                            left: particle.left,
+                            top: particle.top,
+                            backgroundColor: particle.color,
+                            animation: `shareplattr-confetti-float 900ms ease-out ${particle.delay} both`,
+                        }}
+                    />
+                ))}
+            </div>
+
+            <div className="relative flex items-start gap-3">
+                <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#08bcbc] text-white shadow-sm shadow-cyan-900/20"
+                    style={{ animation: 'shareplattr-check-pop 520ms cubic-bezier(.2,.8,.2,1) both' }}
+                    aria-hidden="true"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="h-5 w-5">
+                        <path d="m5 12.5 4.2 4.2L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </div>
+                <div className="min-w-0">
+                    <p className="text-base font-extrabold text-slate-950">
+                        {justJoined ? "You're in! 🎉" : "You're already in"}
+                    </p>
+                    <p className="mt-1 text-sm leading-5 text-slate-600">
+                        {justJoined ? `You've joined ${campaignTitle}!` : `${campaignTitle} is ready to share.`}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function messageWithLink(message, url) {
     const normalized = (message ?? '').trim();
 
@@ -226,6 +272,7 @@ function messageWithLink(message, url) {
 export default function Show({ campaign, businessPreview = false }) {
     const [copied, setCopied] = useState(false);
     const [generating, setGenerating] = useState(false);
+    const [justJoined, setJustJoined] = useState(false);
     const [toast, setToast] = useState(null);
     const [shareMessageText, setShareMessageText] = useState(campaign.share_message ?? '');
     const [payoutPromptDismissed, setPayoutPromptDismissed] = useState(false);
@@ -285,6 +332,7 @@ export default function Show({ campaign, businessPreview = false }) {
 
         router.post(`/campaigns/${campaign.slug ?? campaign.id}/referral-link`, {}, {
             preserveScroll: true,
+            onSuccess: () => setJustJoined(true),
             onFinish: () => setGenerating(false),
         });
     };
@@ -567,6 +615,8 @@ export default function Show({ campaign, businessPreview = false }) {
 
                                 {!businessPreview && campaign.referral_url && (
                                     <div className="mt-4 space-y-4">
+                                        <CelebrationPanel campaignTitle={campaign.title} justJoined={justJoined} />
+
                                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left">
                                             <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Your referral link</p>
                                             <div className="mt-2 flex gap-2">

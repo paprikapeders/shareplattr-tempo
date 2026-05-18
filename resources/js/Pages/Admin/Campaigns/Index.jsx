@@ -4,6 +4,7 @@ import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
 import ConversionLabel from '../../../Components/ConversionLabel';
 import EmptyState from '../../../Components/EmptyState';
+import ImageWithFallback from '../../../Components/ImageWithFallback';
 import PageHeader from '../../../Components/PageHeader';
 
 function dollars(cents) {
@@ -61,9 +62,13 @@ export default function Index({ campaigns }) {
                                     <tr key={campaign.id} className="transition hover:bg-slate-50/80">
                                         <td className="px-5 py-4">
                                             <div className="flex items-center gap-3">
-                                                {campaign.brand_logo_url && (
-                                                    <img src={campaign.brand_logo_url} alt="" className="h-10 w-10 rounded-lg object-cover" />
-                                                )}
+                                                <ImageWithFallback
+                                                    src={campaign.brand_logo_url}
+                                                    alt=""
+                                                    fallbackLabel={campaign.brand_name || campaign.title}
+                                                    className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                                                    showFallbackText={false}
+                                                />
                                                 <div>
                                                     <p className="text-sm font-semibold text-slate-950">{campaign.title}</p>
                                                     <p className="mt-1 text-xs text-slate-500">{campaign.brand_name}</p>

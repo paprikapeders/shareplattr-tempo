@@ -3,6 +3,7 @@ import AdminLayout from '../../../Layouts/AdminLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
 import EmptyState from '../../../Components/EmptyState';
+import ImageWithFallback from '../../../Components/ImageWithFallback';
 import PageHeader from '../../../Components/PageHeader';
 
 function dollars(cents) {
@@ -28,13 +29,13 @@ export default function Show({ brand }) {
             <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
                 <Card className="p-6">
                     <div className="flex items-center gap-4">
-                        {brand.logo_url ? (
-                            <img src={brand.logo_url} alt="" className="h-16 w-16 rounded-2xl object-cover" />
-                        ) : (
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-xl font-semibold text-slate-500">
-                                {brand.name[0]}
-                            </div>
-                        )}
+                        <ImageWithFallback
+                            src={brand.logo_url}
+                            alt=""
+                            fallbackLabel={brand.name}
+                            className="h-16 w-16 shrink-0 rounded-2xl object-cover"
+                            showFallbackText={false}
+                        />
                         <div>
                             <p className="text-lg font-semibold text-slate-950">{brand.name}</p>
                             <p className="mt-1 text-sm capitalize text-slate-500">{brand.status}</p>

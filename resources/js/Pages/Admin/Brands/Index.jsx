@@ -3,6 +3,7 @@ import AdminLayout from '../../../Layouts/AdminLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
 import EmptyState from '../../../Components/EmptyState';
+import ImageWithFallback from '../../../Components/ImageWithFallback';
 import PageHeader from '../../../Components/PageHeader';
 
 function statusClasses(status) {
@@ -57,13 +58,13 @@ export default function Index({ brands }) {
                                     <tr key={brand.id} className="transition hover:bg-slate-50/80">
                                         <td className="px-5 py-4">
                                             <div className="flex items-center gap-3">
-                                                {brand.logo_url ? (
-                                                    <img src={brand.logo_url} alt="" className="h-10 w-10 rounded-lg object-cover" />
-                                                ) : (
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-500">
-                                                        {brand.name[0]}
-                                                    </div>
-                                                )}
+                                                <ImageWithFallback
+                                                    src={brand.logo_url}
+                                                    alt=""
+                                                    fallbackLabel={brand.name}
+                                                    className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                                                    showFallbackText={false}
+                                                />
                                                 <div>
                                                     <p className="text-sm font-semibold text-slate-950">{brand.name}</p>
                                                     <p className="mt-1 text-xs text-slate-500">{brand.website_url ?? 'No website saved'}</p>

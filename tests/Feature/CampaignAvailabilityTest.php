@@ -236,6 +236,36 @@ class CampaignAvailabilityTest extends TestCase
         $this->assertStringContainsString('Set up payout method', $page);
     }
 
+    public function test_campaign_detail_has_post_join_celebration_panel(): void
+    {
+        $page = file_get_contents(resource_path('js/Pages/Campaigns/Show.jsx'));
+
+        $this->assertStringContainsString('function CelebrationPanel', $page);
+        $this->assertStringContainsString("You're in! 🎉", $page);
+        $this->assertStringContainsString("You've joined", $page);
+        $this->assertStringContainsString('shareplattr-confetti-float', $page);
+        $this->assertStringContainsString('pointer-events-none absolute inset-0', $page);
+        $this->assertStringContainsString('<CelebrationPanel campaignTitle={campaign.title} justJoined={justJoined} />', $page);
+    }
+
+    public function test_campaign_images_use_shared_fallback_component(): void
+    {
+        $component = file_get_contents(resource_path('js/Components/ImageWithFallback.jsx'));
+        $campaignCard = file_get_contents(resource_path('js/Components/CampaignCard.jsx'));
+        $campaignDetail = file_get_contents(resource_path('js/Pages/Campaigns/Show.jsx'));
+        $draftPreview = file_get_contents(resource_path('js/Components/CampaignDraftPreview.jsx'));
+
+        $this->assertStringContainsString('function ImageWithFallback', $component);
+        $this->assertStringContainsString('onError={() => setFailed(true)}', $component);
+        $this->assertStringContainsString("fallbackText = 'No image yet'", $component);
+        $this->assertStringContainsString('src={campaign.campaign_banner_url}', $campaignCard);
+        $this->assertStringContainsString('fallbackLabel={brandName(campaign)}', $campaignCard);
+        $this->assertStringContainsString('src={campaign.campaign_banner_url}', $campaignDetail);
+        $this->assertStringContainsString('src={campaign.brand_logo_url}', $campaignDetail);
+        $this->assertStringContainsString('src={previewCampaign.campaign_banner_url}', $draftPreview);
+        $this->assertStringContainsString('src={previewCampaign.brand_logo_url}', $draftPreview);
+    }
+
     public function test_admin_conversion_rejects_expired_campaign(): void
     {
         $admin = User::factory()->admin()->create();

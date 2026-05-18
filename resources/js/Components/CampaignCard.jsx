@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { useState } from 'react';
+import ImageWithFallback from './ImageWithFallback';
 import { formatExpiryDate } from '../Support/dates';
 import { formatReward } from '../Support/rewards';
 
@@ -11,56 +11,24 @@ function brandName(campaign) {
     return campaign.brand?.name || campaign.brand_name || campaign.title || 'SharePlattr';
 }
 
-function brandInitials(campaign) {
-    const name = brandName(campaign).trim();
-    const words = name.split(/\s+/).filter(Boolean);
-
-    if (words.length >= 2) {
-        return `${words[0][0]}${words[1][0]}`.toUpperCase();
-    }
-
-    return name.slice(0, 2).toUpperCase() || 'SP';
-}
-
-function CampaignImageFallback({ campaign }) {
-    return (
-        <div className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[linear-gradient(135deg,#f8fafc_0%,#dff7f8_45%,#dbeafe_100%)]">
-            <div className="absolute -left-10 -top-10 h-32 w-32 rounded-full bg-cyan-200/60 blur-2xl" />
-            <div className="absolute -bottom-14 right-0 h-36 w-36 rounded-full bg-indigo-200/60 blur-2xl" />
-            <span className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-white/80 text-3xl font-black text-slate-800 shadow-sm ring-1 ring-white/70">
-                {brandInitials(campaign)}
-            </span>
-            <span className="absolute bottom-3 right-3 rounded-full bg-white/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                SharePlattr
-            </span>
-        </div>
-    );
-}
-
 export default function CampaignCard({ campaign }) {
-    const [imageFailed, setImageFailed] = useState(false);
     const detailHref = `/campaigns/${campaign.slug ?? campaign.id}`;
     const category = campaign.category ?? 'Featured';
     const tag = campaign.brand_industry ?? campaign.category ?? 'Campaign';
     const letter = firstLetter(brandName(campaign));
-    const showImage = campaign.campaign_banner_url && !imageFailed;
 
     return (
         <Link
             href={detailHref}
             className="group relative block h-64 overflow-hidden rounded-xl bg-slate-200 shadow-sm transition duration-300 hover:scale-105 hover:shadow-xl hover:shadow-slate-950/15 focus:outline-none focus:ring-2 focus:ring-[#08c4c4]/35"
         >
-            {showImage ? (
-                <img
-                    src={campaign.campaign_banner_url}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                    loading="lazy"
-                    onError={() => setImageFailed(true)}
-                />
-            ) : (
-                <CampaignImageFallback campaign={campaign} />
-            )}
+            <ImageWithFallback
+                src={campaign.campaign_banner_url}
+                alt=""
+                fallbackLabel={brandName(campaign)}
+                className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                initialsClassName="h-20 w-20 rounded-2xl text-3xl"
+            />
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
