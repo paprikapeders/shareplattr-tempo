@@ -196,6 +196,10 @@ function DiscordIcon({ className = 'h-4 w-4' }) {
     return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true"><path d="M19.5 5.3A16 16 0 0 0 15.6 4l-.2.4c1.4.4 2.1 1 2.1 1s-1.9-1-5.5-1-5.5 1-5.5 1 .7-.6 2.1-1L8.4 4a16 16 0 0 0-3.9 1.3C2 9.1 1.4 12.8 1.7 16.5A15.7 15.7 0 0 0 6.6 19l.9-1.2c-.5-.2-1-.5-1.5-.8l.4-.3c2.9 1.3 6.1 1.3 9.1 0l.4.3c-.5.3-1 .6-1.5.8l.9 1.2a15.7 15.7 0 0 0 4.9-2.5c.4-4.3-.7-7.9-2.7-11.2ZM8.5 14.2c-.9 0-1.6-.8-1.6-1.7s.7-1.7 1.6-1.7 1.6.8 1.6 1.7-.7 1.7-1.6 1.7Zm7 0c-.9 0-1.6-.8-1.6-1.7s.7-1.7 1.6-1.7 1.6.8 1.6 1.7-.7 1.7-1.6 1.7Z" /></svg>;
 }
 
+function EmailIcon({ className = 'h-4 w-4' }) {
+    return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5" /><path d="m5 8 7 5 7-5" /></svg>;
+}
+
 function ShareButton({ label, source, icon: Icon, onClick }) {
     return (
         <button type="button" onClick={onClick} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm shadow-slate-950/5 transition hover:-translate-y-0.5 hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-400/25" aria-label={label} title={label}>
@@ -309,6 +313,21 @@ export default function Show({ campaign, businessPreview = false }) {
         window.open(url, '_blank', 'noopener,noreferrer');
     };
 
+    const emailSubject = () => {
+        const businessName = campaign.brand_name?.trim();
+
+        return businessName ? `I thought you'd like ${businessName}` : "I thought you'd like this";
+    };
+
+    const handleEmailShare = () => {
+        const subject = emailSubject();
+        const body = composedMessage('email');
+        const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+        showToast('Opening your email client. If nothing opens, copy the message manually.', 3200);
+        window.location.href = mailtoUrl;
+    };
+
     const handleInstagramShare = async () => {
         const instagramWebUrl = 'https://www.instagram.com/';
         const instagramAppUrl = 'instagram://app';
@@ -379,6 +398,12 @@ export default function Show({ campaign, businessPreview = false }) {
             source: 'X',
             icon: XIcon,
             onClick: () => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(composedMessage('x'))}`),
+        },
+        {
+            label: 'Share by Email',
+            source: 'Email',
+            icon: EmailIcon,
+            onClick: handleEmailShare,
         },
         {
             label: 'Copy message & open Instagram',

@@ -136,6 +136,18 @@ class CampaignAvailabilityTest extends TestCase
         $this->assertStringNotContainsString('instagram.com/intent', $page);
     }
 
+    public function test_email_share_uses_encoded_mailto_with_composed_message(): void
+    {
+        $page = file_get_contents(resource_path('js/Pages/Campaigns/Show.jsx'));
+
+        $this->assertStringContainsString('function EmailIcon', $page);
+        $this->assertStringContainsString('const handleEmailShare = () => {', $page);
+        $this->assertStringContainsString("const subject = emailSubject();", $page);
+        $this->assertStringContainsString("const body = composedMessage('email');", $page);
+        $this->assertStringContainsString('mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}', $page);
+        $this->assertStringContainsString("label: 'Share by Email'", $page);
+    }
+
     public function test_admin_conversion_rejects_expired_campaign(): void
     {
         $admin = User::factory()->admin()->create();
