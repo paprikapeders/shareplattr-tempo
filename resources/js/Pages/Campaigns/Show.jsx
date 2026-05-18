@@ -58,16 +58,19 @@ function Pill({ children, className = '' }) {
 
 function Hero({ campaign, reward }) {
     const expiryLabel = formatExpiryDate(campaign.expires_at, null);
+    const hasBanner = Boolean(campaign.campaign_banner && campaign.campaign_banner_url);
 
     return (
         <section className="relative min-h-[255px] overflow-hidden rounded-none bg-slate-900 sm:rounded-2xl">
-            <ImageWithFallback
-                src={campaign.campaign_banner_url}
-                alt=""
-                fallbackLabel={campaign.brand_name || campaign.title}
-                className="absolute inset-0 h-full w-full object-cover"
-                initialsClassName="h-20 w-20 rounded-2xl text-3xl"
-            />
+            {hasBanner ? (
+                <img
+                    src={campaign.campaign_banner_url}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                />
+            ) : (
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,#0f172a_0%,#111827_52%,#020617_100%)]" />
+            )}
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/38 to-black/12" />
 
@@ -143,6 +146,45 @@ function MetadataBlock({ title, children }) {
         <div>
             <h3 className="text-sm font-bold text-slate-950">{title}</h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">{children}</p>
+        </div>
+    );
+}
+
+function rewardTypeLabel(campaign) {
+    return 'Cash reward';
+}
+
+function rewardAmountLabel(campaign, reward) {
+    if ((campaign.reward_type ?? 'flat') === 'percentage') {
+        return `${reward} of verified conversion value`;
+    }
+
+    return `${reward} per verified referral`;
+}
+
+function RewardSummaryCard({ campaign, reward }) {
+    return (
+        <div className="mt-5 rounded-xl border border-cyan-200 bg-cyan-50/80 p-4 text-left shadow-sm shadow-cyan-900/5">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <p className="text-xs font-extrabold uppercase tracking-wide text-cyan-700">Reward</p>
+                    <p className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">{rewardAmountLabel(campaign, reward)}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-700 shadow-sm">
+                    {rewardTypeLabel(campaign)}
+                </span>
+            </div>
+
+            <p className="mt-3 text-sm leading-5 text-slate-700">
+                Paid after the referral completes the required action and the conversion is verified.
+            </p>
+
+            <details className="mt-3 rounded-lg bg-white/70 px-3 py-2 text-sm text-slate-600">
+                <summary className="cursor-pointer select-none font-bold text-slate-950">How rewards work</summary>
+                <p className="mt-2 leading-5">
+                    Rewards are reviewed and paid after the referral action is verified. Final approval depends on campaign terms.
+                </p>
+            </details>
         </div>
     );
 }
@@ -587,7 +629,7 @@ export default function Show({ campaign, businessPreview = false }) {
                             </Card>
                         </div>
 
-                        <aside className="space-y-4">
+                        <aside className="order-first space-y-4 xl:order-none">
                             <Card className="p-6 text-center">
                                 <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-500">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -599,8 +641,7 @@ export default function Show({ campaign, businessPreview = false }) {
                                     )}
                                 </div>
 
-                                <p className="mt-6 text-4xl font-extrabold tracking-tight text-slate-950">{reward}</p>
-                                <p className="mt-2 text-sm text-slate-400">earned per verified conversion</p>
+                                <RewardSummaryCard campaign={campaign} reward={reward} />
 
                                 {!businessPreview && (
                                     <button

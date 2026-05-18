@@ -262,8 +262,25 @@ class CampaignAvailabilityTest extends TestCase
         $this->assertStringContainsString('fallbackLabel={brandName(campaign)}', $campaignCard);
         $this->assertStringContainsString('src={campaign.campaign_banner_url}', $campaignDetail);
         $this->assertStringContainsString('src={campaign.brand_logo_url}', $campaignDetail);
+        $this->assertStringContainsString('const hasBanner = Boolean(campaign.campaign_banner && campaign.campaign_banner_url);', $campaignDetail);
+        $this->assertStringContainsString('{hasBanner ? (', $campaignDetail);
+        $this->assertStringContainsString('bg-[linear-gradient(135deg,#0f172a_0%,#111827_52%,#020617_100%)]', $campaignDetail);
         $this->assertStringContainsString('src={previewCampaign.campaign_banner_url}', $draftPreview);
         $this->assertStringContainsString('src={previewCampaign.brand_logo_url}', $draftPreview);
+    }
+
+    public function test_campaign_detail_has_reward_transparency_before_join_cta(): void
+    {
+        $page = file_get_contents(resource_path('js/Pages/Campaigns/Show.jsx'));
+
+        $this->assertStringContainsString('function RewardSummaryCard', $page);
+        $this->assertStringContainsString('Cash reward', $page);
+        $this->assertStringContainsString('per verified referral', $page);
+        $this->assertStringContainsString('Paid after the referral completes the required action and the conversion is verified.', $page);
+        $this->assertStringContainsString('How rewards work', $page);
+        $this->assertStringContainsString('Rewards are reviewed and paid after the referral action is verified. Final approval depends on campaign terms.', $page);
+        $this->assertStringContainsString('<RewardSummaryCard campaign={campaign} reward={reward} />', $page);
+        $this->assertStringContainsString('order-first space-y-4 xl:order-none', $page);
     }
 
     public function test_admin_conversion_rejects_expired_campaign(): void
