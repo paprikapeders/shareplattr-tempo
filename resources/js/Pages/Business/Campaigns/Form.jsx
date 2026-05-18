@@ -116,6 +116,24 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
                 </div>
 
                 <div>
+                    <FieldLabel>Default share message</FieldLabel>
+                    <textarea
+                        name="share_message_template"
+                        value={data.share_message_template}
+                        onChange={(event) => setData('share_message_template', event.target.value)}
+                        maxLength={1000}
+                        rows="5"
+                        className={`mt-1 w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-950/5 outline-none transition focus:ring-4 ${errors.share_message_template ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100' : 'border-slate-200 focus:border-slate-400 focus:ring-slate-100'}`}
+                        aria-invalid={errors.share_message_template ? 'true' : undefined}
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                        You can use {'{business_name}'}, {'{campaign_title}'}, and {'{referral_link}'}.
+                    </p>
+                    <CharacterCounter value={data.share_message_template} max={1000} />
+                    {errors.share_message_template && <p className="mt-1 text-sm text-rose-600">{errors.share_message_template}</p>}
+                </div>
+
+                <div>
                     <FileUpload
                         label="Campaign Banner"
                         name="campaign_banner"

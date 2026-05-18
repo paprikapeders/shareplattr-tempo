@@ -86,6 +86,7 @@ class BusinessOwnerModuleTest extends TestCase
                 'category_key' => 'product_launch',
                 'reward_amount' => '15.50',
                 'destination_url' => 'https://example.com/cold-brew',
+                'share_message_template' => 'Try {business_name}: {campaign_title}. {referral_link}',
                 'status' => 'active',
                 'expires_at' => null,
             ])
@@ -96,6 +97,7 @@ class BusinessOwnerModuleTest extends TestCase
             'title' => 'Cold Brew Starter Pack',
             'reward_type' => 'flat',
             'reward_amount' => 1550,
+            'share_message_template' => 'Try {business_name}: {campaign_title}. {referral_link}',
             'status' => 'active',
         ]);
     }

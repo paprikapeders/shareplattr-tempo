@@ -45,6 +45,7 @@ class AdminCampaignUpdateTest extends TestCase
                 'category_key' => 'brand_awareness',
                 'reward_amount' => '15.50',
                 'destination_url' => 'https://example.com/cold-brew-updated',
+                'share_message_template' => 'Join {campaign_title} from {business_name}: {referral_link}',
                 'status' => 'inactive',
                 'expires_at' => null,
             ])
@@ -55,8 +56,24 @@ class AdminCampaignUpdateTest extends TestCase
             'id' => $campaign->id,
             'title' => 'Cold Brew Starter Pack Updated',
             'reward_amount' => 1550,
+            'share_message_template' => 'Join {campaign_title} from {business_name}: {referral_link}',
             'status' => 'inactive',
         ]);
+    }
+
+    public function test_admin_validates_share_message_template_length(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $brand = Brand::create([
+            'name' => 'Northstar Coffee',
+        ]);
+
+        $this
+            ->actingAs($admin)
+            ->post(route('admin.campaigns.store'), $this->campaignRequestData($brand, [
+                'share_message_template' => str_repeat('a', 1001),
+            ]))
+            ->assertSessionHasErrors('share_message_template');
     }
 
     public function test_campaign_banner_update_stores_unique_public_path_and_removes_old_file(): void

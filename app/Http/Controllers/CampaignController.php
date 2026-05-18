@@ -14,6 +14,8 @@ use Inertia\Inertia;
 
 class CampaignController extends Controller
 {
+    private const DEFAULT_SHARE_MESSAGE_TEMPLATE = "Hey! I've been using {business_name} and thought you'd love it.\n\nUse my link to get started: {referral_link}";
+
     /**
      * Display active campaigns.
      */
@@ -191,6 +193,7 @@ class CampaignController extends Controller
             'tags' => $campaign->tags ?? [],
             'assets' => $campaign->assets ?? [],
             'participant_instructions' => $campaign->participant_instructions,
+            'share_message_template' => $campaign->share_message_template,
             'status' => $campaign->status,
             'expires_at' => $campaign->expires_at?->toIso8601String(),
             'click_count' => (int) ($campaign->clicks_count ?? $campaign->click_count ?? 0),
@@ -200,8 +203,22 @@ class CampaignController extends Controller
             'campaign_banner' => $campaign->campaign_banner,
             'campaign_banner_url' => $this->publicStorageUrl($campaign->campaign_banner, $campaign->updated_at?->timestamp),
             'referral_url' => $token ? route('referrals.show', $token->token) : null,
+            'share_message' => $token ? $this->shareMessage($campaign, route('referrals.show', $token->token)) : null,
             'brand_stats' => $this->brandStats($campaign),
         ];
+    }
+
+    private function shareMessage(Campaign $campaign, string $referralUrl): string
+    {
+        $template = filled($campaign->share_message_template)
+            ? $campaign->share_message_template
+            : self::DEFAULT_SHARE_MESSAGE_TEMPLATE;
+
+        return strtr($template, [
+            '{business_name}' => $campaign->brand?->name ?? $campaign->brand_name ?? 'this brand',
+            '{campaign_title}' => $campaign->title,
+            '{referral_link}' => $referralUrl,
+        ]);
     }
 
     private function brandStats(Campaign $campaign): array

@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ClientLayout from '../../Layouts/ClientLayout';
 import BusinessLayout from '../../Layouts/BusinessLayout';
 import CopyCampaignLinkButton from '../../Components/CopyCampaignLinkButton';
@@ -205,10 +205,25 @@ function ShareButton({ label, source, icon: Icon, onClick }) {
     );
 }
 
+function messageWithLink(message, url) {
+    const normalized = (message ?? '').trim();
+
+    if (!url) {
+        return normalized;
+    }
+
+    if (normalized.includes(url)) {
+        return normalized;
+    }
+
+    return `${normalized}${normalized ? '\n\n' : ''}${url}`;
+}
+
 export default function Show({ campaign, businessPreview = false }) {
     const [copied, setCopied] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [toast, setToast] = useState(null);
+    const [shareMessageText, setShareMessageText] = useState(campaign.share_message ?? '');
     const Layout = businessPreview ? BusinessLayout : ClientLayout;
     const statsUrl = businessPreview
         ? `/business/campaigns/${campaign.id}/stats-summary`
@@ -240,6 +255,10 @@ export default function Show({ campaign, businessPreview = false }) {
         return url.toString();
     };
 
+    useEffect(() => {
+        setShareMessageText(campaign.share_message ?? '');
+    }, [campaign.share_message]);
+
     const showToast = (message) => {
         setToast(message);
         window.setTimeout(() => setToast(null), 1800);
@@ -266,16 +285,45 @@ export default function Show({ campaign, businessPreview = false }) {
         window.setTimeout(() => setCopied(false), 1800);
     };
 
-    const copySourceLink = async (source, label) => {
-        await navigator.clipboard.writeText(referralUrl(source));
-        showToast(`${label} link copied. Paste it into your post, story, or DM.`);
+    const composedMessage = (source = 'copy') => {
+        const baseUrl = campaign.referral_url ?? '';
+        const copyUrl = referralUrl('copy');
+        const sourceUrl = referralUrl(source);
+        let message = shareMessageText;
+
+        if (baseUrl && message.includes(baseUrl)) {
+            message = message.replaceAll(baseUrl, sourceUrl);
+        } else if (message.includes(copyUrl)) {
+            message = message.replaceAll(copyUrl, sourceUrl);
+        }
+
+        return messageWithLink(message, sourceUrl);
+    };
+
+    const copyMessage = async (source = 'copy', label = 'Share message') => {
+        await navigator.clipboard.writeText(composedMessage(source));
+        showToast(`${label} copied`);
     };
 
     const openShare = (url) => {
         window.open(url, '_blank', 'noopener,noreferrer');
     };
 
-    const shareMessage = (source) => `Check out this campaign: ${campaign.title}. Join here: ${referralUrl(source)}`;
+    const nativeShare = async () => {
+        const text = composedMessage('direct');
+
+        if (navigator.share) {
+            await navigator.share({
+                title: campaign.title,
+                text,
+                url: referralUrl('direct'),
+            });
+            return;
+        }
+
+        await copyMessage('direct', 'Share message');
+    };
+
     const socialShares = [
         {
             label: 'Share on Facebook',
@@ -287,45 +335,45 @@ export default function Show({ campaign, businessPreview = false }) {
             label: 'Share on X',
             source: 'X',
             icon: XIcon,
-            onClick: () => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage('x'))}`),
+            onClick: () => openShare(`https://twitter.com/intent/tweet?text=${encodeURIComponent(composedMessage('x'))}`),
         },
         {
-            label: 'Copy Instagram link',
+            label: 'Copy Instagram message',
             source: 'Instagram',
             icon: InstagramIcon,
-            onClick: () => copySourceLink('instagram', 'Instagram'),
+            onClick: () => copyMessage('instagram', 'Instagram message'),
         },
         {
-            label: 'Copy TikTok link',
+            label: 'Copy TikTok message',
             source: 'TikTok',
             icon: TiktokIcon,
-            onClick: () => copySourceLink('tiktok', 'TikTok'),
+            onClick: () => copyMessage('tiktok', 'TikTok message'),
         },
     ];
     const messageShares = [
         {
-            label: 'Copy Messenger link',
+            label: 'Copy Messenger message',
             source: 'Messenger',
             icon: MessengerIcon,
-            onClick: () => copySourceLink('messenger', 'Messenger'),
+            onClick: () => copyMessage('messenger', 'Messenger message'),
         },
         {
             label: 'Share on WhatsApp',
             source: 'WhatsApp',
             icon: WhatsappIcon,
-            onClick: () => openShare(`https://wa.me/?text=${encodeURIComponent(shareMessage('whatsapp'))}`),
+            onClick: () => openShare(`https://wa.me/?text=${encodeURIComponent(composedMessage('whatsapp'))}`),
         },
         {
             label: 'Share on Telegram',
             source: 'Telegram',
             icon: TelegramIcon,
-            onClick: () => openShare(`https://t.me/share/url?url=${encodeURIComponent(referralUrl('telegram'))}&text=${encodeURIComponent(`Check out this campaign: ${campaign.title}`)}`),
+            onClick: () => openShare(`https://t.me/share/url?url=${encodeURIComponent(referralUrl('telegram'))}&text=${encodeURIComponent(composedMessage('telegram'))}`),
         },
         {
-            label: 'Copy Discord link',
+            label: 'Copy Discord message',
             source: 'Discord',
             icon: DiscordIcon,
-            onClick: () => copySourceLink('discord', 'Discord'),
+            onClick: () => copyMessage('discord', 'Discord message'),
         },
     ];
 
@@ -456,6 +504,32 @@ export default function Show({ campaign, businessPreview = false }) {
                                         <div className="rounded-xl border border-slate-200 bg-white p-4 text-left">
                                             <p className="text-sm font-extrabold text-slate-950">Share this campaign</p>
                                             <div className="mt-4 space-y-4">
+                                                <div>
+                                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Message</p>
+                                                    <textarea
+                                                        value={shareMessageText}
+                                                        onChange={(event) => setShareMessageText(event.target.value)}
+                                                        rows="6"
+                                                        className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700 outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100"
+                                                    />
+                                                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => copyMessage('copy')}
+                                                            className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
+                                                        >
+                                                            Copy message
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={nativeShare}
+                                                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700"
+                                                        >
+                                                            Share
+                                                        </button>
+                                                    </div>
+                                                </div>
+
                                                 <div>
                                                     <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Social</p>
                                                     <div className="mt-2 grid grid-cols-2 gap-2">

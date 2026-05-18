@@ -32,6 +32,7 @@ use Illuminate\Support\Str;
     'tags',
     'assets',
     'participant_instructions',
+    'share_message_template',
     'import_metadata',
     'destination_url',
     'campaign_banner',

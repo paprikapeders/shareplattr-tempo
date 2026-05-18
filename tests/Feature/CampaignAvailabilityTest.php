@@ -68,6 +68,62 @@ class CampaignAvailabilityTest extends TestCase
         $this->assertDatabaseCount('referral_tokens', 0);
     }
 
+    public function test_campaign_detail_renders_custom_share_message_after_referral_link_exists(): void
+    {
+        $user = User::factory()->create();
+        $campaign = $this->createCampaign([
+            'brand_name' => 'Northstar Coffee',
+            'title' => 'Cold Brew Starter Pack',
+            'share_message_template' => 'Share {campaign_title} from {business_name}: {referral_link}',
+        ]);
+
+        $token = ReferralToken::create([
+            'user_id' => $user->id,
+            'campaign_id' => $campaign->id,
+            'token' => 'customshare',
+        ]);
+
+        $referralUrl = route('referrals.show', $token->token);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.show', $campaign->slug))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns/Show')
+                ->where('campaign.share_message_template', 'Share {campaign_title} from {business_name}: {referral_link}')
+                ->where('campaign.referral_url', $referralUrl)
+                ->where('campaign.share_message', 'Share Cold Brew Starter Pack from Northstar Coffee: '.$referralUrl)
+            );
+    }
+
+    public function test_campaign_detail_uses_fallback_share_message_when_template_is_empty(): void
+    {
+        $user = User::factory()->create();
+        $campaign = $this->createCampaign([
+            'brand_name' => 'Northstar Coffee',
+            'title' => 'Cold Brew Starter Pack',
+            'share_message_template' => null,
+        ]);
+
+        $token = ReferralToken::create([
+            'user_id' => $user->id,
+            'campaign_id' => $campaign->id,
+            'token' => 'fallbackshare',
+        ]);
+
+        $referralUrl = route('referrals.show', $token->token);
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.show', $campaign->slug))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns/Show')
+                ->where('campaign.share_message', "Hey! I've been using Northstar Coffee and thought you'd love it.\n\nUse my link to get started: ".$referralUrl)
+            );
+    }
+
     public function test_admin_conversion_rejects_expired_campaign(): void
     {
         $admin = User::factory()->admin()->create();
