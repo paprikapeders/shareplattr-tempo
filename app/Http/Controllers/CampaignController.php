@@ -202,6 +202,7 @@ class CampaignController extends Controller
             'campaign_terms' => $campaign->campaign_terms,
             'share_message_template' => $campaign->share_message_template,
             'status' => $campaign->status,
+            'created_at' => $campaign->created_at?->toIso8601String(),
             'expires_at' => $campaign->expires_at?->toIso8601String(),
             'click_count' => (int) ($campaign->clicks_count ?? $campaign->click_count ?? 0),
             'conversion_count' => (int) ($campaign->conversions_count ?? $campaign->conversion_count ?? 0),
