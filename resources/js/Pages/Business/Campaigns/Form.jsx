@@ -134,6 +134,22 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
                 </div>
 
                 <div>
+                    <FieldLabel>Campaign Terms</FieldLabel>
+                    <textarea
+                        name="campaign_terms"
+                        value={data.campaign_terms}
+                        onChange={(event) => setData('campaign_terms', event.target.value)}
+                        rows="6"
+                        className={`mt-1 w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-950/5 outline-none transition focus:ring-4 ${errors.campaign_terms ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100' : 'border-slate-200 focus:border-slate-400 focus:ring-slate-100'}`}
+                        aria-invalid={errors.campaign_terms ? 'true' : undefined}
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                        Add eligibility, reward conditions, expiry, exclusions, and location restrictions. If left blank, generic SharePlattr referral terms will be shown.
+                    </p>
+                    {errors.campaign_terms && <p className="mt-1 text-sm text-rose-600">{errors.campaign_terms}</p>}
+                </div>
+
+                <div>
                     <FileUpload
                         label="Campaign Banner"
                         name="campaign_banner"

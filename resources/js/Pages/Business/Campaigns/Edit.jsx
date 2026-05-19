@@ -13,6 +13,7 @@ export default function Edit({ campaign, statuses }) {
         reward_amount: campaign.reward_amount_dollars,
         destination_url: campaign.destination_url,
         share_message_template: campaign.share_message_template ?? '',
+        campaign_terms: campaign.campaign_terms ?? '',
         campaign_banner: null,
         campaign_banner_url: campaign.campaign_banner_url,
         status: campaign.status,

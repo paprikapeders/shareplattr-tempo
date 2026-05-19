@@ -19,6 +19,7 @@ export default function Edit({ campaign, statuses, brands }) {
         deliverables: campaign.deliverables ?? '',
         participant_instructions: campaign.participant_instructions ?? '',
         share_message_template: campaign.share_message_template ?? '',
+        campaign_terms: campaign.campaign_terms ?? '',
         destination_url: campaign.destination_url,
         campaign_banner: null,
         campaign_banner_url: campaign.campaign_banner_url,

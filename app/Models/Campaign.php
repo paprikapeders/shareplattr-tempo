@@ -33,6 +33,7 @@ use Illuminate\Support\Str;
     'assets',
     'participant_instructions',
     'share_message_template',
+    'campaign_terms',
     'import_metadata',
     'destination_url',
     'campaign_banner',

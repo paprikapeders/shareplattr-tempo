@@ -33,6 +33,7 @@ export default function Create({ statuses, brands }) {
         deliverables: '',
         participant_instructions: '',
         share_message_template: '',
+        campaign_terms: '',
         destination_url: '',
         campaign_banner: null,
         campaign_banner_url: null,

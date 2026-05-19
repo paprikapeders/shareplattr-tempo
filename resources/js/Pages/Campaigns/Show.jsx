@@ -9,6 +9,8 @@ import { formatExpiryDate } from '../../Support/dates';
 import { formatReward } from '../../Support/rewards';
 import usePollingStats from '../../Support/usePollingStats';
 
+const genericCampaignTerms = 'Standard SharePlattr referral participation terms apply. Rewards are subject to verification, campaign availability, eligibility checks, and fraud review. Rewards may be rejected for self-referrals, duplicate activity, invalid conversions, or activity outside the campaign requirements.';
+
 function compactNumber(value) {
     return new Intl.NumberFormat('en-US', {
         notation: 'compact',
@@ -184,6 +186,27 @@ function RewardSummaryCard({ campaign, reward }) {
                 <p className="mt-2 leading-5">
                     Rewards are reviewed and paid after the referral action is verified. Final approval depends on campaign terms.
                 </p>
+            </details>
+        </div>
+    );
+}
+
+function CampaignTermsBlock({ terms }) {
+    const campaignTerms = terms?.trim() || genericCampaignTerms;
+
+    return (
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm shadow-slate-950/5">
+            <p className="text-sm font-extrabold text-slate-950">Campaign Terms</p>
+            <details className="mt-2">
+                <summary className="cursor-pointer select-none text-sm font-bold text-[#08bcbc]">
+                    View campaign terms
+                </summary>
+                <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
+                    <p className="whitespace-pre-line">{campaignTerms}</p>
+                    <Link href="/terms-of-use" className="inline-flex font-bold text-slate-950 underline underline-offset-4">
+                        Terms of Service
+                    </Link>
+                </div>
             </details>
         </div>
     );
@@ -642,6 +665,8 @@ export default function Show({ campaign, businessPreview = false }) {
                                 </div>
 
                                 <RewardSummaryCard campaign={campaign} reward={reward} />
+
+                                <CampaignTermsBlock terms={campaign.campaign_terms} />
 
                                 {!businessPreview && (
                                     <button

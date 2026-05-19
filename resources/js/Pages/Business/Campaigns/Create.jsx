@@ -27,6 +27,7 @@ export default function Create({ statuses, brand }) {
         reward_amount: '',
         destination_url: '',
         share_message_template: '',
+        campaign_terms: '',
         campaign_banner: null,
         campaign_banner_url: null,
         status: 'draft',

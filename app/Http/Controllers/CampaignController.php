@@ -199,6 +199,7 @@ class CampaignController extends Controller
             'tags' => $campaign->tags ?? [],
             'assets' => $campaign->assets ?? [],
             'participant_instructions' => $campaign->participant_instructions,
+            'campaign_terms' => $campaign->campaign_terms,
             'share_message_template' => $campaign->share_message_template,
             'status' => $campaign->status,
             'expires_at' => $campaign->expires_at?->toIso8601String(),
