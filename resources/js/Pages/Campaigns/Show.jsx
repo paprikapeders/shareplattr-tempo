@@ -371,6 +371,7 @@ export default function Show({ campaign, businessPreview = false }) {
 
         return url.toString();
     };
+    const fullReferralUrl = campaign.referral_url ? referralUrl('copy') : '';
 
     useEffect(() => {
         setShareMessageText(campaign.share_message ?? '');
@@ -389,7 +390,7 @@ export default function Show({ campaign, businessPreview = false }) {
 
     const generateLink = () => {
         if (campaign.referral_url) {
-            copyLink(referralUrl('copy'));
+            copyLink(fullReferralUrl);
             return;
         }
 
@@ -406,7 +407,7 @@ export default function Show({ campaign, businessPreview = false }) {
         await navigator.clipboard.writeText(url);
         setCopied(true);
         showToast('Referral link copied');
-        window.setTimeout(() => setCopied(false), 1800);
+        window.setTimeout(() => setCopied(false), 2000);
     };
 
     const dismissPayoutPrompt = () => {
@@ -685,18 +686,23 @@ export default function Show({ campaign, businessPreview = false }) {
 
                                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left">
                                             <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Your referral link</p>
+                                            <p className="mt-1 text-xs font-medium text-slate-500">
+                                                Full link below. Scroll or select the field to review it.
+                                            </p>
                                             <div className="mt-2 flex gap-2">
                                                 <input
                                                     readOnly
-                                                    value={referralUrl('copy')}
-                                                    className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-xs text-slate-700 outline-none"
+                                                    aria-label="Full referral link"
+                                                    value={fullReferralUrl}
+                                                    onFocus={(event) => event.target.select()}
+                                                    className="min-w-0 flex-1 overflow-x-auto rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-xs text-slate-700 outline-none focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
                                                 />
                                                 <button
                                                     type="button"
-                                                    onClick={() => copyLink(referralUrl('copy'))}
+                                                    onClick={() => copyLink(fullReferralUrl)}
                                                     className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
                                                 >
-                                                    Copy
+                                                    {copied ? 'Copied!' : 'Copy'}
                                                 </button>
                                             </div>
                                         </div>
