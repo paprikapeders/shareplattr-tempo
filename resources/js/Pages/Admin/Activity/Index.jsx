@@ -13,7 +13,7 @@ function formatDate(value) {
     }).format(new Date(value));
 }
 
-function ActivityTable({ title, description, rows, emptyTitle }) {
+function ActivityTable({ title, description, rows }) {
     return (
         <section>
             <div className="mb-4">
@@ -22,7 +22,7 @@ function ActivityTable({ title, description, rows, emptyTitle }) {
             </div>
 
             {rows.length === 0 ? (
-                <EmptyState title={emptyTitle}>Nothing needs review in this section right now.</EmptyState>
+                <EmptyState title="No activity yet — start sharing to see results here." />
             ) : (
                 <Card className="overflow-hidden p-0">
                     <div className="overflow-x-auto">
@@ -91,14 +91,12 @@ export default function Index({ blockedActivities, flaggedClicks }) {
                 title="Blocked Activity"
                 description="Self-referral attempts are blocked from creating clicks and logged here."
                 rows={blockedActivities}
-                emptyTitle="No blocked activity."
             />
 
             <ActivityTable
                 title="Flagged Clicks"
                 description="Duplicate clicks are still recorded but flagged for review."
                 rows={flaggedClicks}
-                emptyTitle="No flagged clicks."
             />
         </AdminLayout>
     );

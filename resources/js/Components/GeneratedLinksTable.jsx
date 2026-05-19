@@ -25,6 +25,9 @@ export default function GeneratedLinksTable({
     rows,
     filters,
     onFilterChange,
+    hasAnyData = false,
+    hasActiveFilters = false,
+    onClearFilters,
     pageSize,
     onPageSizeChange,
     page,
@@ -35,6 +38,8 @@ export default function GeneratedLinksTable({
     onCopy,
     onExport,
 }) {
+    const isFilteredEmpty = rows.length === 0 && hasAnyData && hasActiveFilters;
+
     return (
         <section className="rounded-[28px] bg-white shadow-[0_22px_55px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
             <div className="border-b border-slate-200 px-6 py-6">
@@ -56,9 +61,12 @@ export default function GeneratedLinksTable({
 
             {rows.length === 0 ? (
                 <div className="px-6 pb-6">
-                    <EmptyState title="No generated links match your filters.">
-                        Create a referral link from the campaigns page to populate this table.
-                    </EmptyState>
+                    <EmptyState
+                        title={isFilteredEmpty ? 'No results match your filters' : 'No campaigns yet — create or join a campaign to get started.'}
+                        description={isFilteredEmpty ? 'Try adjusting your filters or clear them to see all records.' : 'Create a referral link from the campaigns page to populate this table.'}
+                        actionLabel={isFilteredEmpty ? 'Clear filters' : undefined}
+                        onAction={isFilteredEmpty ? onClearFilters : undefined}
+                    />
                 </div>
             ) : (
                 <>

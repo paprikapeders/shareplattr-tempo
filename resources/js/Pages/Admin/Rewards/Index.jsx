@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
@@ -116,6 +116,12 @@ function filterHref(status) {
 }
 
 export default function Index({ rewards, filters, counts, statuses }) {
+    const hasActiveFilters = Boolean(filters.status);
+    const isFilteredEmpty = rewards.length === 0 && hasActiveFilters && counts.all > 0;
+    const clearFilters = () => router.get('/admin/rewards', {}, {
+        preserveState: false,
+        replace: true,
+    });
     const tabs = [
         { label: 'All', value: null, count: counts.all },
         ...statuses.map((status) => ({
@@ -154,9 +160,12 @@ export default function Index({ rewards, filters, counts, statuses }) {
             </div>
 
             {rewards.length === 0 ? (
-                <EmptyState title="No rewards found.">
-                    No rewards match the current status filter.
-                </EmptyState>
+                <EmptyState
+                    title={isFilteredEmpty ? 'No results match your filters' : 'No payouts yet — eligible rewards will appear here when they’re ready.'}
+                    description={isFilteredEmpty ? 'Try adjusting your filters or clear them to see all records.' : undefined}
+                    actionLabel={isFilteredEmpty ? 'Clear filters' : undefined}
+                    onAction={isFilteredEmpty ? clearFilters : undefined}
+                />
             ) : (
                 <Card className="overflow-hidden p-0">
                     <div className="overflow-x-auto">

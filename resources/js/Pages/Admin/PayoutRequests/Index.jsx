@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import Card from '../../../Components/Card';
 import EmptyState from '../../../Components/EmptyState';
@@ -136,6 +136,12 @@ function PayoutRequestRow({ payoutRequest }) {
 }
 
 export default function Index({ payoutRequests, filters, counts, statuses }) {
+    const hasActiveFilters = Boolean(filters.status);
+    const isFilteredEmpty = payoutRequests.length === 0 && hasActiveFilters && counts.all > 0;
+    const clearFilters = () => router.get('/admin/payout-requests', {}, {
+        preserveState: false,
+        replace: true,
+    });
     const tabs = [
         { label: 'All', value: null, count: counts.all },
         ...statuses.map((status) => ({
@@ -174,9 +180,12 @@ export default function Index({ payoutRequests, filters, counts, statuses }) {
             </div>
 
             {payoutRequests.length === 0 ? (
-                <EmptyState title="No payout requests found.">
-                    No payout requests match the current status filter.
-                </EmptyState>
+                <EmptyState
+                    title={isFilteredEmpty ? 'No results match your filters' : 'No payouts yet — eligible rewards will appear here when they’re ready.'}
+                    description={isFilteredEmpty ? 'Try adjusting your filters or clear them to see all records.' : undefined}
+                    actionLabel={isFilteredEmpty ? 'Clear filters' : undefined}
+                    onAction={isFilteredEmpty ? clearFilters : undefined}
+                />
             ) : (
                 <Card className="overflow-hidden p-0">
                     <div className="overflow-x-auto">

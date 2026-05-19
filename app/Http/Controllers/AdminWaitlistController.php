@@ -15,6 +15,7 @@ class AdminWaitlistController extends Controller
         $type = $request->query('type');
         $type = in_array($type, self::TYPES, true) ? $type : null;
         $search = trim((string) $request->query('search', ''));
+        $unfilteredTotal = WaitlistSubmission::query()->count();
 
         $baseQuery = WaitlistSubmission::query()
             ->when($search !== '', fn ($query) => $query->where('email', 'like', '%'.$search.'%'));
@@ -48,6 +49,7 @@ class AdminWaitlistController extends Controller
                 'referrer' => (int) $counts->referrer_count,
                 'business' => (int) $counts->business_count,
             ],
+            'unfilteredTotal' => $unfilteredTotal,
         ]);
     }
 }

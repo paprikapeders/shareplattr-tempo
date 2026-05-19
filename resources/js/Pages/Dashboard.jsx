@@ -34,6 +34,10 @@ function applyFilters(items, filters) {
     });
 }
 
+function hasActiveTableFilters(filters) {
+    return filters.status !== 'all' || filters.search.trim() !== '';
+}
+
 function paginate(items, page, pageSize) {
     const start = (page - 1) * pageSize;
 
@@ -155,6 +159,10 @@ export default function Dashboard({ stats, referralLinks, activities, onboarding
 
     const filteredReferrals = useMemo(() => applyFilters(liveReferralLinks, referralFilters), [liveReferralLinks, referralFilters]);
     const filteredGeneratedLinks = useMemo(() => applyFilters(liveReferralLinks, generatedFilters), [liveReferralLinks, generatedFilters]);
+    const hasReferralData = liveReferralLinks.length > 0;
+    const hasGeneratedLinkData = liveReferralLinks.length > 0;
+    const hasActiveReferralFilters = hasActiveTableFilters(referralFilters);
+    const hasActiveGeneratedFilters = hasActiveTableFilters(generatedFilters);
 
     const referralTotalPages = Math.ceil(filteredReferrals.length / referralPageSize);
     const generatedTotalPages = Math.ceil(filteredGeneratedLinks.length / generatedPageSize);
@@ -174,6 +182,16 @@ export default function Dashboard({ stats, referralLinks, activities, onboarding
         await navigator.clipboard.writeText(value);
         setCopiedId(id);
         window.setTimeout(() => setCopiedId(null), 1800);
+    };
+
+    const clearReferralFilters = () => {
+        setReferralFilters({ status: 'all', search: '' });
+        setReferralPage(1);
+    };
+
+    const clearGeneratedFilters = () => {
+        setGeneratedFilters({ status: 'all', search: '' });
+        setGeneratedPage(1);
     };
 
     const exportReferrals = () => {
@@ -230,6 +248,9 @@ export default function Dashboard({ stats, referralLinks, activities, onboarding
                         <ReferralsTable
                             rows={pagedReferrals}
                             filters={referralFilters}
+                            hasAnyData={hasReferralData}
+                            hasActiveFilters={hasActiveReferralFilters}
+                            onClearFilters={clearReferralFilters}
                             onFilterChange={(key, value) => {
                                 setReferralFilters((current) => ({ ...current, [key]: value }));
                                 setReferralPage(1);
@@ -250,6 +271,9 @@ export default function Dashboard({ stats, referralLinks, activities, onboarding
                     <GeneratedLinksTable
                         rows={pagedGeneratedLinks}
                         filters={generatedFilters}
+                        hasAnyData={hasGeneratedLinkData}
+                        hasActiveFilters={hasActiveGeneratedFilters}
+                        onClearFilters={clearGeneratedFilters}
                         onFilterChange={(key, value) => {
                             setGeneratedFilters((current) => ({ ...current, [key]: value }));
                             setGeneratedPage(1);

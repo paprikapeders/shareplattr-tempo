@@ -39,7 +39,7 @@ export default function Index({ campaigns }) {
             </PageHeader>
 
             {campaigns.length === 0 ? (
-                <EmptyState title="No campaigns yet.">Create your first campaign to make it available for participants.</EmptyState>
+                <EmptyState title="No campaigns yet — create or join a campaign to get started." />
             ) : (
                 <Card className="overflow-hidden p-0">
                     <div className="overflow-x-auto">

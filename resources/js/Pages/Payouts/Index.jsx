@@ -267,9 +267,7 @@ export default function Index({ stripeKey, stats, payoutMethod, payoutRequests }
                 </div>
 
                 {payoutRequests.length === 0 ? (
-                    <EmptyState title="No payout requests yet.">
-                        Request payout when you have pending rewards available.
-                    </EmptyState>
+                    <EmptyState title="No payouts yet — eligible rewards will appear here when they’re ready." />
                 ) : (
                     <div className="space-y-4">
                         {payoutRequests.map((request) => (

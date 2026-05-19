@@ -71,7 +71,7 @@ function sortCampaigns(campaigns, sort) {
     });
 }
 
-export default function Campaigns({ campaigns, searchResults = [], categories, filters = {} }) {
+export default function Campaigns({ campaigns, searchResults = [], categories, filters = {}, unfilteredTotal = 0 }) {
     const [category, setCategory] = useState(filters.category ?? 'all');
     const [keyword, setKeyword] = useState(filters.search ?? '');
     const [sort, setSort] = useState(() => {
@@ -84,7 +84,9 @@ export default function Campaigns({ campaigns, searchResults = [], categories, f
 
     const activeSearch = (filters.search ?? '').trim();
     const hasActiveSearch = activeSearch.length > 0;
+    const hasActiveFilters = hasActiveSearch || (filters.category ?? 'all') !== 'all';
     const visibleCampaigns = hasActiveSearch ? searchResults : campaigns;
+    const isFilteredEmpty = hasActiveFilters && unfilteredTotal > 0 && visibleCampaigns.length === 0;
     const sortedCampaigns = useMemo(
         () => sortCampaigns(visibleCampaigns, sort),
         [visibleCampaigns, sort],
@@ -158,7 +160,7 @@ export default function Campaigns({ campaigns, searchResults = [], categories, f
                             {hasActiveSearch ? `Search results for: ${activeSearch}` : 'Campaigns'}
                         </h2>
                         <p className="mt-2 text-sm text-slate-400">
-                            {hasActiveSearch ? 'Matching available campaigns' : 'Sorted to help you find strong earning opportunities first'}
+                            {hasActiveFilters ? 'Matching available campaigns' : 'Sorted to help you find strong earning opportunities first'}
                         </p>
                     </div>
                     <SortControl value={sort} onChange={setSort} />
@@ -166,11 +168,14 @@ export default function Campaigns({ campaigns, searchResults = [], categories, f
 
                 {visibleCampaigns.length === 0 ? (
                     <div className="mt-10">
-                        <EmptyState title="No campaigns found.">
-                            Try another category or keyword, or check back when new campaigns are active.
-                        </EmptyState>
+                        <EmptyState
+                            title={isFilteredEmpty ? 'No results match your filters' : 'No campaigns yet — create or join a campaign to get started.'}
+                            description={isFilteredEmpty ? 'Try adjusting your filters or clear them to see all records.' : 'Check back when new campaigns are active.'}
+                            actionLabel={isFilteredEmpty ? 'Clear filters' : undefined}
+                            onAction={isFilteredEmpty ? resetFilters : undefined}
+                        />
                     </div>
-                ) : hasActiveSearch ? (
+                ) : hasActiveFilters ? (
                     <section className="mt-5">
                         <div className="mb-4 flex justify-end">
                             <button

@@ -65,8 +65,10 @@ function WaitlistRow({ submission }) {
     );
 }
 
-export default function Index({ submissions, filters, counts }) {
+export default function Index({ submissions, filters, counts, unfilteredTotal = 0 }) {
     const [search, setSearch] = useState(filters.search ?? '');
+    const hasActiveFilters = Boolean(filters.search || filters.type);
+    const isFilteredEmpty = submissions.length === 0 && hasActiveFilters && unfilteredTotal > 0;
     const tabs = [
         { label: 'All', value: null, count: counts.all },
         { label: 'Referrer', value: 'referrer', count: counts.referrer },
@@ -81,6 +83,14 @@ export default function Index({ submissions, filters, counts }) {
             search,
         }, {
             preserveState: true,
+            replace: true,
+        });
+    };
+
+    const clearFilters = () => {
+        setSearch('');
+        router.get('/admin/waitlist', {}, {
+            preserveState: false,
             replace: true,
         });
     };
@@ -140,9 +150,12 @@ export default function Index({ submissions, filters, counts }) {
             </Card>
 
             {submissions.length === 0 ? (
-                <EmptyState title="No waitlist requests found.">
-                    No landing page join requests match the current filters.
-                </EmptyState>
+                <EmptyState
+                    title={isFilteredEmpty ? 'No results match your filters' : 'No waitlist requests yet.'}
+                    description={isFilteredEmpty ? 'Try adjusting your filters or clear them to see all records.' : 'Landing page join requests will appear here.'}
+                    actionLabel={isFilteredEmpty ? 'Clear filters' : undefined}
+                    onAction={isFilteredEmpty ? clearFilters : undefined}
+                />
             ) : (
                 <Card className="overflow-hidden p-0">
                     <div className="overflow-x-auto">

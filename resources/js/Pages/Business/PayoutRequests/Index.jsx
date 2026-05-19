@@ -106,9 +106,7 @@ export default function Index({ payoutRequests, billing }) {
             )}
 
             {payoutRequests.length === 0 ? (
-                <EmptyState title="No payout requests yet.">
-                    Requests will appear here when participants submit eligible rewards from your campaigns.
-                </EmptyState>
+                <EmptyState title="No payouts yet — eligible rewards will appear here when they’re ready." />
             ) : (
                 <div className="space-y-4">
                     {payoutRequests.map((payoutRequest) => (

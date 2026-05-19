@@ -25,6 +25,9 @@ class CampaignController extends Controller
         $search = preg_replace('/\s+/', ' ', trim((string) $request->query('search', ''))) ?? '';
         $category = (string) $request->query('category', 'all');
         $hasSearch = $search !== '';
+        $unfilteredTotal = Campaign::query()
+            ->available()
+            ->count();
 
         $campaignQuery = Campaign::query()
             ->with('brand:id,name,logo,logo_url,description,business_type,website_url,country_region,affiliate_url,contact_info,notes')
@@ -95,6 +98,7 @@ class CampaignController extends Controller
                 'search' => $search,
                 'category' => $category ?: 'all',
             ],
+            'unfilteredTotal' => $unfilteredTotal,
         ]);
     }
 

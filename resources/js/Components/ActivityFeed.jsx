@@ -1,3 +1,5 @@
+import EmptyState from './EmptyState';
+
 function initials(value) {
     return (value ?? 'SP')
         .split(' ')
@@ -29,23 +31,30 @@ export default function ActivityFeed({ activities }) {
             </div>
 
             <div className="mt-4 max-h-[360px] space-y-4 overflow-y-auto pr-1 xl:max-h-[330px]">
-                {activities.map((activity) => (
-                    <article key={activity.id} className="flex items-start gap-3">
-                        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${toneClasses(activity.tone)}`}>
-                            {initials(activity.title)}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                                <p className="truncate text-[15px] font-semibold text-[#2a3041]">{activity.title}</p>
-                                <span className="text-xs text-slate-400">{activity.timestamp}</span>
+                {activities.length === 0 ? (
+                    <EmptyState
+                        title="No activity yet — start sharing to see results here."
+                        className="px-4 py-8"
+                    />
+                ) : (
+                    activities.map((activity) => (
+                        <article key={activity.id} className="flex items-start gap-3">
+                            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${toneClasses(activity.tone)}`}>
+                                {initials(activity.title)}
                             </div>
-                            <p className="mt-1 text-[14px] leading-6 text-slate-500">{activity.message}</p>
-                        </div>
 
-                        <span className="mt-2 h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                    </article>
-                ))}
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                    <p className="truncate text-[15px] font-semibold text-[#2a3041]">{activity.title}</p>
+                                    <span className="text-xs text-slate-400">{activity.timestamp}</span>
+                                </div>
+                                <p className="mt-1 text-[14px] leading-6 text-slate-500">{activity.message}</p>
+                            </div>
+
+                            <span className="mt-2 h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                        </article>
+                    ))
+                )}
             </div>
         </aside>
     );
