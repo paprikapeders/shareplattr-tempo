@@ -82,7 +82,17 @@ export default function Login() {
                 />
                 {errors.password && <p className="-mt-2 text-sm text-red-600">{errors.password}</p>}
 
-                <div className="-mt-1 text-right leading-none">
+                <div className="-mt-1 flex items-center justify-between gap-3">
+                    <label className="flex min-w-0 items-center gap-2 text-[14px] font-medium text-[#101010]">
+                        <input
+                            name="remember"
+                            type="checkbox"
+                            checked={data.remember}
+                            onChange={(event) => setData('remember', event.target.checked)}
+                            className="h-4 w-4 rounded border-white bg-white text-indigo-600 shadow-sm focus:ring-2 focus:ring-indigo-300"
+                        />
+                        <span>Remember me</span>
+                    </label>
                     <Link href="/forgot-password" className="text-[15px] text-[#101010]">
                         Forgot Password?
                     </Link>
