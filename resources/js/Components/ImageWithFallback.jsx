@@ -21,6 +21,8 @@ export default function ImageWithFallback({
     fallbackLabel = 'SharePlattr',
     fallbackText = 'No image yet',
     showFallbackText = true,
+    showFallbackContent = true,
+    showFallbackDecorations = true,
     initialsClassName = 'h-10 w-10 rounded-xl text-sm',
     loading = 'lazy',
 }) {
@@ -52,18 +54,24 @@ export default function ImageWithFallback({
             role={alt ? 'img' : undefined}
             aria-label={alt || undefined}
         >
-            <div className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full bg-cyan-200/55 blur-2xl" />
-            <div className="pointer-events-none absolute -bottom-10 right-0 h-28 w-28 rounded-full bg-violet-200/55 blur-2xl" />
-            <div className="relative flex flex-col items-center justify-center gap-1 px-2 text-center">
-                <span className={`flex items-center justify-center bg-white/85 font-black text-slate-800 shadow-sm ring-1 ring-white/70 ${initialsClassName}`}>
-                    {initialsFrom(fallbackLabel)}
-                </span>
-                {showFallbackText && (
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                        {fallbackText}
+            {showFallbackDecorations && (
+                <>
+                    <div className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full bg-cyan-200/55 blur-2xl" />
+                    <div className="pointer-events-none absolute -bottom-10 right-0 h-28 w-28 rounded-full bg-violet-200/55 blur-2xl" />
+                </>
+            )}
+            {showFallbackContent && (
+                <div className="relative flex flex-col items-center justify-center gap-1 px-2 text-center">
+                    <span className={`flex items-center justify-center bg-white/85 font-black text-slate-800 shadow-sm ring-1 ring-white/70 ${initialsClassName}`}>
+                        {initialsFrom(fallbackLabel)}
                     </span>
-                )}
-            </div>
+                    {showFallbackText && (
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                            {fallbackText}
+                        </span>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
