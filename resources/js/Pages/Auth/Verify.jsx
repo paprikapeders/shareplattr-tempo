@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import OTPInput from '../../Components/OTPInput';
+import RegistrationStepIndicator from '../../Components/Auth/RegistrationStepIndicator';
 import AuthLayout from '../../Layouts/AuthLayout';
+
+const registrationSteps = ['Your details', 'Set password', 'Verify email'];
 
 function formatCountdown(totalSeconds) {
     const minutes = Math.floor(totalSeconds / 60);
@@ -57,6 +60,8 @@ export default function Verify({ email, editRegistrationUrl, expiresInSeconds })
 
     return (
         <AuthLayout title="Shareplattr" backHref="/login" showMobileHero={false} contentClassName="pt-24 lg:py-10">
+            <RegistrationStepIndicator currentStep={3} steps={registrationSteps} />
+
             <form onSubmit={submit} className="mx-auto mt-8 flex w-full max-w-[340px] flex-col items-center sm:mt-10">
                 <div className="mb-4 hidden lg:block">
                     <VerificationIcon />

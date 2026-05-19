@@ -1,10 +1,13 @@
 import { Link, useForm, usePage } from '@inertiajs/react';
+import { useRef } from 'react';
 import AuthLayout from '../../Layouts/AuthLayout';
 import PasswordInput from '../../Components/PasswordInput';
 
 export default function Login() {
     const { flash = {} } = usePage().props;
-    const { data, setData, post, processing, errors } = useForm({
+    const emailRef = useRef(null);
+    const passwordRef = useRef(null);
+    const { data, setData, post, processing, errors, transform } = useForm({
         email: '',
         password: '',
         remember: false,
@@ -12,7 +15,20 @@ export default function Login() {
 
     const submit = (event) => {
         event.preventDefault();
-        post('/login');
+
+        const payload = {
+            ...data,
+            email: emailRef.current?.value ?? data.email,
+            password: passwordRef.current?.value ?? data.password,
+        };
+
+        setData(payload);
+        transform(() => payload);
+
+        post('/login', {
+            preserveScroll: true,
+            onFinish: () => transform((currentData) => currentData),
+        });
     };
 
     return (
@@ -43,8 +59,11 @@ export default function Login() {
                 )}
 
                 <input
+                    ref={emailRef}
+                    name="email"
                     type="email"
                     placeholder="E-mail"
+                    autoComplete="email"
                     value={data.email}
                     onChange={(event) => setData('email', event.target.value)}
                     className="h-11 w-full rounded-full border-0 bg-white px-5 text-[15px] text-[#111111] shadow-[0_10px_24px_rgba(15,23,42,0.10)] outline-none placeholder:text-[#6f7280] lg:h-12"
@@ -52,7 +71,10 @@ export default function Login() {
                 {errors.email && <p className="-mt-2 text-sm text-red-600">{errors.email}</p>}
 
                 <PasswordInput
+                    ref={passwordRef}
+                    name="password"
                     placeholder="Password"
+                    autoComplete="current-password"
                     value={data.password}
                     onChange={(event) => setData('password', event.target.value)}
                     className="h-11 w-full rounded-full border-0 bg-white px-5 text-[15px] text-[#111111] shadow-[0_10px_24px_rgba(15,23,42,0.10)] outline-none placeholder:text-[#6f7280] lg:h-12"

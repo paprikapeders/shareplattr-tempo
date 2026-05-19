@@ -20,8 +20,12 @@ class RegisterController extends Controller
 
     public function create(Request $request): Response
     {
+        $pendingUser = $this->editablePendingUser($request);
+
         return Inertia::render('Auth/Register', [
             'prefill' => [
+                'first_name' => $pendingUser ? $this->firstName($pendingUser) : '',
+                'last_name' => $pendingUser ? $this->lastName($pendingUser) : '',
                 'email' => (string) $request->query('email', ''),
                 'account_type' => $request->query('account_type') === 'business_owner'
                     ? 'business_owner'
@@ -32,8 +36,12 @@ class RegisterController extends Controller
 
     public function createBusiness(Request $request): Response
     {
+        $pendingUser = $this->editablePendingUser($request);
+
         return Inertia::render('Auth/Register', [
             'prefill' => [
+                'first_name' => $pendingUser ? $this->firstName($pendingUser) : '',
+                'last_name' => $pendingUser ? $this->lastName($pendingUser) : '',
                 'email' => (string) $request->query('email', ''),
                 'account_type' => 'business_owner',
             ],
@@ -124,5 +132,17 @@ class RegisterController extends Controller
         }
 
         return route('dashboard');
+    }
+
+    private function firstName(User $user): string
+    {
+        return str($user->name)->beforeLast(' ')->toString() ?: $user->name;
+    }
+
+    private function lastName(User $user): string
+    {
+        return str($user->name)->contains(' ')
+            ? str($user->name)->afterLast(' ')->toString()
+            : '';
     }
 }

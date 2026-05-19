@@ -1,10 +1,12 @@
 import { Link, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AuthLayout from '../../Layouts/AuthLayout';
+import RegistrationStepIndicator from '../../Components/Auth/RegistrationStepIndicator';
 import PasswordInput from '../../Components/PasswordInput';
 import { clearFieldError, isBlank, scrollToField } from '../../Support/formValidation';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const registrationSteps = ['Your details', 'Set password', 'Verify email'];
 
 const passwordRequirements = [
     ['length', 'At least 8 characters', (value) => value.length >= 8],
@@ -76,14 +78,26 @@ function PasswordStrengthFeedback({ password }) {
 
 export default function Register({ prefill = {} }) {
     const { data, setData, post, processing, errors: serverErrors, clearErrors } = useForm({
-        first_name: '',
-        last_name: '',
+        first_name: prefill.first_name ?? '',
+        last_name: prefill.last_name ?? '',
         email: prefill.email ?? '',
         password: '',
         account_type: prefill.account_type ?? 'participant',
     });
+    const [currentStep, setCurrentStep] = useState(1);
     const [clientErrors, setClientErrors] = useState({});
     const errors = { ...serverErrors, ...clientErrors };
+
+    useEffect(() => {
+        if (serverErrors.password) {
+            setCurrentStep(2);
+            return;
+        }
+
+        if (serverErrors.first_name || serverErrors.last_name || serverErrors.email) {
+            setCurrentStep(1);
+        }
+    }, [serverErrors]);
 
     const fieldError = (field, values) => {
         if (field === 'first_name' && isBlank(values.first_name)) {
@@ -139,9 +153,13 @@ export default function Register({ prefill = {} }) {
     };
 
     const validate = () => {
+        return validateFields(['first_name', 'last_name', 'email', 'password']);
+    };
+
+    const validateFields = (fields) => {
         const nextErrors = {};
 
-        ['first_name', 'last_name', 'email', 'password'].forEach((field) => {
+        fields.forEach((field) => {
             const error = fieldError(field, data);
 
             if (error) {
@@ -159,8 +177,24 @@ export default function Register({ prefill = {} }) {
         return true;
     };
 
+    const continueToPassword = () => {
+        if (!validateFields(['first_name', 'last_name', 'email'])) {
+            return;
+        }
+
+        setCurrentStep(2);
+        window.requestAnimationFrame(() => {
+            document.querySelector('[name="password"]')?.focus();
+        });
+    };
+
     const submit = (event) => {
         event.preventDefault();
+        if (currentStep === 1) {
+            continueToPassword();
+            return;
+        }
+
         if (!validate()) {
             return;
         }
@@ -170,97 +204,124 @@ export default function Register({ prefill = {} }) {
 
     return (
         <AuthLayout title="Shareplattr" backHref="/login" showMobileHero={false} contentClassName="pt-24 lg:py-10">
+            <RegistrationStepIndicator currentStep={currentStep} steps={registrationSteps} />
+
             <form onSubmit={submit} className="mx-auto mt-7 flex w-full max-w-[320px] flex-col gap-3.5 lg:mt-9">
                 {errors.account_type && <p className="-mt-2 text-sm text-red-600">{errors.account_type}</p>}
 
-                <div>
-                    <label className="mb-1.5 block px-1 text-sm font-medium text-[#101010]">
-                        First Name <span className="text-red-600">*</span>
-                    </label>
-                    <input
-                        name="first_name"
-                        type="text"
-                        placeholder="First Name"
-                        value={data.first_name}
-                        onChange={(event) => updateField('first_name', event.target.value)}
-                        className={`h-12 w-full rounded-full bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280] ${errors.first_name ? 'border border-red-400' : 'border-0'}`}
-                        aria-invalid={errors.first_name ? 'true' : undefined}
-                    />
-                    {errors.first_name && <p className="mt-1.5 text-sm text-red-600">{errors.first_name}</p>}
-                </div>
+                {currentStep === 1 && (
+                    <>
+                        <div>
+                            <label className="mb-1.5 block px-1 text-sm font-medium text-[#101010]">
+                                First Name <span className="text-red-600">*</span>
+                            </label>
+                            <input
+                                name="first_name"
+                                type="text"
+                                placeholder="First Name"
+                                value={data.first_name}
+                                onChange={(event) => updateField('first_name', event.target.value)}
+                                className={`h-12 w-full rounded-full bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280] ${errors.first_name ? 'border border-red-400' : 'border-0'}`}
+                                aria-invalid={errors.first_name ? 'true' : undefined}
+                            />
+                            {errors.first_name && <p className="mt-1.5 text-sm text-red-600">{errors.first_name}</p>}
+                        </div>
 
-                <div>
-                    <label className="mb-1.5 block px-1 text-sm font-medium text-[#101010]">
-                        Last Name <span className="text-red-600">*</span>
-                    </label>
-                    <input
-                        name="last_name"
-                        type="text"
-                        placeholder="Last Name"
-                        value={data.last_name}
-                        onChange={(event) => updateField('last_name', event.target.value)}
-                        className={`h-12 w-full rounded-full bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280] ${errors.last_name ? 'border border-red-400' : 'border-0'}`}
-                        aria-invalid={errors.last_name ? 'true' : undefined}
-                    />
-                    {errors.last_name && <p className="mt-1.5 text-sm text-red-600">{errors.last_name}</p>}
-                </div>
+                        <div>
+                            <label className="mb-1.5 block px-1 text-sm font-medium text-[#101010]">
+                                Last Name <span className="text-red-600">*</span>
+                            </label>
+                            <input
+                                name="last_name"
+                                type="text"
+                                placeholder="Last Name"
+                                value={data.last_name}
+                                onChange={(event) => updateField('last_name', event.target.value)}
+                                className={`h-12 w-full rounded-full bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280] ${errors.last_name ? 'border border-red-400' : 'border-0'}`}
+                                aria-invalid={errors.last_name ? 'true' : undefined}
+                            />
+                            {errors.last_name && <p className="mt-1.5 text-sm text-red-600">{errors.last_name}</p>}
+                        </div>
 
-                <div className="flex flex-col">
-                    <label className="mb-1.5 block px-1 text-sm font-medium text-[#101010]">
-                        Email <span className="text-red-600">*</span>
-                    </label>
-                    <input
-                        name="email"
-                        type="email"
-                        placeholder="E-mail"
-                        value={data.email}
-                        onChange={(event) => updateField('email', event.target.value)}
-                        className={`h-12 w-full rounded-full bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280] ${errors.email ? 'border border-red-400' : 'border-0'}`}
-                        aria-invalid={errors.email ? 'true' : undefined}
-                    />
-                    {errors.email && (
-                        <p className="mt-1.5 text-sm leading-5 text-red-500 transition-opacity">
-                            {errors.email}
-                            {String(errors.email).includes('already registered') && (
-                                <>
-                                    {' '}
-                                    <Link href="/login" className="font-medium text-red-600 underline underline-offset-4 hover:text-red-700">
-                                        sign in
-                                    </Link>
-                                    <span> or </span>
-                                    <Link href="/forgot-password" className="font-medium text-red-600 underline underline-offset-4 hover:text-red-700">
-                                        reset your password
-                                    </Link>
-                                    <span>.</span>
-                                </>
+                        <div className="flex flex-col">
+                            <label className="mb-1.5 block px-1 text-sm font-medium text-[#101010]">
+                                Email <span className="text-red-600">*</span>
+                            </label>
+                            <input
+                                name="email"
+                                type="email"
+                                placeholder="E-mail"
+                                value={data.email}
+                                onChange={(event) => updateField('email', event.target.value)}
+                                className={`h-12 w-full rounded-full bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280] ${errors.email ? 'border border-red-400' : 'border-0'}`}
+                                aria-invalid={errors.email ? 'true' : undefined}
+                            />
+                            {errors.email && (
+                                <p className="mt-1.5 text-sm leading-5 text-red-500 transition-opacity">
+                                    {errors.email}
+                                    {String(errors.email).includes('already registered') && (
+                                        <>
+                                            {' '}
+                                            <Link href="/login" className="font-medium text-red-600 underline underline-offset-4 hover:text-red-700">
+                                                sign in
+                                            </Link>
+                                            <span> or </span>
+                                            <Link href="/forgot-password" className="font-medium text-red-600 underline underline-offset-4 hover:text-red-700">
+                                                reset your password
+                                            </Link>
+                                            <span>.</span>
+                                        </>
+                                    )}
+                                </p>
                             )}
-                        </p>
-                    )}
-                </div>
+                        </div>
 
-                <div>
-                    <label className="mb-1.5 block px-1 text-sm font-medium text-[#101010]">
-                        Password <span className="text-red-600">*</span>
-                    </label>
-                    <PasswordInput
-                        name="password"
-                        placeholder="Enter Your Password"
-                        value={data.password}
-                        onChange={(event) => updateField('password', event.target.value)}
-                        className={`h-12 w-full rounded-full bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280] ${errors.password ? 'border border-red-400' : 'border-0'}`}
-                        error={Boolean(errors.password)}
-                    />
-                    {errors.password && <p className="mt-1.5 text-sm text-red-600">{errors.password}</p>}
-                    <PasswordStrengthFeedback password={data.password} />
-                </div>
+                        <button
+                            type="button"
+                            onClick={continueToPassword}
+                            className="mt-8 h-12 w-full whitespace-nowrap rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 lg:mt-8"
+                        >
+                            Continue
+                        </button>
+                    </>
+                )}
 
-                <button
-                    type="submit"
-                    disabled={processing}
-                    className="mt-8 h-12 w-full whitespace-nowrap rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:opacity-50 lg:mt-8"
-                >
-                    {processing ? 'Creating...' : 'Create My Account'}
-                </button>
+                {currentStep === 2 && (
+                    <>
+                        <div>
+                            <label className="mb-1.5 block px-1 text-sm font-medium text-[#101010]">
+                                Password <span className="text-red-600">*</span>
+                            </label>
+                            <PasswordInput
+                                name="password"
+                                placeholder="Enter Your Password"
+                                value={data.password}
+                                onChange={(event) => updateField('password', event.target.value)}
+                                className={`h-12 w-full rounded-full bg-white px-5 text-[15px] text-[#111111] shadow-sm outline-none placeholder:text-[#6f7280] ${errors.password ? 'border border-red-400' : 'border-0'}`}
+                                error={Boolean(errors.password)}
+                            />
+                            {errors.password && <p className="mt-1.5 text-sm text-red-600">{errors.password}</p>}
+                            <PasswordStrengthFeedback password={data.password} />
+                        </div>
+
+                        <div className="mt-8 grid grid-cols-[0.9fr_1.1fr] gap-3 lg:mt-8">
+                            <button
+                                type="button"
+                                onClick={() => setCurrentStep(1)}
+                                className="h-12 whitespace-nowrap rounded-full bg-white px-4 text-[16px] font-bold text-[#101010] shadow-sm transition hover:scale-[1.01] hover:opacity-95"
+                            >
+                                Back
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="h-12 whitespace-nowrap rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 px-4 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:opacity-50"
+                            >
+                                {processing ? 'Creating...' : 'Create Account'}
+                            </button>
+                        </div>
+                    </>
+                )}
 
                 <p className="text-center text-[15px] text-[#101010] lg:hidden">
                     <Link href="/login" className="font-medium">

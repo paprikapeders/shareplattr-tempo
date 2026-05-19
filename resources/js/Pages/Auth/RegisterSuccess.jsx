@@ -1,13 +1,18 @@
 import { Link } from '@inertiajs/react';
+import RegistrationStepIndicator from '../../Components/Auth/RegistrationStepIndicator';
+
+const registrationSteps = ['Your details', 'Set password', 'Verify email'];
 
 export default function RegisterSuccess({ redirectUrl = '/dashboard' }) {
     return (
         <main className="flex h-dvh min-h-screen items-center justify-center bg-[#B8E7EA] px-8 py-10 text-[#111111]">
             <section className="flex w-full max-w-[360px] flex-col items-center text-center">
+                <RegistrationStepIndicator currentStep={registrationSteps.length + 1} steps={registrationSteps} />
+
                 <img
                     src="/images/congratulations.png"
                     alt=""
-                    className="h-40 w-40 object-contain sm:h-48 sm:w-48"
+                    className="mt-8 h-40 w-40 object-contain sm:h-48 sm:w-48"
                 />
 
                 <h1 className="mt-8 text-[38px] font-black leading-none tracking-normal text-[#111111] sm:text-[44px]">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 
 function EyeIcon({ hidden }) {
     if (hidden) {
@@ -19,7 +19,7 @@ function EyeIcon({ hidden }) {
     );
 }
 
-export default function PasswordInput({
+const PasswordInput = forwardRef(function PasswordInput({
     name = 'password',
     value,
     onChange,
@@ -27,12 +27,13 @@ export default function PasswordInput({
     className = '',
     error = false,
     ...props
-}) {
+}, ref) {
     const [visible, setVisible] = useState(false);
 
     return (
         <div className="relative">
             <input
+                ref={ref}
                 name={name}
                 type={visible ? 'text' : 'password'}
                 placeholder={placeholder}
@@ -52,4 +53,6 @@ export default function PasswordInput({
             </button>
         </div>
     );
-}
+});
+
+export default PasswordInput;
