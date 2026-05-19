@@ -248,6 +248,23 @@ class CampaignAvailabilityTest extends TestCase
         $this->assertStringContainsString('<CelebrationPanel campaignTitle={campaign.title} justJoined={justJoined} />', $page);
     }
 
+    public function test_campaign_detail_has_post_join_qr_code_sharing_panel(): void
+    {
+        $page = file_get_contents(resource_path('js/Pages/Campaigns/Show.jsx'));
+
+        $this->assertStringContainsString("import { QRCodeCanvas } from 'qrcode.react';", $page);
+        $this->assertStringContainsString("['qr', 'QR Code']", $page);
+        $this->assertStringContainsString("const qrReferralUrl = campaign.referral_url ? referralUrl('qr') : '';", $page);
+        $this->assertStringContainsString('value={qrReferralUrl}', $page);
+        $this->assertStringContainsString('size={180}', $page);
+        $this->assertStringContainsString('max-h-[160px] w-full max-w-[160px] sm:max-h-[180px] sm:max-w-[180px]', $page);
+        $this->assertStringContainsString('truncate font-mono text-xs text-slate-600">{shortReferralUrl}', $page);
+        $this->assertStringNotContainsString('QR referral URL', $page);
+        $this->assertStringContainsString('shareplattr-referral-${referralToken}.png', $page);
+        $this->assertStringContainsString("const qrDownloadLabel = isMobileDevice ? 'Save to Photos' : 'Download QR Code';", $page);
+        $this->assertStringContainsString('Let someone scan this code to open your referral link.', $page);
+    }
+
     public function test_campaign_images_use_shared_fallback_component(): void
     {
         $component = file_get_contents(resource_path('js/Components/ImageWithFallback.jsx'));
@@ -280,7 +297,7 @@ class CampaignAvailabilityTest extends TestCase
         $this->assertStringContainsString('How rewards work', $page);
         $this->assertStringContainsString('Rewards are reviewed and paid after the referral action is verified. Final approval depends on campaign terms.', $page);
         $this->assertStringContainsString('<RewardSummaryCard campaign={campaign} reward={reward} />', $page);
-        $this->assertStringContainsString('order-first space-y-4 xl:order-none', $page);
+        $this->assertStringContainsString('space-y-4 overflow-hidden', $page);
     }
 
     public function test_admin_conversion_rejects_expired_campaign(): void

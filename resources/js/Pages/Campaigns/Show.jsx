@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ClientLayout from '../../Layouts/ClientLayout';
 import BusinessLayout from '../../Layouts/BusinessLayout';
 import CopyCampaignLinkButton from '../../Components/CopyCampaignLinkButton';
@@ -340,7 +341,9 @@ export default function Show({ campaign, businessPreview = false }) {
     const [justJoined, setJustJoined] = useState(false);
     const [toast, setToast] = useState(null);
     const [shareMessageText, setShareMessageText] = useState(campaign.share_message ?? '');
+    const [shareTab, setShareTab] = useState('link');
     const [payoutPromptDismissed, setPayoutPromptDismissed] = useState(false);
+    const qrCodeRef = useRef(null);
     const Layout = businessPreview ? BusinessLayout : ClientLayout;
     const statsUrl = businessPreview
         ? `/business/campaigns/${campaign.id}/stats-summary`
@@ -372,6 +375,29 @@ export default function Show({ campaign, businessPreview = false }) {
         return url.toString();
     };
     const fullReferralUrl = campaign.referral_url ? referralUrl('copy') : '';
+    const qrReferralUrl = campaign.referral_url ? referralUrl('qr') : '';
+    const shortReferralUrl = fullReferralUrl.replace(/^https?:\/\//, '');
+    const referralToken = useMemo(() => {
+        if (!campaign.referral_url) {
+            return 'link';
+        }
+
+        try {
+            const url = new URL(campaign.referral_url, window.location.origin);
+
+            return url.pathname.split('/').filter(Boolean).pop() || 'link';
+        } catch (error) {
+            return 'link';
+        }
+    }, [campaign.referral_url]);
+    const isMobileDevice = useMemo(() => {
+        if (typeof window === 'undefined') {
+            return false;
+        }
+
+        return /Android|iPhone|iPad|iPod/i.test(window.navigator.userAgent || '');
+    }, []);
+    const qrDownloadLabel = isMobileDevice ? 'Save to Photos' : 'Download QR Code';
 
     useEffect(() => {
         setShareMessageText(campaign.share_message ?? '');
@@ -433,6 +459,23 @@ export default function Show({ campaign, businessPreview = false }) {
     const copyMessage = async (source = 'copy', label = 'Share message') => {
         await navigator.clipboard.writeText(composedMessage(source));
         showToast(`${label} copied`);
+    };
+
+    const downloadQrCode = () => {
+        const canvas = qrCodeRef.current;
+
+        if (!canvas) {
+            return;
+        }
+
+        const link = document.createElement('a');
+
+        link.href = canvas.toDataURL('image/png');
+        link.download = `shareplattr-referral-${referralToken}.png`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        showToast(isMobileDevice ? 'QR code ready to save' : 'QR code downloaded');
     };
 
     const openShare = (url) => {
@@ -653,8 +696,8 @@ export default function Show({ campaign, businessPreview = false }) {
                             </Card>
                         </div>
 
-                        <aside className="order-first space-y-4 xl:order-none">
-                            <Card className="p-6 text-center">
+                        <aside className="space-y-4 overflow-hidden">
+                            <Card className="overflow-hidden p-6 text-center">
                                 <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-500">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
                                     Campaign active
@@ -669,43 +712,20 @@ export default function Show({ campaign, businessPreview = false }) {
 
                                 <CampaignTermsBlock terms={campaign.campaign_terms} />
 
-                                {!businessPreview && (
+                                {!businessPreview && !campaign.referral_url && (
                                     <button
                                         type="button"
                                         onClick={generateLink}
                                         disabled={generating}
                                         className="mt-6 h-12 w-full rounded-xl bg-gradient-to-r from-violet-500 to-purple-700 px-4 text-sm font-extrabold text-white shadow-sm transition hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
                                     >
-                                        {generating ? 'Generating...' : campaign.referral_url ? (copied ? 'Copied!' : 'Copy My Link') : 'Join & Get My Link'}
+                                        {generating ? 'Generating...' : 'Join & Get My Link'}
                                     </button>
                                 )}
 
                                 {!businessPreview && campaign.referral_url && (
                                     <div className="mt-4 space-y-4">
                                         <CelebrationPanel campaignTitle={campaign.title} justJoined={justJoined} />
-
-                                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left">
-                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Your referral link</p>
-                                            <p className="mt-1 text-xs font-medium text-slate-500">
-                                                Full link below. Scroll or select the field to review it.
-                                            </p>
-                                            <div className="mt-2 flex gap-2">
-                                                <input
-                                                    readOnly
-                                                    aria-label="Full referral link"
-                                                    value={fullReferralUrl}
-                                                    onFocus={(event) => event.target.select()}
-                                                    className="min-w-0 flex-1 overflow-x-auto rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-xs text-slate-700 outline-none focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => copyLink(fullReferralUrl)}
-                                                    className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
-                                                >
-                                                    {copied ? 'Copied!' : 'Copy'}
-                                                </button>
-                                            </div>
-                                        </div>
 
                                         {showPayoutPrompt && (
                                             <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-left">
@@ -734,52 +754,109 @@ export default function Show({ campaign, businessPreview = false }) {
                                             </div>
                                         )}
 
-                                        <div className="rounded-xl border border-slate-200 bg-white p-4 text-left">
+                                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-4 text-left">
                                             <p className="text-sm font-extrabold text-slate-950">Share this campaign</p>
-                                            <div className="mt-4 space-y-4">
-                                                <div>
-                                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Message</p>
-                                                    <textarea
-                                                        value={shareMessageText}
-                                                        onChange={(event) => setShareMessageText(event.target.value)}
-                                                        rows="6"
-                                                        className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700 outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100"
-                                                    />
-                                                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                                            <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
+                                                {[
+                                                    ['link', 'Share Link'],
+                                                    ['qr', 'QR Code'],
+                                                ].map(([tab, label]) => (
+                                                    <button
+                                                        key={tab}
+                                                        type="button"
+                                                        onClick={() => setShareTab(tab)}
+                                                        className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${shareTab === tab ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            <div className="mt-4">
+                                                {shareTab === 'link' ? (
+                                                    <div className="space-y-4">
+                                                        <div>
+                                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Your referral link</p>
+                                                            <div className="mt-2 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                                                                <p className="min-w-0 flex-1 truncate font-mono text-xs text-slate-600">{shortReferralUrl}</p>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => copyLink(fullReferralUrl)}
+                                                                    className="shrink-0 rounded-md bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800"
+                                                                >
+                                                                    {copied ? 'Copied!' : 'Copy Link'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Message</p>
+                                                            <textarea
+                                                                value={shareMessageText}
+                                                                onChange={(event) => setShareMessageText(event.target.value)}
+                                                                rows="6"
+                                                                className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700 outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100"
+                                                            />
+                                                            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => copyMessage('copy')}
+                                                                    className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
+                                                                >
+                                                                    Copy message
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={nativeShare}
+                                                                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700"
+                                                                >
+                                                                    Share
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Social</p>
+                                                            <div className="mt-2 grid grid-cols-2 gap-2">
+                                                                {socialShares.map((action) => (
+                                                                    <ShareButton key={action.source} {...action} />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Messaging</p>
+                                                            <div className="mt-2 grid grid-cols-2 gap-2">
+                                                                {messageShares.map((action) => (
+                                                                    <ShareButton key={action.source} {...action} />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3 text-center">
+                                                        <p className="text-sm leading-5 text-slate-600">
+                                                            Let someone scan this code to open your referral link.
+                                                        </p>
+                                                        <div className="mx-auto flex h-40 w-40 max-w-full items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:h-48 sm:w-48">
+                                                            <QRCodeCanvas
+                                                                ref={qrCodeRef}
+                                                                value={qrReferralUrl}
+                                                                size={180}
+                                                                marginSize={4}
+                                                                level="H"
+                                                                className="h-full max-h-[160px] w-full max-w-[160px] sm:max-h-[180px] sm:max-w-[180px]"
+                                                            />
+                                                        </div>
                                                         <button
                                                             type="button"
-                                                            onClick={() => copyMessage('copy')}
-                                                            className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
+                                                            onClick={downloadQrCode}
+                                                            className="w-full rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
                                                         >
-                                                            Copy message
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={nativeShare}
-                                                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700"
-                                                        >
-                                                            Share
+                                                            {qrDownloadLabel}
                                                         </button>
                                                     </div>
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Social</p>
-                                                    <div className="mt-2 grid grid-cols-2 gap-2">
-                                                        {socialShares.map((action) => (
-                                                            <ShareButton key={action.source} {...action} />
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Messaging</p>
-                                                    <div className="mt-2 grid grid-cols-2 gap-2">
-                                                        {messageShares.map((action) => (
-                                                            <ShareButton key={action.source} {...action} />
-                                                        ))}
-                                                    </div>
-                                                </div>
+                                                )}
                                             </div>
                                         </div>
 
