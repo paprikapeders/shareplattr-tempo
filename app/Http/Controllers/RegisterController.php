@@ -27,9 +27,7 @@ class RegisterController extends Controller
                 'first_name' => $pendingUser ? $this->firstName($pendingUser) : '',
                 'last_name' => $pendingUser ? $this->lastName($pendingUser) : '',
                 'email' => (string) $request->query('email', ''),
-                'account_type' => $request->query('account_type') === 'business_owner'
-                    ? 'business_owner'
-                    : 'participant',
+                'account_type' => $this->accountTypeFromRequest($request),
             ],
         ]);
     }
@@ -43,7 +41,7 @@ class RegisterController extends Controller
                 'first_name' => $pendingUser ? $this->firstName($pendingUser) : '',
                 'last_name' => $pendingUser ? $this->lastName($pendingUser) : '',
                 'email' => (string) $request->query('email', ''),
-                'account_type' => 'business_owner',
+                'account_type' => 'business',
             ],
         ]);
     }
@@ -72,10 +70,11 @@ class RegisterController extends Controller
                     Rule::unique('users', 'email')->ignore($pendingUser?->id),
                 ],
                 'password' => ['required', Password::min(8)],
-                'account_type' => ['nullable', Rule::in(['participant', 'business_owner'])],
+                'account_type' => ['required', Rule::in(['participant', 'business'])],
             ],
             [
                 'email.unique' => 'This email is already registered. Please sign in or reset your password.',
+                'account_type.required' => 'Choose an account type to continue.',
             ],
         );
 
@@ -84,7 +83,7 @@ class RegisterController extends Controller
                 'name' => trim($validated['first_name'].' '.$validated['last_name']),
                 'email' => $validated['email'],
                 'password' => $validated['password'],
-                'user_type' => $validated['account_type'] ?? 'participant',
+                'user_type' => $this->userTypeFromAccountType($validated['account_type']),
             ];
 
             if ($pendingUser) {
@@ -117,6 +116,20 @@ class RegisterController extends Controller
             ->whereKey($userId)
             ->whereNull('email_verified_at')
             ->first();
+    }
+
+    private function accountTypeFromRequest(Request $request): string
+    {
+        return match ($request->query('account_type')) {
+            'participant' => 'participant',
+            'business', 'business_owner' => 'business',
+            default => '',
+        };
+    }
+
+    private function userTypeFromAccountType(string $accountType): string
+    {
+        return $accountType === 'business' ? 'business_owner' : 'participant';
     }
 
     private function redirectUrlFor(User $user): string

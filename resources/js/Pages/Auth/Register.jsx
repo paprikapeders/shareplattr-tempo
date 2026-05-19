@@ -2,11 +2,24 @@ import { Link, useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AuthLayout from '../../Layouts/AuthLayout';
 import RegistrationStepIndicator from '../../Components/Auth/RegistrationStepIndicator';
+import LegalAgreementText from '../../Components/LegalAgreementText';
 import PasswordInput from '../../Components/PasswordInput';
 import { clearFieldError, isBlank, scrollToField } from '../../Support/formValidation';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const registrationSteps = ['Your details', 'Set password', 'Verify email'];
+const registrationSteps = ['Account type', 'Your details', 'Set password', 'Verify email'];
+const accountTypeOptions = [
+    {
+        value: 'participant',
+        title: 'Participant',
+        description: 'I want to discover campaigns and earn rewards',
+    },
+    {
+        value: 'business',
+        title: 'Business',
+        description: 'I want to create campaigns and grow through referrals',
+    },
+];
 
 const passwordRequirements = [
     ['length', 'At least 8 characters', (value) => value.length >= 8],
@@ -82,7 +95,7 @@ export default function Register({ prefill = {} }) {
         last_name: prefill.last_name ?? '',
         email: prefill.email ?? '',
         password: '',
-        account_type: prefill.account_type ?? 'participant',
+        account_type: prefill.account_type ?? '',
     });
     const [currentStep, setCurrentStep] = useState(1);
     const [clientErrors, setClientErrors] = useState({});
@@ -90,16 +103,25 @@ export default function Register({ prefill = {} }) {
 
     useEffect(() => {
         if (serverErrors.password) {
-            setCurrentStep(2);
+            setCurrentStep(3);
             return;
         }
 
         if (serverErrors.first_name || serverErrors.last_name || serverErrors.email) {
+            setCurrentStep(2);
+            return;
+        }
+
+        if (serverErrors.account_type) {
             setCurrentStep(1);
         }
     }, [serverErrors]);
 
     const fieldError = (field, values) => {
+        if (field === 'account_type' && !['participant', 'business'].includes(values.account_type)) {
+            return 'Choose an account type to continue.';
+        }
+
         if (field === 'first_name' && isBlank(values.first_name)) {
             return 'First Name is required.';
         }
@@ -153,7 +175,7 @@ export default function Register({ prefill = {} }) {
     };
 
     const validate = () => {
-        return validateFields(['first_name', 'last_name', 'email', 'password']);
+        return validateFields(['account_type', 'first_name', 'last_name', 'email', 'password']);
     };
 
     const validateFields = (fields) => {
@@ -182,15 +204,31 @@ export default function Register({ prefill = {} }) {
             return;
         }
 
-        setCurrentStep(2);
+        setCurrentStep(3);
         window.requestAnimationFrame(() => {
             document.querySelector('[name="password"]')?.focus();
+        });
+    };
+
+    const continueToDetails = () => {
+        if (!validateFields(['account_type'])) {
+            return;
+        }
+
+        setCurrentStep(2);
+        window.requestAnimationFrame(() => {
+            document.querySelector('[name="first_name"]')?.focus();
         });
     };
 
     const submit = (event) => {
         event.preventDefault();
         if (currentStep === 1) {
+            continueToDetails();
+            return;
+        }
+
+        if (currentStep === 2) {
             continueToPassword();
             return;
         }
@@ -210,6 +248,58 @@ export default function Register({ prefill = {} }) {
                 {errors.account_type && <p className="-mt-2 text-sm text-red-600">{errors.account_type}</p>}
 
                 {currentStep === 1 && (
+                    <>
+                        <div>
+                            <h1 className="px-1 text-lg font-bold text-[#101010]">Choose your account type</h1>
+                            <p className="mt-1 px-1 text-sm leading-6 text-slate-700">
+                                Pick the account that matches how you want to use SharePlattr.
+                            </p>
+                        </div>
+
+                        <div className="grid gap-3">
+                            {accountTypeOptions.map((option) => {
+                                const selected = data.account_type === option.value;
+
+                                return (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={() => updateField('account_type', option.value)}
+                                        className={`rounded-2xl border bg-white px-4 py-4 text-left shadow-sm transition focus:outline-none focus:ring-4 focus:ring-cyan-100 ${
+                                            selected
+                                                ? 'border-teal-500 ring-2 ring-teal-200'
+                                                : 'border-white hover:border-teal-200 hover:bg-teal-50/40'
+                                        }`}
+                                        aria-pressed={selected}
+                                    >
+                                        <span className="flex items-start gap-3">
+                                            <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${selected ? 'border-teal-600 bg-teal-600 text-white' : 'border-slate-300 bg-white'}`}>
+                                                {selected && <CheckIcon />}
+                                            </span>
+                                            <span>
+                                                <span className="block text-base font-bold text-[#101010]">{option.title}</span>
+                                                <span className="mt-1 block text-sm leading-5 text-slate-700">{option.description}</span>
+                                            </span>
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {errors.account_type && <p className="px-1 text-sm text-red-600">{errors.account_type}</p>}
+
+                        <button
+                            type="button"
+                            onClick={continueToDetails}
+                            disabled={!data.account_type}
+                            className="mt-8 h-12 w-full whitespace-nowrap rounded-full bg-gradient-to-r from-purple-400 to-indigo-700 text-[16px] font-bold text-white shadow-[0_14px_26px_rgba(88,80,151,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50 lg:mt-8"
+                        >
+                            Continue
+                        </button>
+                    </>
+                )}
+
+                {currentStep === 2 && (
                     <>
                         <div>
                             <label className="mb-1.5 block px-1 text-sm font-medium text-[#101010]">
@@ -286,7 +376,7 @@ export default function Register({ prefill = {} }) {
                     </>
                 )}
 
-                {currentStep === 2 && (
+                {currentStep === 3 && (
                     <>
                         <div>
                             <label className="mb-1.5 block px-1 text-sm font-medium text-[#101010]">
@@ -304,10 +394,12 @@ export default function Register({ prefill = {} }) {
                             <PasswordStrengthFeedback password={data.password} />
                         </div>
 
+                        <LegalAgreementText className="mt-5" />
+
                         <div className="mt-8 grid grid-cols-[0.9fr_1.1fr] gap-3 lg:mt-8">
                             <button
                                 type="button"
-                                onClick={() => setCurrentStep(1)}
+                                onClick={() => setCurrentStep(2)}
                                 className="h-12 whitespace-nowrap rounded-full bg-white px-4 text-[16px] font-bold text-[#101010] shadow-sm transition hover:scale-[1.01] hover:opacity-95"
                             >
                                 Back

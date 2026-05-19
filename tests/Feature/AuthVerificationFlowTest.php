@@ -25,6 +25,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'taylor@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'account_type' => 'participant',
             'terms_accepted' => true,
         ]);
 
@@ -67,6 +68,7 @@ class AuthVerificationFlowTest extends TestCase
             'last_name' => 'User',
             'email' => 'minimal@example.com',
             'password' => 'password123',
+            'account_type' => 'participant',
         ])->assertRedirect(route('verify.notice'));
 
         $this->assertDatabaseHas('users', [
@@ -78,6 +80,72 @@ class AuthVerificationFlowTest extends TestCase
         Mail::assertSent(VerifyEmailCode::class);
     }
 
+    public function test_registration_requires_account_type(): void
+    {
+        Mail::fake();
+
+        $this->post(route('register'), [
+            'first_name' => 'No',
+            'last_name' => 'Type',
+            'email' => 'no-type@example.com',
+            'password' => 'password123',
+        ])->assertSessionHasErrors([
+            'account_type' => 'Choose an account type to continue.',
+        ]);
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'no-type@example.com',
+        ]);
+        Mail::assertNothingSent();
+    }
+
+    public function test_register_screen_shows_accessible_legal_agreement_links(): void
+    {
+        $page = file_get_contents(resource_path('js/Pages/Auth/Register.jsx'));
+        $component = file_get_contents(resource_path('js/Components/LegalAgreementText.jsx'));
+
+        $this->assertStringContainsString("import LegalAgreementText from '../../Components/LegalAgreementText';", $page);
+        $this->assertStringContainsString('<LegalAgreementText className="mt-5" />', $page);
+        $this->assertStringContainsString('Create Account', $page);
+        $this->assertStringContainsString('By creating an account, you agree to our', $component);
+        $this->assertStringContainsString('href="/terms"', $component);
+        $this->assertStringContainsString('href="/privacy"', $component);
+        $this->assertStringContainsString('target="_blank"', $component);
+        $this->assertStringContainsString('rel="noopener noreferrer"', $component);
+        $this->assertStringContainsString('text-sm leading-6 text-slate-700', $component);
+        $this->assertStringContainsString('font-medium text-teal-700 underline underline-offset-2 hover:text-teal-900', $component);
+    }
+
+    public function test_register_screen_starts_with_account_type_selection(): void
+    {
+        $page = file_get_contents(resource_path('js/Pages/Auth/Register.jsx'));
+
+        $this->assertStringContainsString("const registrationSteps = ['Account type', 'Your details', 'Set password', 'Verify email'];", $page);
+        $this->assertStringContainsString("title: 'Participant'", $page);
+        $this->assertStringContainsString('I want to discover campaigns and earn rewards', $page);
+        $this->assertStringContainsString("title: 'Business'", $page);
+        $this->assertStringContainsString('I want to create campaigns and grow through referrals', $page);
+        $this->assertStringContainsString("account_type: prefill.account_type ?? ''", $page);
+        $this->assertStringContainsString('disabled={!data.account_type}', $page);
+    }
+
+    public function test_short_legal_routes_render_existing_documents(): void
+    {
+        $this
+            ->get('/terms')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Legal/TermsOfUse')
+            );
+
+        $this
+            ->get('/privacy')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Legal/PrivacyPolicy')
+            );
+    }
+
     public function test_business_registration_accepts_minimal_account_fields_and_starts_onboarding_after_verification(): void
     {
         Mail::fake();
@@ -87,7 +155,7 @@ class AuthVerificationFlowTest extends TestCase
             'last_name' => 'Minimal',
             'email' => 'business-minimal@example.com',
             'password' => 'password123',
-            'account_type' => 'business_owner',
+            'account_type' => 'business',
         ])->assertRedirect(route('verify.notice'));
 
         $user = User::where('email', 'business-minimal@example.com')->firstOrFail();
@@ -147,7 +215,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'owner@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-            'account_type' => 'business_owner',
+            'account_type' => 'business',
             'terms_accepted' => true,
         ])->assertRedirect(route('verify.notice'));
 
@@ -184,7 +252,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'verified-owner@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-            'account_type' => 'business_owner',
+            'account_type' => 'business',
             'terms_accepted' => true,
         ])->assertRedirect(route('verify.notice'));
 
@@ -233,7 +301,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'business-start@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-            'account_type' => 'business_owner',
+            'account_type' => 'business',
             'terms_accepted' => true,
         ])->assertRedirect(route('verify.notice'));
 
@@ -315,6 +383,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'casey@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'account_type' => 'participant',
             'terms_accepted' => true,
         ])->assertRedirect(route('verify.notice'));
 
@@ -357,6 +426,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'taken@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'account_type' => 'participant',
             'terms_accepted' => true,
         ])->assertSessionHasErrors([
             'email' => 'This email is already registered. Please sign in or reset your password.',
@@ -375,7 +445,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'mistyped@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-            'account_type' => 'business_owner',
+            'account_type' => 'business',
             'terms_accepted' => true,
         ])->assertRedirect(route('verify.notice'));
 
@@ -388,7 +458,7 @@ class AuthVerificationFlowTest extends TestCase
             'email' => 'corrected@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-            'account_type' => 'business_owner',
+            'account_type' => 'business',
             'terms_accepted' => true,
         ])->assertRedirect(route('verify.notice'));
 

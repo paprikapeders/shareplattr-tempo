@@ -52,9 +52,17 @@ Route::get('/terms-of-use', function () {
     return Inertia::render('Legal/TermsOfUse');
 })->name('legal.terms');
 
+Route::get('/terms', function () {
+    return Inertia::render('Legal/TermsOfUse');
+})->name('legal.terms.short');
+
 Route::get('/privacy-policy', function () {
     return Inertia::render('Legal/PrivacyPolicy');
 })->name('legal.privacy');
+
+Route::get('/privacy', function () {
+    return Inertia::render('Legal/PrivacyPolicy');
+})->name('legal.privacy.short');
 
 Route::get('/register/success', [RegisterController::class, 'success'])->name('register.success');
 Route::post('/waitlist', [WaitlistSubmissionController::class, 'store'])->name('waitlist.store');

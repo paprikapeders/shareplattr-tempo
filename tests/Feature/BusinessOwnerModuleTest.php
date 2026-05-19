@@ -28,7 +28,7 @@ class BusinessOwnerModuleTest extends TestCase
         Mail::fake();
 
         $this->post(route('register'), [
-            'account_type' => 'business_owner',
+            'account_type' => 'business',
             'first_name' => 'Business',
             'last_name' => 'Owner',
             'email' => 'owner@example.com',
