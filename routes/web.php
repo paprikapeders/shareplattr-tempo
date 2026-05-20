@@ -9,6 +9,7 @@ use App\Http\Controllers\AdminImportController;
 use App\Http\Controllers\AdminPayoutRequestController;
 use App\Http\Controllers\AdminRewardController;
 use App\Http\Controllers\AdminWaitlistController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BusinessBillingController;
 use App\Http\Controllers\BusinessCampaignController;
@@ -70,6 +71,8 @@ Route::post('/waitlist', [WaitlistSubmissionController::class, 'store'])->name('
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store']);
+    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
     Route::get('/forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'store'])->name('password.email');
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');

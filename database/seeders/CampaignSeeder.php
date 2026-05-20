@@ -23,6 +23,7 @@ class CampaignSeeder extends Seeder
                 'reward_amount' => 1200,
                 'destination_url' => 'https://example.com/northstar-cold-brew',
                 'status' => 'active',
+                'expires_at' => null,
             ],
             [
                 'brand_name' => 'BrightDesk',
@@ -33,6 +34,7 @@ class CampaignSeeder extends Seeder
                 'reward_amount' => 2500,
                 'destination_url' => 'https://example.com/brightdesk-setup',
                 'status' => 'active',
+                'expires_at' => null,
             ],
             [
                 'brand_name' => 'TrailKit',
@@ -43,6 +45,7 @@ class CampaignSeeder extends Seeder
                 'reward_amount' => 1800,
                 'destination_url' => 'https://example.com/trailkit-weekend',
                 'status' => 'active',
+                'expires_at' => null,
             ],
         ];
 

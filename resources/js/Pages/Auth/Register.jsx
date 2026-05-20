@@ -245,6 +245,22 @@ export default function Register({ prefill = {} }) {
             <RegistrationStepIndicator currentStep={currentStep} steps={registrationSteps} />
 
             <form onSubmit={submit} className="mx-auto mt-7 flex w-full max-w-[320px] flex-col gap-3.5 lg:mt-9">
+                <div className="grid gap-2">
+                    <a
+                        href="/auth/google/redirect"
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-5 text-[15px] font-semibold text-[#101010] shadow-sm transition hover:scale-[1.01] hover:opacity-95"
+                    >
+                        <span className="text-base font-black text-[#4285F4]">G</span>
+                        <span>Continue with Google</span>
+                    </a>
+                </div>
+
+                <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-[#101010]/55">
+                    <span className="h-px flex-1 bg-white/70" />
+                    <span>Email signup</span>
+                    <span className="h-px flex-1 bg-white/70" />
+                </div>
+
                 {errors.account_type && <p className="-mt-2 text-sm text-red-600">{errors.account_type}</p>}
 
                 {currentStep === 1 && (

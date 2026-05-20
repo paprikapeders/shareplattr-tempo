@@ -58,6 +58,22 @@ export default function Login() {
                     </p>
                 )}
 
+                <div className="grid gap-2">
+                    <a
+                        href="/auth/google/redirect"
+                        className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-white px-5 text-[15px] font-semibold text-[#101010] shadow-[0_10px_24px_rgba(15,23,42,0.10)] transition hover:scale-[1.01] hover:opacity-95 lg:h-12"
+                    >
+                        <span className="text-base font-black text-[#4285F4]">G</span>
+                        <span>Continue with Google</span>
+                    </a>
+                </div>
+
+                <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-[#101010]/55">
+                    <span className="h-px flex-1 bg-white/70" />
+                    <span>Email login</span>
+                    <span className="h-px flex-1 bg-white/70" />
+                </div>
+
                 <input
                     ref={emailRef}
                     name="email"

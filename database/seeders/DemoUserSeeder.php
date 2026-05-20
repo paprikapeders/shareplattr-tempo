@@ -233,10 +233,11 @@ class DemoUserSeeder extends Seeder
         Campaign::query()
             ->select('id')
             ->each(function (Campaign $campaign) {
-                $campaign->forceFill([
+                DB::table('campaigns')->where('id', $campaign->id)->update([
                     'click_count' => Click::query()->where('campaign_id', $campaign->id)->count(),
                     'conversion_count' => Conversion::query()->where('campaign_id', $campaign->id)->count(),
-                ])->save();
+                    'updated_at' => now(),
+                ]);
             });
     }
 }
