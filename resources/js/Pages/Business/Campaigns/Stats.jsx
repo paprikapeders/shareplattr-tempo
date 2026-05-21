@@ -1,4 +1,3 @@
-import CopyCampaignLinkButton from '../../../Components/CopyCampaignLinkButton';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
 import ConversionLabel from '../../../Components/ConversionLabel';
 import { formatExpiryDate } from '../../../Support/dates';
@@ -48,7 +47,7 @@ export default function Stats({ campaign, stats, recentClicks, recentConversions
     return (
         <BusinessLayout>
             <div className="mx-auto max-w-6xl space-y-6 py-4 sm:py-6">
-                <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <header className="mb-6">
                     <div className="min-w-0">
                         <p className="text-xs font-bold uppercase text-slate-500">Business Campaign</p>
                         <h1 className="mt-1 break-words text-3xl font-bold text-slate-950">{campaign.title} Stats</h1>
@@ -60,7 +59,6 @@ export default function Stats({ campaign, stats, recentClicks, recentConversions
                             </p>
                         )}
                     </div>
-                    <CopyCampaignLinkButton url={campaign.participant_campaign_url} className="shrink-0" />
                 </header>
 
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">

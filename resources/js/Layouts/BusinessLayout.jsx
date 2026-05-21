@@ -202,14 +202,12 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {}, showBr
                         type="button"
                         onClick={onToggle}
                         className={[
-                            'group relative flex h-9 shrink-0 items-center justify-center rounded-xl border border-slate-700/70 bg-slate-800/70 text-slate-300 transition hover:border-cyan-400/50 hover:bg-slate-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/35',
-                            expanded ? 'gap-2 px-3 text-xs font-semibold' : 'w-9',
+                            'group relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-700/70 bg-slate-800/70 text-slate-300 transition hover:border-cyan-400/50 hover:bg-slate-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/35',
                         ].join(' ')}
                         aria-label={toggleLabel}
                         title={toggleLabel}
                     >
                         <ToggleIcon />
-                        {expanded && <span>Collapse</span>}
                         <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus:opacity-100">
                             {toggleLabel}
                         </span>
