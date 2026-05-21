@@ -83,7 +83,7 @@ function Hero({ campaign, reward }) {
     const statusLabel = campaign.status === 'draft' ? 'Draft preview' : 'Active';
 
     return (
-        <section className="relative min-h-[255px] overflow-hidden rounded-none bg-slate-900 sm:rounded-2xl">
+        <section className="relative min-h-[320px] overflow-hidden bg-slate-900 sm:min-h-[360px]">
             {campaign.campaign_banner_url ? (
                 <img
                     src={campaign.campaign_banner_url}
@@ -102,7 +102,7 @@ function Hero({ campaign, reward }) {
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/38 to-black/12" />
 
-            <div className="relative flex min-h-[255px] flex-col justify-end gap-5 p-5 text-white sm:p-8 lg:flex-row lg:items-end lg:justify-between">
+            <div className="relative flex min-h-[320px] flex-col justify-end gap-5 p-5 text-white sm:min-h-[360px] sm:p-8 lg:flex-row lg:items-end lg:justify-between">
                 <div className="flex min-w-0 items-end gap-4">
                     <BrandAvatar campaign={campaign} className="h-14 w-14 shrink-0 rounded-2xl bg-white text-lg shadow-xl ring-1 ring-white/70 sm:h-16 sm:w-16" />
                     <div className="min-w-0 pb-1">
@@ -222,7 +222,7 @@ export function CampaignPreviewContent({ data, brand }) {
         <div className="bg-slate-50">
             <Hero campaign={previewCampaign} reward={reward} />
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="grid gap-6 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="space-y-6">
                     <Card className="p-6">
                         <h2 className="text-lg font-bold text-slate-950">About this campaign</h2>
@@ -372,7 +372,7 @@ export default function CampaignPreviewModal({
                         </button>
                     </div>
 
-                    <div className="max-h-[calc(100vh-11rem)] overflow-y-auto p-0 sm:p-5">
+                    <div className="max-h-[calc(100vh-11rem)] overflow-y-auto">
                         <CampaignPreviewContent data={data} brand={brand} />
                     </div>
 
