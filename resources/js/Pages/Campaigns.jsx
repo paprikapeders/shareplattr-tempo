@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CampaignCard from '../Components/CampaignCard';
 import CampaignSearchBar from '../Components/CampaignSearchBar';
 import EmptyState from '../Components/EmptyState';
@@ -81,6 +81,8 @@ export default function Campaigns({ campaigns, searchResults = [], categories, f
 
         return window.sessionStorage.getItem(sortStorageKey) || defaultSort;
     });
+    const searchDebounceRef = useRef(null);
+    const hasMountedRef = useRef(false);
 
     const activeSearch = (filters.search ?? '').trim();
     const hasActiveSearch = activeSearch.length > 0;
@@ -101,32 +103,64 @@ export default function Campaigns({ campaigns, searchResults = [], categories, f
         window.sessionStorage.setItem(sortStorageKey, sort);
     }, [sort]);
 
+    const requestCampaigns = (nextKeyword = keyword, nextCategory = category) => {
+        router.get('/campaigns', {
+            search: nextKeyword.trim() || undefined,
+            category: nextCategory === 'all' ? undefined : nextCategory,
+        }, {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        });
+    };
+
+    useEffect(() => {
+        if (!hasMountedRef.current) {
+            hasMountedRef.current = true;
+            return undefined;
+        }
+
+        if (searchDebounceRef.current) {
+            clearTimeout(searchDebounceRef.current);
+        }
+
+        searchDebounceRef.current = setTimeout(() => {
+            const currentSearch = (filters.search ?? '').trim();
+            const nextSearch = keyword.trim();
+            const currentCategory = filters.category ?? 'all';
+
+            if (nextSearch === currentSearch && category === currentCategory) {
+                return;
+            }
+
+            requestCampaigns(keyword, category);
+        }, 300);
+
+        return () => clearTimeout(searchDebounceRef.current);
+    }, [keyword]);
+
     const submitSearch = (event, nextCategory = category) => {
         event?.preventDefault();
 
-        router.get('/campaigns', {
-            search: keyword.trim() || undefined,
-            category: nextCategory === 'all' ? undefined : nextCategory,
-        }, {
-            replace: true,
-        });
+        if (searchDebounceRef.current) {
+            clearTimeout(searchDebounceRef.current);
+        }
+
+        requestCampaigns(keyword, nextCategory);
     };
 
     const changeCategory = (value) => {
         setCategory(value);
 
-        router.get('/campaigns', {
-            search: keyword.trim() || undefined,
-            category: value === 'all' ? undefined : value,
-        }, {
-            replace: true,
-        });
+        requestCampaigns(keyword, value);
     };
 
     const resetFilters = () => {
         setCategory('all');
         setKeyword('');
         router.get('/campaigns', {}, {
+            preserveScroll: true,
+            preserveState: true,
             replace: true,
         });
     };

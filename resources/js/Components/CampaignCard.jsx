@@ -24,6 +24,7 @@ export default function CampaignCard({ campaign }) {
     const category = campaign.category ?? 'Featured';
     const letter = firstLetter(brandName(campaign));
     const reward = rewardCallout(campaign);
+    const expiryLabel = campaign.expires_at ? formatExpiryDate(campaign.expires_at, null) : null;
 
     return (
         <Link
@@ -41,8 +42,15 @@ export default function CampaignCard({ campaign }) {
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/34 to-transparent" />
 
-            <div className="absolute left-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-sm">
-                {letter}
+            <div className="absolute left-3 top-3 flex max-w-[calc(100%-7rem)] items-center gap-2">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-sm ring-1 ring-white/60">
+                    {letter}
+                </div>
+                {expiryLabel && (
+                    <span className="truncate rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white/15 backdrop-blur">
+                        {expiryLabel}
+                    </span>
+                )}
             </div>
 
             <div className="absolute right-3 top-3 rounded bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-slate-800 backdrop-blur">
@@ -65,11 +73,6 @@ export default function CampaignCard({ campaign }) {
                         <p className="mt-1 text-[11px] font-semibold leading-none text-slate-500">Verified referral</p>
                     </div>
                 </div>
-                {campaign.expires_at && (
-                    <p className="mt-2 text-[11px] font-bold text-white/85">
-                        {formatExpiryDate(campaign.expires_at)}
-                    </p>
-                )}
             </div>
         </Link>
     );
