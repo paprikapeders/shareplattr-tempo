@@ -125,6 +125,7 @@ class BusinessDashboardController extends Controller
             'paid_rewards_generated' => (int) ($campaign->paid_rewards_generated ?? 0),
             'destination_url' => $campaign->destination_url,
             'created_at' => $campaign->created_at->toDateString(),
+            'updated_at' => $campaign->updated_at->toDateTimeString(),
             'expires_at' => $campaign->expires_at?->toDateString(),
         ];
     }
