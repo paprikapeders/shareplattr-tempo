@@ -13,7 +13,7 @@ export default function Form({ data, setData, errors, processing, statuses, onSu
     const isPercentage = data.reward_type === 'percentage';
 
     return (
-        <Card className="max-w-3xl p-6">
+        <Card className="w-full p-6">
             <form onSubmit={onSubmit} className="space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                     <div>

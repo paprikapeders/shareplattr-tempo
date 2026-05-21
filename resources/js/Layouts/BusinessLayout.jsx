@@ -173,7 +173,7 @@ function SidebarTooltip({ children }) {
 function SidebarContent({ url, expanded, onToggle, onNavigate = () => {}, showBrand = true, showToggle = true }) {
     const items = [
         { href: '/business/dashboard', label: 'Dashboard', icon: IconGrid },
-        { href: '/business/campaigns', label: 'Campaigns', icon: IconList },
+        { href: '/business/campaigns', label: 'My Campaigns', icon: IconList },
         { href: '/business/campaigns/create', label: 'Create Campaign', icon: IconBolt, primary: true },
         { href: '/business/payout-requests', label: 'Payout Requests', icon: IconWallet, matchPrefix: '/business/payout-requests' },
         { href: '/business/billing', label: 'Billing', icon: IconCard, matchPrefix: '/business/billing' },

@@ -1,21 +1,11 @@
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import CampaignDraftPreview from '../../../Components/CampaignDraftPreview';
+import CampaignPreviewModal from '../../../Components/CampaignPreview';
 import PageHeader from '../../../Components/PageHeader';
 import { clearFieldError, isBlank, scrollToField } from '../../../Support/formValidation';
 import { OTHER_KEY } from '../../../Support/taxonomy';
 import Form from './Form';
-
-function StepIndicator({ step }) {
-    return (
-        <div className="mb-5 flex max-w-3xl items-center gap-3 text-sm font-semibold">
-            <span className={`rounded-full px-3 py-1 ${step === 'details' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-500'}`}>Step 1: Details</span>
-            <span className="h-px flex-1 bg-slate-200" />
-            <span className={`rounded-full px-3 py-1 ${step === 'preview' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-500'}`}>Step 2: Preview</span>
-        </div>
-    );
-}
 
 export default function Create({ statuses, brands }) {
     const { data, setData, post, processing, errors: serverErrors, clearErrors } = useForm({
@@ -40,7 +30,7 @@ export default function Create({ statuses, brands }) {
         status: 'active',
         expires_at: '',
     });
-    const [step, setStep] = useState('details');
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [clientErrors, setClientErrors] = useState({});
     const errors = { ...serverErrors, ...clientErrors };
     const selectedBrand = brands.find((brand) => String(brand.id) === String(data.brand_id));
@@ -100,8 +90,7 @@ export default function Create({ statuses, brands }) {
             return;
         }
 
-        setStep('preview');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setIsPreviewOpen(true);
     };
 
     const submit = () => {
@@ -112,7 +101,7 @@ export default function Create({ statuses, brands }) {
         post('/admin/campaigns', {
             forceFormData: true,
             onError: () => {
-                setStep('details');
+                setIsPreviewOpen(false);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             },
         });
@@ -126,27 +115,24 @@ export default function Create({ statuses, brands }) {
                 description="Create a campaign participants can browse and generate referral links for."
             />
 
-            <StepIndicator step={step} />
-            {step === 'details' ? (
-                <Form
-                    data={data}
-                    setData={updateField}
-                    errors={errors}
-                    processing={processing}
-                    statuses={statuses}
-                    brands={brands}
-                    onSubmit={preview}
-                    submitLabel="Preview campaign"
-                />
-            ) : (
-                <CampaignDraftPreview
-                    data={{ ...data, reward_type: 'flat' }}
-                    brand={selectedBrand}
-                    processing={processing}
-                    onEdit={() => setStep('details')}
-                    onConfirm={submit}
-                />
-            )}
+            <Form
+                data={data}
+                setData={updateField}
+                errors={errors}
+                processing={processing}
+                statuses={statuses}
+                brands={brands}
+                onSubmit={preview}
+                submitLabel="Preview campaign"
+            />
+            <CampaignPreviewModal
+                data={{ ...data, reward_type: 'flat' }}
+                brand={selectedBrand}
+                isOpen={isPreviewOpen}
+                processing={processing}
+                onClose={() => setIsPreviewOpen(false)}
+                onConfirm={submit}
+            />
         </AdminLayout>
     );
 }
