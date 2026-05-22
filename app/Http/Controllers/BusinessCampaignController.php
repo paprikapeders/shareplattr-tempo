@@ -100,11 +100,15 @@ class BusinessCampaignController extends Controller
     public function show(Request $request, Campaign $campaign)
     {
         $this->authorizeOwner($request, $campaign);
+        $summary = $this->statsPayload($campaign);
 
         return Inertia::render('Business/Campaigns/Show', [
             'campaign' => [
                 ...$this->campaignPayload($campaign),
-                'source_breakdown' => $this->sourceBreakdown($campaign),
+                'stats' => $summary['stats'],
+                'source_breakdown' => $summary['source_breakdown'],
+                'recentClicks' => $summary['recentClicks'],
+                'recentConversions' => $summary['recentConversions'],
                 'pending_conversions' => $this->pendingConversionQueue($campaign),
                 'referral_tokens' => ReferralToken::query()
                     ->where('campaign_id', $campaign->id)
@@ -209,14 +213,7 @@ class BusinessCampaignController extends Controller
     {
         $this->authorizeOwner($request, $campaign);
 
-        $summary = $this->statsPayload($campaign);
-
-        return Inertia::render('Business/Campaigns/Stats', [
-            'campaign' => $this->campaignPayload($campaign),
-            'stats' => $summary['stats'],
-            'recentClicks' => $summary['recentClicks'],
-            'recentConversions' => $summary['recentConversions'],
-        ]);
+        return redirect()->route('business.campaigns.show', $campaign);
     }
 
     public function statsSummary(Request $request, Campaign $campaign)

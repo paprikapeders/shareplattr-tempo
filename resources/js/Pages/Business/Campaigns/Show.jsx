@@ -55,6 +55,29 @@ function MetricCard({ label, value, children }) {
     );
 }
 
+function dollars(cents) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((cents ?? 0) / 100);
+}
+
+function RecentCard({ title, children, empty }) {
+    return (
+        <Card className="p-0">
+            <div className="border-b border-slate-100 px-5 py-4">
+                <h2 className="text-sm font-bold text-slate-950">
+                    {title === 'Recent Conversions' ? <ConversionLabel>{title}</ConversionLabel> : title}
+                </h2>
+            </div>
+            {empty ? (
+                <div className="px-5 py-8 text-sm text-slate-500">{empty}</div>
+            ) : (
+                <div className="overflow-x-auto px-5">
+                    {children}
+                </div>
+            )}
+        </Card>
+    );
+}
+
 function DetailItem({ label, children, wide = false }) {
     return (
         <div className={wide ? 'sm:col-span-2' : ''}>
@@ -169,6 +192,9 @@ function ConversionApprovalQueue({ conversions = [] }) {
 
 export default function Show({ campaign }) {
     const { stats: liveSummary, lastUpdatedAt } = usePollingStats(`/business/campaigns/${campaign.id}/stats-summary`, {
+        stats: campaign.stats,
+        recentClicks: campaign.recentClicks,
+        recentConversions: campaign.recentConversions,
         campaign: {
             click_count: campaign.click_count,
             conversion_count: campaign.conversion_count,
@@ -198,6 +224,9 @@ export default function Show({ campaign }) {
     }
 
     const liveCampaign = liveSummary?.campaign ?? {};
+    const liveStats = liveSummary?.stats ?? campaign.stats ?? {};
+    const recentClicks = liveSummary?.recentClicks ?? campaign.recentClicks ?? [];
+    const recentConversions = liveSummary?.recentConversions ?? campaign.recentConversions ?? [];
     const sourceBreakdown = liveSummary?.source_breakdown ?? liveCampaign.source_breakdown ?? campaign.source_breakdown;
     const pendingConversions = liveCampaign.pending_conversions ?? campaign.pending_conversions ?? [];
 
@@ -219,7 +248,6 @@ export default function Show({ campaign }) {
                     <div className="flex flex-wrap items-center gap-2">
                         <Button as={Link} href={`/business/campaigns/${campaign.id}/edit`} variant="secondary">Edit</Button>
                         <Button as={Link} href={campaign.business_preview_url ?? `/business/campaigns/${campaign.id}/preview`} variant="secondary">View Campaign</Button>
-                        <Button as={Link} href={`/business/campaigns/${campaign.id}/stats`}>Stats</Button>
                         {canToggleStatus && (
                             <Button type="button" onClick={updateStatus} variant="secondary">
                                 {campaign.status === 'active' ? 'Pause' : 'Resume'}
@@ -231,8 +259,12 @@ export default function Show({ campaign }) {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <MetricCard label="Status"><StatusBadge status={campaign.status} /></MetricCard>
                     <MetricCard label="Reward" value={formatReward(campaign)} />
-                    <MetricCard label="Clicks" value={liveCampaign.click_count ?? campaign.click_count ?? 0} />
-                    <MetricCard label="Conversions" value={liveCampaign.conversion_count ?? campaign.conversion_count ?? 0} />
+                    <MetricCard label="Total Clicks" value={liveStats.total_clicks ?? liveCampaign.click_count ?? campaign.click_count ?? 0} />
+                    <MetricCard label="Unique Clicks" value={liveStats.unique_clicks ?? 0} />
+                    <MetricCard label="Flagged Clicks" value={liveStats.flagged_clicks ?? 0} />
+                    <MetricCard label="Conversions" value={liveStats.conversions ?? liveCampaign.conversion_count ?? campaign.conversion_count ?? 0} />
+                    <MetricCard label="Conversion Rate" value={`${liveStats.conversion_rate ?? 0}%`} />
+                    <MetricCard label="Rewards Generated" value={dollars(liveStats.total_rewards_generated)} />
                 </div>
                 {lastUpdatedAt && (
                     <p className="-mt-3 text-xs font-medium text-slate-400">
@@ -241,6 +273,36 @@ export default function Show({ campaign }) {
                 )}
 
                 <ChannelStats sources={sourceBreakdown} />
+
+                <div className="grid gap-5 lg:grid-cols-2">
+                    <RecentCard title="Recent Clicks" empty={recentClicks.length === 0 ? 'No clicks yet.' : null}>
+                        <table className="w-full min-w-[520px] table-auto divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100">
+                                {recentClicks.map((click) => (
+                                    <tr key={click.id}>
+                                        <td className="py-4 pr-3 text-sm text-slate-600">{click.ip_address}</td>
+                                        <td className="px-3 py-4 text-sm text-slate-600">{click.is_flagged ? click.flag_reason || 'flagged' : 'unique'}</td>
+                                        <td className="py-4 pl-3 text-right text-sm text-slate-500">{click.created_at}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </RecentCard>
+
+                    <RecentCard title="Recent Conversions" empty={recentConversions.length === 0 ? 'No conversions yet.' : null}>
+                        <table className="w-full min-w-[520px] table-auto divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100">
+                                {recentConversions.map((conversion) => (
+                                    <tr key={conversion.id}>
+                                        <td className="py-4 pr-3 text-sm font-semibold text-slate-950">{dollars(conversion.amount)}</td>
+                                        <td className="px-3 py-4 text-sm text-slate-600">{conversion.status}</td>
+                                        <td className="py-4 pl-3 text-right text-sm text-slate-500">{conversion.created_at}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </RecentCard>
+                </div>
 
                 <ConversionApprovalQueue conversions={pendingConversions} />
 

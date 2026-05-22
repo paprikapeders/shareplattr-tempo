@@ -51,10 +51,10 @@ function Actions({ campaign }) {
     return (
         <div className="flex shrink-0 flex-wrap justify-start gap-2 text-slate-500 lg:justify-end">
             <Link
-                href={`/business/campaigns/${campaign.id}`}
+                href={`/business/campaigns/${campaign.id}/preview`}
                 className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400/30"
-                aria-label="View campaign"
-                title="View campaign"
+                aria-label="View campaign preview"
+                title="View campaign preview"
             >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" /><circle cx="12" cy="12" r="2.5" /></svg>
                 <span>View</span>
@@ -67,15 +67,6 @@ function Actions({ campaign }) {
             >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4"><path d="M12 20h9" /><path d="m16.5 3.5 4 4L8 20H4v-4L16.5 3.5Z" /></svg>
                 <span>Edit</span>
-            </Link>
-            <Link
-                href={`/business/campaigns/${campaign.id}/stats`}
-                className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400/30"
-                aria-label="View campaign stats"
-                title="View campaign stats"
-            >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4"><path d="M4 19V5M9 19v-8M14 19V8M19 19v-5" /></svg>
-                <span>Stats</span>
             </Link>
         </div>
     );

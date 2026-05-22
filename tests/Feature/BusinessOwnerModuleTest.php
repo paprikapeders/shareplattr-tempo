@@ -250,6 +250,11 @@ class BusinessOwnerModuleTest extends TestCase
                 ->where('campaign.reward_type', 'flat')
                 ->where('campaign.reward_display', '$10.00')
                 ->where('campaign.business_preview_url', route('business.campaigns.preview', $campaign))
+                ->where('campaign.stats.total_clicks', 0)
+                ->where('campaign.stats.unique_clicks', 0)
+                ->where('campaign.stats.flagged_clicks', 0)
+                ->where('campaign.stats.conversions', 0)
+                ->where('campaign.stats.total_rewards_generated', 0)
             );
     }
 
@@ -757,7 +762,7 @@ class BusinessOwnerModuleTest extends TestCase
             ->assertSessionHas('error', 'Please fill in: Industry.');
     }
 
-    public function test_business_owner_stats_only_include_own_campaign_data(): void
+    public function test_business_campaign_detail_stats_only_include_own_campaign_data_and_stats_redirects(): void
     {
         [$owner, $profile] = $this->businessOwnerWithProfile('Owner One', 'One Co');
         [$otherOwner, $otherProfile] = $this->businessOwnerWithProfile('Owner Two', 'Two Co');
@@ -830,17 +835,22 @@ class BusinessOwnerModuleTest extends TestCase
 
         $this
             ->actingAs($owner)
-            ->get(route('business.campaigns.stats', $campaign))
+            ->get(route('business.campaigns.show', $campaign))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Business/Campaigns/Stats')
-                ->where('stats.total_clicks', 2)
-                ->where('stats.unique_clicks', 1)
-                ->where('stats.flagged_clicks', 1)
-                ->where('stats.conversions', 1)
-                ->where('stats.total_rewards_generated', 1500)
-                ->missing('recentClicks.2')
+                ->component('Business/Campaigns/Show')
+                ->where('campaign.stats.total_clicks', 2)
+                ->where('campaign.stats.unique_clicks', 1)
+                ->where('campaign.stats.flagged_clicks', 1)
+                ->where('campaign.stats.conversions', 1)
+                ->where('campaign.stats.total_rewards_generated', 1500)
+                ->missing('campaign.recentClicks.2')
             );
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.campaigns.stats', $campaign))
+            ->assertRedirect(route('business.campaigns.show', $campaign));
 
         $this
             ->actingAs($owner)
