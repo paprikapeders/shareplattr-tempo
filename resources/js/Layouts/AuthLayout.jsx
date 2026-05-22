@@ -48,7 +48,7 @@ export default function AuthLayout({
                     </section>
                 )}
 
-                <section className={`relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-8 py-5 sm:px-10 lg:min-h-dvh lg:px-10 ${showHero && showMobileHero ? '-mt-14 lg:mt-0' : ''} ${contentClassName}`}>
+                <section className={`auth-laptop-shift relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-8 py-5 sm:px-10 lg:min-h-dvh lg:px-10 ${showHero && showMobileHero ? '-mt-14 lg:mt-0' : ''} ${contentClassName}`}>
                     {backHref && (
                         <a
                             href={backHref}

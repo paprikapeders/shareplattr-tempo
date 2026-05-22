@@ -140,6 +140,12 @@ body {
     }
 }
 
+@media (min-width: 80rem) and (max-width: 96rem) {
+    .auth-laptop-shift {
+        transform: translateX(-20px);
+    }
+}
+
 .landing-page {
     --landing-background: 168 47% 81%;
     --landing-foreground: 220 20% 10%;
