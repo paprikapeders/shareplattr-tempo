@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import BrandLogo, { BrandMark } from '../Components/BrandLogo';
 import FlashMessages from '../Components/FlashMessages';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 import useSidebarPreference, { BUSINESS_SIDEBAR_STORAGE_KEY } from '../Support/useSidebarPreference';
@@ -171,12 +172,9 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {}, showBr
         <div className="flex h-full flex-col">
             <div className={`mb-5 flex items-center ${expanded ? 'justify-between gap-3' : 'justify-center'}`}>
                 {expanded && showBrand && (
-                    <Link href="/business/dashboard" className="flex min-w-0 items-center gap-3 text-white" onClick={onNavigate}>
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-400 text-sm font-bold text-slate-950">
-                            S
-                        </span>
+                    <Link href="/business/dashboard" className="flex min-w-0 flex-col items-start gap-1 text-white" onClick={onNavigate}>
+                        <BrandLogo variant="white" className="h-8 w-auto max-w-[150px]" />
                         <span className="min-w-0">
-                            <span className="block truncate text-sm font-bold">SharePlattr</span>
                             <span className="block truncate text-xs text-slate-400">Business</span>
                         </span>
                     </Link>
@@ -334,7 +332,7 @@ export default function BusinessLayout({ children }) {
                 title="SharePlattr"
                 subtitle="Business"
                 homeHref="/business/dashboard"
-                logo={<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400 text-sm font-bold text-slate-950">S</span>}
+                logo={<BrandMark className="h-10 w-10 shrink-0" />}
                 navLabel="Business navigation"
             >
                 <SidebarContent

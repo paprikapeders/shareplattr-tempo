@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import BrandLogo from '../Components/BrandLogo';
 
 const peopleImage = '/images/people.png';
 
@@ -59,9 +60,10 @@ export default function AuthLayout({
                     )}
 
                     <div className="relative z-10 mx-auto flex w-full max-w-[320px] flex-col lg:max-w-[340px] xl:max-w-[360px]">
-                        <h1 className="text-center text-[38px] font-extrabold leading-none tracking-normal text-[#111111] lg:text-[42px] lg:font-black xl:text-[48px]">
-                            {title}
-                        </h1>
+                        <h1 className="sr-only">{title}</h1>
+                        <div className="flex justify-center">
+                            <BrandLogo className="h-14 w-auto max-w-full" />
+                        </div>
                         {subtitle && (
                             <p className="mt-4 text-center text-[15px] leading-6 text-[#1f2933]/90">
                                 {subtitle}

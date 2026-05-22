@@ -21,6 +21,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\PayoutRequestController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\ParticipantProfileController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ReferralLinkController;
 use App\Http\Controllers\SimulateConversionController;
@@ -89,6 +90,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/stats-summary', [DashboardController::class, 'statsSummary'])->name('dashboard.stats-summary');
+    Route::get('/profile', [ParticipantProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile', [ParticipantProfileController::class, 'update'])->name('profile.update');
     Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
     Route::get('/campaigns/{campaign}/stats-summary', [CampaignController::class, 'statsSummary'])->name('campaigns.stats-summary');
     Route::get('/campaigns/{campaign}', [CampaignController::class, 'show'])->name('campaigns.show');

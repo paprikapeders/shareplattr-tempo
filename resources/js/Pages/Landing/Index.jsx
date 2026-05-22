@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import BrandLogo, { brandLogo } from '../../Components/BrandLogo';
 
 const asset = (name) => `/landing/assets/${name}`;
 
@@ -261,11 +262,12 @@ function Navigation() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16 lg:h-20">
                     <button
-                        className="text-xl font-extrabold tracking-tight text-gray-900 hover:text-purple-600 transition-colors"
+                        className="flex items-center transition-opacity hover:opacity-80"
                         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                         type="button"
+                        aria-label="Shareplattr"
                     >
-                        Shareplattr
+                        <BrandLogo className="h-10 w-auto max-w-[170px]" alt="Shareplattr" />
                     </button>
 
                     <div className="hidden md:flex items-center gap-8">
@@ -816,6 +818,9 @@ export default function LandingIndex() {
                     content="Businesses post campaigns. Referrers share them. Everyone earns."
                 />
                 <meta property="og:type" content="website" />
+                <meta property="og:image" content={brandLogo.og} />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:image" content={brandLogo.og} />
                 <link href="https://fonts.googleapis.com" rel="preconnect" />
                 <link crossOrigin="anonymous" href="https://fonts.gstatic.com" rel="preconnect" />
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />

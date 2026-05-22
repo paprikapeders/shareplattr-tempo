@@ -1,16 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import BrandLogo, { BrandMark } from '../Components/BrandLogo';
 import FlashMessages from '../Components/FlashMessages';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 import useSidebarPreference, { CLIENT_SIDEBAR_STORAGE_KEY } from '../Support/useSidebarPreference';
-
-function LogoIcon() {
-    return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7">
-            <path d="M4.8 10.8c0-1.8 1-3.4 2.5-4.3l8-4.6c2.6-1.5 5.9.4 5.9 3.4v13.4c0 3-3.3 4.9-5.9 3.4l-8-4.6a5 5 0 0 1-2.5-4.3v-2.4Z" />
-        </svg>
-    );
-}
 
 function DashboardIconGrid() {
     return (
@@ -49,6 +42,15 @@ function DashboardIconLogout() {
             <path d="M10 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1" />
             <path d="M15 16l5-4-5-4" />
             <path d="M20 12H9" />
+        </svg>
+    );
+}
+
+function DashboardIconProfile() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M5 20a7 7 0 0 1 14 0" />
         </svg>
     );
 }
@@ -128,10 +130,11 @@ function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {}, showB
             <div className={`flex items-center ${collapsed ? 'flex-col gap-3' : 'justify-between gap-3'}`}>
                 {showBrand && (
                     <Link href="/dashboard" className="flex min-w-0 items-center gap-3 text-white" onClick={onNavigate} aria-label="SharePlattr dashboard" title="SharePlattr">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08c4c4] text-white">
-                            <LogoIcon />
-                        </span>
-                        {!collapsed && <span className="truncate text-sm font-semibold">SharePlattr</span>}
+                        {collapsed ? (
+                            <BrandMark className="h-10 w-10 shrink-0" />
+                        ) : (
+                            <BrandLogo variant="white" className="h-9 w-auto max-w-[150px]" />
+                        )}
                     </Link>
                 )}
 
@@ -190,7 +193,6 @@ function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {}, showB
 function ClientTopBar({ url, user, onMobileMenu }) {
     const name = user?.name || 'SharePlattr user';
     const pageTitle = getClientPageTitle(url);
-    const activityFeedActive = url === '/dashboard#activity';
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -233,28 +235,9 @@ function ClientTopBar({ url, user, onMobileMenu }) {
                         <MenuIcon />
                     </button>
 
-                    <Link href="/dashboard" className="flex items-center gap-3 text-[#08bcbc]" aria-label="SharePlattr dashboard">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#08c4c4] text-white shadow-sm">
-                            <LogoIcon />
-                        </span>
-                        <span className="hidden text-sm font-bold text-slate-900 sm:inline lg:hidden">SharePlattr</span>
-                    </Link>
-
                     <div className="min-w-0 lg:hidden">
                         <p className="truncate text-sm font-semibold text-slate-950">{pageTitle}</p>
                     </div>
-
-                    <nav className="hidden items-center lg:flex" aria-label="Main navigation">
-                        <Link
-                            href="/dashboard#activity"
-                            className={[
-                                'rounded-full px-3 py-2 text-sm font-semibold transition',
-                                activityFeedActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950',
-                            ].join(' ')}
-                        >
-                            Activity Feed
-                        </Link>
-                    </nav>
                 </div>
 
                 <div ref={menuRef} className="relative flex items-center justify-end gap-3">
@@ -290,13 +273,13 @@ function ClientTopBar({ url, user, onMobileMenu }) {
                             className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl shadow-slate-950/10"
                         >
                             <Link
-                                href="/dashboard"
+                                href="/profile"
                                 role="menuitem"
                                 onClick={() => setMenuOpen(false)}
                                 className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
                             >
-                                <DashboardIconGrid />
-                                Dashboard
+                                <DashboardIconProfile />
+                                Profile
                             </Link>
                             <Link
                                 href="/logout"
@@ -343,7 +326,7 @@ export default function ClientLayout({ children }) {
                 title="SharePlattr"
                 subtitle="Participant"
                 homeHref="/dashboard"
-                logo={<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08c4c4] text-white"><LogoIcon /></span>}
+                logo={<BrandMark className="h-10 w-10 shrink-0" />}
                 navLabel="Participant navigation"
             >
                 <SidebarContent

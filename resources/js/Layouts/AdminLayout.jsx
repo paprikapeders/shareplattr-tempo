@@ -1,14 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import BrandLogo, { BrandMark } from '../Components/BrandLogo';
 import FlashMessages from '../Components/FlashMessages';
 import MobileNavDrawer from '../Components/MobileNavDrawer';
 
 function LogoMark() {
-    return (
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-950 text-sm font-bold text-white shadow-sm shadow-slate-950/15">
-            S
-        </span>
-    );
+    return <BrandMark className="h-9 w-9 shrink-0" />;
 }
 
 function MenuIcon() {
@@ -122,9 +119,8 @@ function AdminSidebar({ url, onNavigate = () => {}, showBrand = true, dark = fal
         <div className="flex h-full flex-col">
             {showBrand && (
                 <Link href="/admin/campaigns" className="flex items-center gap-3 px-1 text-slate-950" onClick={onNavigate}>
-                    <LogoMark />
+                    <BrandLogo className="h-9 w-auto max-w-[170px]" />
                     <div className="leading-tight">
-                        <p className="text-base font-bold">SharePlattr</p>
                         <p className="text-xs font-medium text-slate-500">Admin</p>
                     </div>
                 </Link>
@@ -254,7 +250,7 @@ export default function AdminLayout({ children }) {
                     title="SharePlattr"
                     subtitle="Admin"
                     homeHref="/admin/campaigns"
-                    logo={<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-bold text-slate-950">S</span>}
+                    logo={<LogoMark />}
                     navLabel="Admin navigation"
                 >
                     <AdminSidebar url={url} onNavigate={() => setMobileOpen(false)} showBrand={false} dark />
