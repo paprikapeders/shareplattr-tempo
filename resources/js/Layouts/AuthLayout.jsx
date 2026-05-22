@@ -43,12 +43,12 @@ export default function AuthLayout({
                             loading="eager"
                             fetchPriority="high"
                             decoding="sync"
-                            className="hidden h-[100vh] w-auto max-w-none object-contain lg:block lg:translate-x-0 xl:h-[104vh] xl:translate-x-4 2xl:h-[106vh] 2xl:translate-x-8"
+                            className="auth-hero-image hidden h-[100vh] w-auto max-w-none object-contain lg:block lg:translate-x-0 xl:h-[104vh] xl:translate-x-4 2xl:h-[106vh] 2xl:translate-x-8"
                         />
                     </section>
                 )}
 
-                <section className={`auth-laptop-shift relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-8 py-5 sm:px-10 lg:min-h-dvh lg:px-10 ${showHero && showMobileHero ? '-mt-14 lg:mt-0' : ''} ${contentClassName}`}>
+                <section className={`auth-laptop-shift relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-8 py-5 sm:px-10 lg:min-h-dvh lg:items-center lg:px-10 ${showHero && showMobileHero ? '-mt-14 lg:mt-0' : ''} ${contentClassName}`}>
                     {backHref && (
                         <a
                             href={backHref}
@@ -59,10 +59,10 @@ export default function AuthLayout({
                         </a>
                     )}
 
-                    <div className="relative z-10 mx-auto flex w-full max-w-[320px] flex-col lg:max-w-[340px] xl:max-w-[360px]">
+                    <div className="relative z-10 mx-auto flex w-full max-w-[320px] flex-col lg:-translate-x-10 lg:max-w-[340px] xl:max-w-[360px]">
                         <h1 className="sr-only">{title}</h1>
                         <div className="flex justify-center">
-                            <BrandLogo className="h-14 w-auto max-w-full" />
+                            <BrandLogo className="auth-brand-logo h-14 w-auto max-w-full" />
                         </div>
                         {subtitle && (
                             <p className="mt-4 text-center text-[15px] leading-6 text-[#1f2933]/90">
