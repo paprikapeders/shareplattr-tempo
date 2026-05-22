@@ -23,14 +23,14 @@ function toneClasses(tone) {
 
 export default function ActivityFeed({ activities }) {
     return (
-        <aside id="activity" className="scroll-mt-24 rounded-[22px] bg-white p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 sm:p-5 xl:sticky xl:top-[90px] xl:max-h-[420px] xl:overflow-hidden">
+        <aside id="activity" className="min-w-0 scroll-mt-24 rounded-[22px] bg-white p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 sm:p-5 2xl:sticky 2xl:top-[90px] 2xl:max-h-[420px] 2xl:overflow-hidden">
             <div className="border-b border-slate-200 px-2 pb-4 text-sm">
                 <div className="border-b border-[#25338c] pb-2 font-semibold text-[#25338c]">
                     Activity feed
                 </div>
             </div>
 
-            <div className="mt-4 max-h-[360px] space-y-4 overflow-y-auto pr-1 xl:max-h-[330px]">
+            <div className="mt-4 max-h-[360px] space-y-4 overflow-y-auto pr-1 2xl:max-h-[330px]">
                 {activities.length === 0 ? (
                     <EmptyState
                         title="No activity yet — start sharing to see results here."

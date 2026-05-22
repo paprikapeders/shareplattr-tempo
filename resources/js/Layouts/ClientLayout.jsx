@@ -340,7 +340,7 @@ export default function ClientLayout({ children }) {
 
             <div className={`min-w-0 overflow-x-hidden transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[220px]'}`}>
                 <ClientTopBar url={url} user={auth.user} onMobileMenu={() => setMobileOpen(true)} />
-                <main className="mx-auto min-h-screen max-w-[1500px] space-y-5 px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
+                <main className="mx-auto min-h-screen w-full max-w-[1500px] space-y-5 overflow-x-hidden px-4 py-4 sm:px-6 lg:px-6 xl:px-8 lg:py-6">
                     <FlashMessages />
                     {children}
                 </main>

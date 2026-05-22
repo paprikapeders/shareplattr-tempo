@@ -108,7 +108,7 @@ function OnboardingChecklist({ steps }) {
 
 function OnboardingEmptyState({ onboarding }) {
     return (
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+        <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(0,1fr)_320px] 2xl:items-start">
             <section className="min-w-0 rounded-[28px] bg-white px-6 py-8 shadow-[0_18px_45px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 sm:px-8 sm:py-10">
                 <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#08bcbc]">Welcome to SharePlattr</p>
                 <h1 className="mt-4 max-w-2xl text-3xl font-black leading-tight text-[#111111] sm:text-4xl">
@@ -226,7 +226,7 @@ export default function Dashboard({ stats, referralLinks, activities, onboarding
             {liveOnboarding?.show ? (
                 <OnboardingEmptyState onboarding={liveOnboarding} />
             ) : (
-                <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+                <div className="grid min-w-0 gap-5 2xl:grid-cols-[minmax(0,1fr)_320px] 2xl:items-start">
                 <div className="min-w-0 space-y-5">
                     <MetricsCards stats={liveStats} />
                     {lastUpdatedAt && (
