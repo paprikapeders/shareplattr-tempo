@@ -104,54 +104,39 @@ function IconChevronDown() {
     );
 }
 
-function IconBag() {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
-            <path d="M6 8h12l-1 12H7L6 8Z" />
-            <path d="M9 8a3 3 0 0 1 6 0" />
-        </svg>
-    );
-}
+function currentPath(url) {
+    const path = (url ?? '').split(/[?#]/)[0].replace(/\/+$/, '');
 
-function getBusinessPageTitle(url) {
-    if (url?.startsWith('/business/campaigns/create')) {
-        return 'Create Campaign';
-    }
-
-    if (url?.startsWith('/business/campaigns')) {
-        return 'Campaigns';
-    }
-
-    if (url?.startsWith('/business/payout-requests')) {
-        return 'Payout Requests';
-    }
-
-    if (url?.startsWith('/business/billing')) {
-        return 'Billing';
-    }
-
-    if (url?.startsWith('/business/profile')) {
-        return 'Profile';
-    }
-
-    return 'Dashboard';
+    return path === '' ? '/' : path;
 }
 
 function isActive(url, item) {
-    if (item.href === '/business/campaigns') {
-        return url === '/business/campaigns'
-            || /^\/business\/campaigns\/\d+(\/stats|\/edit)?$/.test(url ?? '');
+    const path = currentPath(url);
+
+    if (item.href === '/business/dashboard') {
+        return path === '/business/dashboard';
     }
 
-    return url === item.href || Boolean(item.matchPrefix && url?.startsWith(item.matchPrefix));
+    if (item.href === '/business/campaigns/create') {
+        return path === '/business/campaigns/create';
+    }
+
+    if (item.href === '/business/campaigns') {
+        return path === '/business/campaigns'
+            || /^\/business\/campaigns\/\d+(\/(preview|stats-summary|stats|edit))?$/.test(path);
+    }
+
+    return path === item.href || Boolean(item.matchPrefix && path.startsWith(`${item.matchPrefix}/`));
 }
 
 function sidebarLinkClass(active, expanded, primary = false) {
     if (primary) {
         return [
-            'group relative flex h-11 items-center rounded-xl text-sm font-semibold text-slate-950 shadow-sm shadow-cyan-950/15 transition hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/40',
-            expanded ? 'w-full justify-start gap-3 px-3 bg-cyan-400' : 'w-11 justify-center bg-cyan-400',
-            active ? 'ring-2 ring-cyan-200/50' : '',
+            'group relative flex h-11 items-center rounded-xl text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-cyan-300/40',
+            expanded ? 'w-full justify-start gap-3 px-3' : 'w-11 justify-center',
+            active
+                ? 'bg-cyan-400 text-slate-950 shadow-cyan-950/15 ring-2 ring-cyan-200/50'
+                : 'text-cyan-200 shadow-black/10 hover:bg-cyan-400 hover:text-slate-950',
         ].join(' ');
     }
 
@@ -266,15 +251,13 @@ function DesktopSidebar({ url, expanded, onToggle }) {
     );
 }
 
-function Header({ user, url, onMobileMenu }) {
-    const dashboardActive = url === '/business/dashboard';
-    const pageTitle = getBusinessPageTitle(url);
+function Header({ user, onMobileMenu }) {
     const [menuOpen, setMenuOpen] = useState(false);
 
     return (
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
             <div className="flex h-12 items-center justify-between gap-3 px-4 sm:px-5">
-                <div className="flex h-full min-w-0 items-center gap-3 sm:gap-7">
+                <div className="flex h-full min-w-0 items-center">
                     <button
                         type="button"
                         onClick={onMobileMenu}
@@ -283,22 +266,6 @@ function Header({ user, url, onMobileMenu }) {
                     >
                         <IconMenu />
                     </button>
-                    <Link
-                        href="/business/dashboard"
-                        className={[
-                            'hidden h-full items-center gap-2 border-b-2 px-1 text-sm font-bold transition lg:flex',
-                            dashboardActive
-                                ? 'border-violet-600 text-slate-950'
-                                : 'border-transparent text-slate-600 hover:text-slate-950',
-                        ].join(' ')}
-                    >
-                        <IconBag />
-                        Dashboard
-                    </Link>
-                    <div className="min-w-0 lg:hidden">
-                        <p className="truncate text-sm font-semibold text-slate-950">{pageTitle}</p>
-                        <p className="truncate text-xs text-slate-500">Business</p>
-                    </div>
                 </div>
 
                 <div className="relative">
@@ -381,7 +348,7 @@ export default function BusinessLayout({ children }) {
             </MobileNavDrawer>
 
             <div className={`min-w-0 overflow-x-hidden transition-all duration-200 ${expanded ? 'lg:pl-56' : 'lg:pl-14'}`}>
-                <Header user={auth.user} url={page.url} onMobileMenu={() => setMobileOpen(true)} />
+                <Header user={auth.user} onMobileMenu={() => setMobileOpen(true)} />
                 <main className="mx-auto min-h-screen w-full max-w-[1500px] px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
                     <FlashMessages className="mb-6" />
                     {children}
