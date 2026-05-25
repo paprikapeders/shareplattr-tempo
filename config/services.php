@@ -49,6 +49,7 @@ return [
     'geoip' => [
         'endpoint' => env('GEOIP_ENDPOINT'),
         'timeout' => env('GEOIP_TIMEOUT', 0.5),
+        'debug_log' => env('GEOIP_DEBUG_LOG', false),
     ],
 
     'slack' => [

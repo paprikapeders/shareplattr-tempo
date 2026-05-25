@@ -11,6 +11,7 @@ use App\Models\ReferralToken;
 use App\Models\User;
 use App\Services\ClickLocationResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -221,6 +222,52 @@ class ReferralTrackingTest extends TestCase
             'region' => 'Metro Manila',
             'city' => 'Manila',
         ]);
+    }
+
+    public function test_referral_click_uses_trusted_forwarded_public_ip_for_geoip(): void
+    {
+        config(['services.geoip.debug_log' => true]);
+        Log::spy();
+        [$campaign, $token] = $this->createReferralToken();
+
+        $this->mock(ClickLocationResolver::class, function ($mock) {
+            $mock->shouldReceive('resolve')
+                ->once()
+                ->with('8.8.8.8')
+                ->andReturn([
+                    'country' => 'United States',
+                    'country_code' => 'US',
+                    'region' => 'California',
+                    'city' => null,
+                ]);
+        });
+
+        $this
+            ->withServerVariables([
+                'REMOTE_ADDR' => '172.18.0.2',
+                'HTTP_X_FORWARDED_FOR' => '8.8.8.8, 172.18.0.1',
+                'HTTP_X_REAL_IP' => '8.8.8.8',
+                'HTTP_X_FORWARDED_PROTO' => 'https',
+                'HTTP_CF_CONNECTING_IP' => '8.8.8.8',
+            ])
+            ->get(route('referrals.show', $token->token))
+            ->assertRedirect($campaign->destination_url);
+
+        $this->assertDatabaseHas('clicks', [
+            'referral_token_id' => $token->id,
+            'ip_address' => '8.8.8.8',
+            'country' => 'United States',
+            'country_code' => 'US',
+            'region' => 'California',
+        ]);
+
+        Log::shouldHaveReceived('info')
+            ->once()
+            ->with('Referral GeoIP debug', \Mockery::on(fn (array $context) => $context['request_ip'] === '8.8.8.8'
+                && $context['client_ip'] === '8.8.8.8'
+                && $context['x_forwarded_for'] === '8.8.8.8, 172.18.0.1'
+                && $context['x_real_ip'] === '8.8.8.8'
+                && $context['cf_connecting_ip'] === '8.8.8.8'));
     }
 
     public function test_referral_click_location_unknown_for_private_ip(): void

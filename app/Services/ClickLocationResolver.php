@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ClickLocationResolver
@@ -10,12 +11,18 @@ class ClickLocationResolver
     public function resolve(?string $ipAddress): array
     {
         if (! $this->canLookup($ipAddress)) {
+            $this->debug('Referral GeoIP skipped for non-public IP', [
+                'ip_address' => $ipAddress,
+            ]);
+
             return $this->unknown();
         }
 
         $endpoint = config('services.geoip.endpoint');
 
         if (blank($endpoint)) {
+            $this->debug('Referral GeoIP endpoint is not configured');
+
             return $this->unknown();
         }
 
@@ -25,11 +32,21 @@ class ClickLocationResolver
                 ->get(str_replace('{ip}', urlencode($ipAddress), $endpoint));
 
             if (! $response->ok()) {
+                $this->debug('Referral GeoIP lookup returned a non-success response', [
+                    'ip_address' => $ipAddress,
+                    'status' => $response->status(),
+                ]);
+
                 return $this->unknown();
             }
 
             return $this->fromProviderData($response->json() ?? []);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            $this->debug('Referral GeoIP lookup failed', [
+                'ip_address' => $ipAddress,
+                'error' => $exception->getMessage(),
+            ]);
+
             return $this->unknown();
         }
     }
@@ -55,6 +72,8 @@ class ClickLocationResolver
         $city = $data['city'] ?? null;
 
         if (blank($country) && blank($countryCode) && blank($region) && blank($city)) {
+            $this->debug('Referral GeoIP provider returned no location fields');
+
             return $this->unknown();
         }
 
@@ -74,5 +93,14 @@ class ClickLocationResolver
             'region' => null,
             'city' => null,
         ];
+    }
+
+    private function debug(string $message, array $context = []): void
+    {
+        if (! config('services.geoip.debug_log')) {
+            return;
+        }
+
+        Log::warning($message, $context);
     }
 }

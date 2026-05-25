@@ -10,6 +10,7 @@ use App\Services\ClickLocationResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ReferralLinkController extends Controller
@@ -90,6 +91,7 @@ class ReferralLinkController extends Controller
         $isDuplicate = $this->isDuplicateClick($referralToken, $request);
         $source = $this->sourceFromRequest($request);
         $location = $this->locationResolver->resolve($request->ip());
+        $this->logGeoIpDebug($request, $location);
 
         DB::transaction(function () use ($referralToken, $request, $isDuplicate, $source, $location) {
             Click::create([
@@ -135,6 +137,25 @@ class ReferralLinkController extends Controller
             ->where('ip_address', $ipAddress)
             ->where('created_at', '>=', now()->subHour())
             ->exists();
+    }
+
+    private function logGeoIpDebug(Request $request, array $location): void
+    {
+        if (! config('services.geoip.debug_log')) {
+            return;
+        }
+
+        Log::info('Referral GeoIP debug', [
+            'request_ip' => $request->ip(),
+            'client_ip' => $request->getClientIp(),
+            'x_forwarded_for' => $request->headers->get('x-forwarded-for'),
+            'x_real_ip' => $request->headers->get('x-real-ip'),
+            'cf_connecting_ip' => $request->headers->get('cf-connecting-ip'),
+            'resolved_country' => $location['country'] ?? null,
+            'resolved_country_code' => $location['country_code'] ?? null,
+            'resolved_region' => $location['region'] ?? null,
+            'geoip_endpoint_configured' => filled(config('services.geoip.endpoint')),
+        ]);
     }
 
     private function makeToken(): string
