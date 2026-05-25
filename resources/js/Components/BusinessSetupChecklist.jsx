@@ -47,7 +47,7 @@ export default function BusinessSetupChecklist({ checklist, className = '' }) {
     const [hidden, setHidden] = useState(false);
     const [showWelcome, setShowWelcome] = useState(false);
 
-    const allComplete = checklist?.completedCount === checklist?.totalCount;
+    const setupComplete = checklist?.completedCount === checklist?.totalCount;
     const nextStep = useMemo(
         () => checklist?.steps?.find((step) => !step.completed) ?? checklist?.steps?.[checklist.steps.length - 1],
         [checklist],
@@ -79,22 +79,11 @@ export default function BusinessSetupChecklist({ checklist, className = '' }) {
         setHidden(true);
     };
 
-    const reopenChecklist = () => {
-        window.localStorage.removeItem(HIDDEN_KEY);
-        setHidden(false);
-    };
-
-    if (allComplete && hidden) {
-        return (
-            <div className={className}>
-                <Button type="button" variant="secondary" onClick={reopenChecklist}>
-                    Review setup steps
-                </Button>
-            </div>
-        );
+    if (setupComplete && hidden) {
+        return null;
     }
 
-    if (!checklist.shouldShow && !allComplete) {
+    if (!checklist.shouldShow && !setupComplete) {
         return null;
     }
 
@@ -107,10 +96,10 @@ export default function BusinessSetupChecklist({ checklist, className = '' }) {
                     <div>
                         <p className="text-xs font-bold uppercase text-cyan-600">Business setup</p>
                         <h2 className="mt-1 text-lg font-bold text-slate-950">
-                            {allComplete ? 'Your setup is complete' : 'Launch your first referral campaign'}
+                            {setupComplete ? 'Your setup is complete' : 'Launch your first referral campaign'}
                         </h2>
                         <p className="mt-1 text-sm text-slate-500">
-                            {allComplete
+                            {setupComplete
                                 ? 'You are ready to validate sharing, clicks, conversions, rewards, and payouts.'
                                 : 'Follow these steps to move from setup to a live campaign.'}
                         </p>
@@ -120,7 +109,7 @@ export default function BusinessSetupChecklist({ checklist, className = '' }) {
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
                             {checklist.completedCount} of {checklist.totalCount} complete
                         </span>
-                        {allComplete && (
+                        {setupComplete && (
                             <button
                                 type="button"
                                 onClick={hideChecklist}
@@ -135,7 +124,7 @@ export default function BusinessSetupChecklist({ checklist, className = '' }) {
 
                 <div className="grid gap-0 divide-y divide-slate-100">
                     {checklist.steps.map((step) => {
-                        const isNext = !allComplete && nextStep?.key === step.key;
+                        const isNext = !setupComplete && nextStep?.key === step.key;
 
                         return (
                             <Link
@@ -167,10 +156,10 @@ export default function BusinessSetupChecklist({ checklist, className = '' }) {
 
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-5 py-4">
                     <p className="text-sm text-slate-600">
-                        {allComplete ? 'Need to revisit anything?' : `Next up: ${nextStep?.label}`}
+                        {setupComplete ? 'Need to revisit anything?' : `Next up: ${nextStep?.label}`}
                     </p>
                     <Button as={Link} href={nextStep?.href ?? '/business/dashboard'}>
-                        {allComplete ? 'View setup checklist again' : `Continue: ${nextStep?.label}`}
+                        {setupComplete ? 'View setup checklist again' : `Continue: ${nextStep?.label}`}
                     </Button>
                 </div>
             </Card>
