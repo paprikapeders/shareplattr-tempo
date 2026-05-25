@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\BlockedActivity;
 use App\Models\Brand;
 use App\Models\BusinessProfile;
 use App\Models\Campaign;
@@ -10,6 +9,7 @@ use App\Models\Click;
 use App\Models\PayoutMethod;
 use App\Models\ReferralToken;
 use App\Models\User;
+use App\Services\ClickLocationResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -189,7 +189,56 @@ class ReferralTrackingTest extends TestCase
             ->assertJsonPath('stats.unique_clicks', 1)
             ->assertJsonPath('source_breakdown.6.source', 'telegram')
             ->assertJsonPath('source_breakdown.6.clicks', 1)
-            ->assertJsonPath('recentClicks.0.ip_address', '203.0.113.13');
+            ->assertJsonPath('recentClicks.0.location_label', 'Unknown')
+            ->assertJsonMissingPath('recentClicks.0.ip_address');
+    }
+
+    public function test_referral_click_location_fields_are_stored_when_available(): void
+    {
+        [$campaign, $token] = $this->createReferralToken();
+
+        $this->mock(ClickLocationResolver::class, function ($mock) {
+            $mock->shouldReceive('resolve')
+                ->once()
+                ->with('8.8.8.8')
+                ->andReturn([
+                    'country' => 'Philippines',
+                    'country_code' => 'PH',
+                    'region' => 'Metro Manila',
+                    'city' => 'Manila',
+                ]);
+        });
+
+        $this
+            ->withServerVariables(['REMOTE_ADDR' => '8.8.8.8'])
+            ->get(route('referrals.show', $token->token))
+            ->assertRedirect($campaign->destination_url);
+
+        $this->assertDatabaseHas('clicks', [
+            'referral_token_id' => $token->id,
+            'country' => 'Philippines',
+            'country_code' => 'PH',
+            'region' => 'Metro Manila',
+            'city' => 'Manila',
+        ]);
+    }
+
+    public function test_referral_click_location_unknown_for_private_ip(): void
+    {
+        [$campaign, $token] = $this->createReferralToken();
+
+        $this
+            ->withServerVariables(['REMOTE_ADDR' => '192.168.1.10'])
+            ->get(route('referrals.show', $token->token))
+            ->assertRedirect($campaign->destination_url);
+
+        $this->assertDatabaseHas('clicks', [
+            'referral_token_id' => $token->id,
+            'ip_address' => '192.168.1.10',
+            'country' => null,
+            'country_code' => null,
+            'region' => null,
+        ]);
     }
 
     public function test_business_campaign_stats_summary_is_only_available_to_campaign_owner(): void

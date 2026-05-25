@@ -46,6 +46,11 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'geoip' => [
+        'endpoint' => env('GEOIP_ENDPOINT'),
+        'timeout' => env('GEOIP_TIMEOUT', 0.5),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

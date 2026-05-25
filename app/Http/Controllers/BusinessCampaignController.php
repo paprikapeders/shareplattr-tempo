@@ -16,8 +16,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -107,6 +107,8 @@ class BusinessCampaignController extends Controller
                 ...$this->campaignPayload($campaign),
                 'stats' => $summary['stats'],
                 'source_breakdown' => $summary['source_breakdown'],
+                'location_breakdown' => $summary['location_breakdown'],
+                'participants' => $this->participantsPayload($campaign),
                 'recentClicks' => $summary['recentClicks'],
                 'recentConversions' => $summary['recentConversions'],
                 'pending_conversions' => $this->pendingConversionQueue($campaign),
@@ -229,6 +231,7 @@ class BusinessCampaignController extends Controller
                 'click_count' => (int) $campaign->fresh()->click_count,
                 'conversion_count' => (int) Conversion::query()->where('campaign_id', $campaign->id)->count(),
                 'source_breakdown' => $this->sourceBreakdown($campaign),
+                'location_breakdown' => $this->locationBreakdown($campaign),
                 'pending_conversions' => $this->pendingConversionQueue($campaign),
             ],
         ]);
@@ -511,13 +514,15 @@ class BusinessCampaignController extends Controller
                 'total_rewards_generated' => (int) Reward::query()->where('campaign_id', $campaign->id)->sum('amount'),
             ],
             'source_breakdown' => $this->sourceBreakdown($campaign),
+            'location_breakdown' => $this->locationBreakdown($campaign),
             'recentClicks' => (clone $clicks)
                 ->latest()
                 ->limit(10)
                 ->get()
                 ->map(fn (Click $click) => [
                     'id' => $click->id,
-                    'ip_address' => $click->ip_address,
+                    'location_label' => $this->locationLabel($click->country, $click->region),
+                    'source' => $click->source ?? 'direct',
                     'is_flagged' => $click->is_flagged,
                     'flag_reason' => $click->flag_reason,
                     'created_at' => $click->created_at->toDateTimeString(),
@@ -580,5 +585,87 @@ class BusinessCampaignController extends Controller
                 ];
             })
             ->all();
+    }
+
+    private function locationBreakdown(Campaign $campaign): array
+    {
+        return Click::query()
+            ->where('campaign_id', $campaign->id)
+            ->selectRaw('country, country_code, region, COUNT(*) as clicks, SUM(CASE WHEN is_flagged = 0 THEN 1 ELSE 0 END) as unique_clicks')
+            ->groupBy('country', 'country_code', 'region')
+            ->orderByDesc('clicks')
+            ->orderByRaw('country IS NULL')
+            ->orderBy('country')
+            ->orderBy('region')
+            ->get()
+            ->map(fn ($row) => [
+                'country' => $row->country,
+                'country_code' => $row->country_code,
+                'region' => $row->region,
+                'label' => $this->locationLabel($row->country, $row->region),
+                'clicks' => (int) $row->clicks,
+                'unique_clicks' => (int) $row->unique_clicks,
+            ])
+            ->all();
+    }
+
+    private function participantsPayload(Campaign $campaign): array
+    {
+        return ReferralToken::query()
+            ->where('campaign_id', $campaign->id)
+            ->with('user:id,name,email')
+            ->withCount([
+                'clicks',
+                'clicks as unique_clicks_count' => fn ($query) => $query->where('is_flagged', false),
+                'conversions',
+            ])
+            ->latest()
+            ->get()
+            ->map(function (ReferralToken $token) use ($campaign) {
+                $latestClickAt = Click::query()
+                    ->where('referral_token_id', $token->id)
+                    ->latest('created_at')
+                    ->value('created_at');
+                $latestConversionAt = Conversion::query()
+                    ->where('referral_token_id', $token->id)
+                    ->latest('created_at')
+                    ->value('created_at');
+                $latestActivityAt = collect([$token->created_at, $latestClickAt, $latestConversionAt])
+                    ->filter()
+                    ->max();
+
+                return [
+                    'id' => $token->id,
+                    'participant_name' => $token->user?->name ?? 'Participant',
+                    'participant_email' => $token->user?->email,
+                    'joined_at' => $token->created_at?->toDateTimeString(),
+                    'total_clicks' => (int) $token->clicks_count,
+                    'unique_clicks' => (int) $token->unique_clicks_count,
+                    'conversions' => (int) $token->conversions_count,
+                    'rewards_generated' => (int) Reward::query()
+                        ->where('campaign_id', $campaign->id)
+                        ->where('user_id', $token->user_id)
+                        ->sum('amount'),
+                    'latest_activity_at' => $latestActivityAt ? Carbon::parse($latestActivityAt)->toDateTimeString() : null,
+                ];
+            })
+            ->all();
+    }
+
+    private function locationLabel(?string $country, ?string $region): string
+    {
+        if (blank($country) && blank($region)) {
+            return 'Unknown';
+        }
+
+        if (blank($region)) {
+            return $country;
+        }
+
+        if (blank($country)) {
+            return $region;
+        }
+
+        return $country.' - '.$region;
     }
 }

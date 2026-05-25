@@ -1,4 +1,5 @@
 import { Link, router, useForm } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import BusinessLayout from '../../../Layouts/BusinessLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
@@ -121,6 +122,130 @@ function ChannelStats({ sources = [] }) {
     );
 }
 
+function LocationStats({ locations = [] }) {
+    const rows = locations.length > 0
+        ? locations
+        : [{ label: 'Unknown', clicks: 0, unique_clicks: 0 }];
+    const maxClicks = Math.max(0, ...rows.map((location) => Number(location.clicks) || 0));
+
+    return (
+        <Card className="p-0">
+            <div className="border-b border-slate-100 px-5 py-4">
+                <h2 className="text-sm font-bold text-slate-950">Clicks by Location</h2>
+            </div>
+
+            <div className="space-y-4 px-5 py-5">
+                {rows.map((location) => (
+                    <div key={`${location.label}-${location.country_code ?? 'unknown'}`} className="grid gap-2 text-sm sm:grid-cols-[180px_minmax(0,1fr)_96px] sm:items-center">
+                        <span className="font-medium text-slate-700">{location.label}</span>
+                        <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                            <div
+                                className="h-full rounded-full bg-[#08c4c4] transition-[width] duration-300"
+                                style={{ width: maxClicks > 0 ? `${Math.round(((Number(location.clicks) || 0) / maxClicks) * 100)}%` : '0%' }}
+                            />
+                        </div>
+                        <span className="text-right font-bold text-slate-950">
+                            {location.clicks}
+                            <span className="ml-1 font-medium text-slate-400">/ {location.unique_clicks} unique</span>
+                        </span>
+                    </div>
+                ))}
+
+                <p className="border-t border-slate-100 pt-4 text-xs font-medium text-slate-400">
+                    Location is estimated from referral click IPs and grouped by country/state.
+                </p>
+            </div>
+        </Card>
+    );
+}
+
+function ParticipantsModal({ open, participants = [], onClose }) {
+    const [query, setQuery] = useState('');
+    const filteredParticipants = useMemo(() => {
+        const normalizedQuery = query.trim().toLowerCase();
+
+        if (!normalizedQuery) {
+            return participants;
+        }
+
+        return participants.filter((participant) => [
+            participant.participant_name,
+            participant.participant_email,
+        ].some((value) => String(value ?? '').toLowerCase().includes(normalizedQuery)));
+    }, [participants, query]);
+
+    if (!open) {
+        return null;
+    }
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 py-6">
+            <div className="flex max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-950">Joined Users</h2>
+                        <p className="mt-1 text-sm text-slate-500">Participants who generated a referral link for this campaign.</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                    >
+                        Close
+                    </button>
+                </div>
+
+                <div className="border-b border-slate-100 px-5 py-4">
+                    <input
+                        type="search"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder="Search name or email"
+                        className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 sm:max-w-sm"
+                    />
+                </div>
+
+                <div className="overflow-auto">
+                    <table className="w-full min-w-[920px] divide-y divide-slate-100 text-sm">
+                        <thead className="bg-slate-50 text-left text-xs font-bold uppercase text-slate-500">
+                            <tr>
+                                <th className="px-5 py-3">Participant</th>
+                                <th className="px-5 py-3">Joined</th>
+                                <th className="px-5 py-3 text-right">Clicks</th>
+                                <th className="px-5 py-3 text-right">Unique</th>
+                                <th className="px-5 py-3 text-right">Conversions</th>
+                                <th className="px-5 py-3 text-right">Rewards</th>
+                                <th className="px-5 py-3 text-right">Latest Activity</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {filteredParticipants.map((participant) => (
+                                <tr key={participant.id}>
+                                    <td className="px-5 py-4">
+                                        <div className="font-semibold text-slate-950">{participant.participant_name}</div>
+                                        <div className="mt-0.5 text-xs text-slate-500">{participant.participant_email}</div>
+                                    </td>
+                                    <td className="px-5 py-4 text-slate-600">{formatDisplayDate(participant.joined_at, 'Unknown')}</td>
+                                    <td className="px-5 py-4 text-right font-semibold text-slate-950">{participant.total_clicks}</td>
+                                    <td className="px-5 py-4 text-right text-slate-700">{participant.unique_clicks}</td>
+                                    <td className="px-5 py-4 text-right text-slate-700">{participant.conversions}</td>
+                                    <td className="px-5 py-4 text-right text-slate-700">{dollars(participant.rewards_generated)}</td>
+                                    <td className="px-5 py-4 text-right text-slate-500">{formatDisplayDate(participant.latest_activity_at, 'None')}</td>
+                                </tr>
+                            ))}
+                            {filteredParticipants.length === 0 && (
+                                <tr>
+                                    <td className="px-5 py-8 text-sm text-slate-500" colSpan="7">No participants match your search.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function ConversionApprovalQueue({ conversions = [] }) {
     return (
         <Card className="p-0">
@@ -191,6 +316,7 @@ function ConversionApprovalQueue({ conversions = [] }) {
 }
 
 export default function Show({ campaign }) {
+    const [participantsOpen, setParticipantsOpen] = useState(false);
     const { stats: liveSummary, lastUpdatedAt } = usePollingStats(`/business/campaigns/${campaign.id}/stats-summary`, {
         stats: campaign.stats,
         recentClicks: campaign.recentClicks,
@@ -199,6 +325,7 @@ export default function Show({ campaign }) {
             click_count: campaign.click_count,
             conversion_count: campaign.conversion_count,
             source_breakdown: campaign.source_breakdown,
+            location_breakdown: campaign.location_breakdown,
         },
     });
     const canToggleStatus = ['active', 'paused'].includes(campaign.status);
@@ -228,7 +355,9 @@ export default function Show({ campaign }) {
     const recentClicks = liveSummary?.recentClicks ?? campaign.recentClicks ?? [];
     const recentConversions = liveSummary?.recentConversions ?? campaign.recentConversions ?? [];
     const sourceBreakdown = liveSummary?.source_breakdown ?? liveCampaign.source_breakdown ?? campaign.source_breakdown;
+    const locationBreakdown = liveSummary?.location_breakdown ?? liveCampaign.location_breakdown ?? campaign.location_breakdown ?? [];
     const pendingConversions = liveCampaign.pending_conversions ?? campaign.pending_conversions ?? [];
+    const participants = campaign.participants ?? [];
 
     return (
         <BusinessLayout>
@@ -248,6 +377,7 @@ export default function Show({ campaign }) {
                     <div className="flex flex-wrap items-center gap-2">
                         <Button as={Link} href={`/business/campaigns/${campaign.id}/edit`} variant="secondary">Edit</Button>
                         <Button as={Link} href={campaign.business_preview_url ?? `/business/campaigns/${campaign.id}/preview`} variant="secondary">View Campaign</Button>
+                        <Button type="button" onClick={() => setParticipantsOpen(true)} variant="secondary">View Participants</Button>
                         {canToggleStatus && (
                             <Button type="button" onClick={updateStatus} variant="secondary">
                                 {campaign.status === 'active' ? 'Pause' : 'Resume'}
@@ -272,7 +402,10 @@ export default function Show({ campaign }) {
                     </p>
                 )}
 
-                <ChannelStats sources={sourceBreakdown} />
+                <div className="grid gap-5 lg:grid-cols-2">
+                    <ChannelStats sources={sourceBreakdown} />
+                    <LocationStats locations={locationBreakdown} />
+                </div>
 
                 <div className="grid gap-5 lg:grid-cols-2">
                     <RecentCard title="Recent Clicks" empty={recentClicks.length === 0 ? 'No clicks yet.' : null}>
@@ -280,7 +413,8 @@ export default function Show({ campaign }) {
                             <tbody className="divide-y divide-slate-100">
                                 {recentClicks.map((click) => (
                                     <tr key={click.id}>
-                                        <td className="py-4 pr-3 text-sm text-slate-600">{click.ip_address}</td>
+                                        <td className="py-4 pr-3 text-sm text-slate-600">{click.location_label ?? 'Unknown'}</td>
+                                        <td className="px-3 py-4 text-sm text-slate-600">{click.source === 'direct' ? 'Direct / Unknown' : click.source}</td>
                                         <td className="px-3 py-4 text-sm text-slate-600">{click.is_flagged ? click.flag_reason || 'flagged' : 'unique'}</td>
                                         <td className="py-4 pl-3 text-right text-sm text-slate-500">{click.created_at}</td>
                                     </tr>
@@ -373,6 +507,12 @@ export default function Show({ campaign }) {
                         )}
                     </dl>
                 </Card>
+
+                <ParticipantsModal
+                    open={participantsOpen}
+                    participants={participants}
+                    onClose={() => setParticipantsOpen(false)}
+                />
             </div>
         </BusinessLayout>
     );

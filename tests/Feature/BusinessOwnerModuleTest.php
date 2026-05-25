@@ -112,8 +112,8 @@ class BusinessOwnerModuleTest extends TestCase
             $this
                 ->actingAs($owner)
                 ->post(route('business.campaigns.store'), [
-                'title' => 'Same Day Expiry Campaign',
-                'description' => 'This campaign should stay available until the selected day ends.',
+                    'title' => 'Same Day Expiry Campaign',
+                    'description' => 'This campaign should stay available until the selected day ends.',
                     'category_key' => 'limited_offer',
                     'reward_amount' => '15.50',
                     'destination_url' => 'https://example.com/same-day-expiry',
@@ -301,6 +301,124 @@ class BusinessOwnerModuleTest extends TestCase
                 ->where('campaign.source_breakdown.9.label', 'Direct / Unknown')
                 ->where('campaign.source_breakdown.9.clicks', 1)
             );
+    }
+
+    public function test_business_campaign_detail_receives_location_click_stats_without_raw_ips(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        $participant = User::factory()->create();
+        $campaign = $this->campaignForOwner($owner, $profile);
+        $token = ReferralToken::create([
+            'user_id' => $participant->id,
+            'campaign_id' => $campaign->id,
+            'token' => 'location-token',
+        ]);
+
+        Click::create([
+            'referral_token_id' => $token->id,
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'ip_address' => '8.8.8.8',
+            'country' => 'Philippines',
+            'country_code' => 'PH',
+            'region' => 'Metro Manila',
+            'source' => 'direct',
+            'is_flagged' => false,
+        ]);
+
+        Click::create([
+            'referral_token_id' => $token->id,
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'ip_address' => '8.8.4.4',
+            'source' => 'direct',
+            'is_flagged' => false,
+        ]);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.campaigns.show', $campaign))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Campaigns/Show')
+                ->where('campaign.location_breakdown.0.label', 'Philippines - Metro Manila')
+                ->where('campaign.location_breakdown.0.clicks', 1)
+                ->where('campaign.location_breakdown.0.unique_clicks', 1)
+                ->where('campaign.location_breakdown.1.label', 'Unknown')
+                ->missing('campaign.recentClicks.0.ip_address')
+            );
+    }
+
+    public function test_business_campaign_participants_include_users_who_generated_referral_links(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        $participant = User::factory()->create([
+            'name' => 'Participant One',
+            'email' => 'participant-one@example.com',
+        ]);
+        $campaign = $this->campaignForOwner($owner, $profile);
+        $token = ReferralToken::create([
+            'user_id' => $participant->id,
+            'campaign_id' => $campaign->id,
+            'token' => 'participant-token',
+        ]);
+        $conversion = Conversion::create([
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'referral_token_id' => $token->id,
+            'amount' => 5000,
+            'status' => 'verified',
+            'verified_at' => now(),
+        ]);
+
+        Click::create([
+            'referral_token_id' => $token->id,
+            'campaign_id' => $campaign->id,
+            'user_id' => $participant->id,
+            'ip_address' => '8.8.8.8',
+            'is_flagged' => false,
+        ]);
+
+        Reward::create([
+            'conversion_id' => $conversion->id,
+            'user_id' => $participant->id,
+            'campaign_id' => $campaign->id,
+            'amount' => 1200,
+            'status' => 'pending',
+        ]);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.campaigns.show', $campaign))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Campaigns/Show')
+                ->where('campaign.participants.0.participant_name', 'Participant One')
+                ->where('campaign.participants.0.participant_email', 'participant-one@example.com')
+                ->where('campaign.participants.0.total_clicks', 1)
+                ->where('campaign.participants.0.unique_clicks', 1)
+                ->where('campaign.participants.0.conversions', 1)
+                ->where('campaign.participants.0.rewards_generated', 1200)
+            );
+    }
+
+    public function test_business_cannot_view_another_business_campaign_participants(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile();
+        [$otherOwner] = $this->businessOwnerWithProfile('Other Owner', 'Other Co');
+        $participant = User::factory()->create();
+        $campaign = $this->campaignForOwner($owner, $profile);
+
+        ReferralToken::create([
+            'user_id' => $participant->id,
+            'campaign_id' => $campaign->id,
+            'token' => 'private-participants',
+        ]);
+
+        $this
+            ->actingAs($otherOwner)
+            ->get(route('business.campaigns.show', $campaign))
+            ->assertForbidden();
     }
 
     public function test_business_campaign_detail_only_returns_pending_conversions_for_current_campaign(): void

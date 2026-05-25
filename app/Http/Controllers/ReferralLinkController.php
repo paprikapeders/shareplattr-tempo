@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Campaign;
 use App\Models\BlockedActivity;
+use App\Models\Campaign;
 use App\Models\Click;
 use App\Models\ReferralToken;
+use App\Services\ClickLocationResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,8 @@ class ReferralLinkController extends Controller
         'copy',
         'direct',
     ];
+
+    public function __construct(private ClickLocationResolver $locationResolver) {}
 
     /**
      * Generate or return the current user's referral link for a campaign.
@@ -86,8 +89,9 @@ class ReferralLinkController extends Controller
 
         $isDuplicate = $this->isDuplicateClick($referralToken, $request);
         $source = $this->sourceFromRequest($request);
+        $location = $this->locationResolver->resolve($request->ip());
 
-        DB::transaction(function () use ($referralToken, $request, $isDuplicate, $source) {
+        DB::transaction(function () use ($referralToken, $request, $isDuplicate, $source, $location) {
             Click::create([
                 'referral_token_id' => $referralToken->id,
                 'campaign_id' => $referralToken->campaign_id,
@@ -95,6 +99,10 @@ class ReferralLinkController extends Controller
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'source' => $source,
+                'country' => $location['country'],
+                'country_code' => $location['country_code'],
+                'region' => $location['region'],
+                'city' => $location['city'],
                 'is_flagged' => $isDuplicate,
                 'flag_reason' => $isDuplicate ? 'duplicate' : null,
             ]);
