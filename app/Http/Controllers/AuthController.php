@@ -11,9 +11,9 @@ use Inertia\Response;
 
 class AuthController extends Controller
 {
-    public function __construct(private EmailVerificationService $emailVerificationService)
-    {
-    }
+    private const PARTICIPANT_HOME = '/campaigns';
+
+    public function __construct(private EmailVerificationService $emailVerificationService) {}
 
     public function create(): Response
     {
@@ -58,6 +58,12 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
+        if ($request->user()->isParticipant()) {
+            $this->normalizeParticipantIntendedUrl($request);
+
+            return redirect()->intended(self::PARTICIPANT_HOME);
+        }
+
         $request->session()->forget('url.intended');
 
         return redirect()->to($this->redirectRouteFor($request->user()));
@@ -85,7 +91,26 @@ class AuthController extends Controller
                 : route('business.profile.edit');
         }
 
-        return route('dashboard');
+        return self::PARTICIPANT_HOME;
     }
 
+    private function normalizeParticipantIntendedUrl(Request $request): void
+    {
+        $intended = $request->session()->get('url.intended');
+
+        if (! is_string($intended) || $intended === '') {
+            return;
+        }
+
+        $path = parse_url($intended, PHP_URL_PATH) ?: '';
+        $query = parse_url($intended, PHP_URL_QUERY);
+
+        if (in_array($path, ['/campaigns', '/profile', '/payouts'], true) || str_starts_with($path, '/campaigns/')) {
+            $request->session()->put('url.intended', $path.($query ? '?'.$query : ''));
+
+            return;
+        }
+
+        $request->session()->forget('url.intended');
+    }
 }

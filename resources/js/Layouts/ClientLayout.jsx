@@ -81,7 +81,7 @@ function MenuIcon() {
 
 function getClientPageTitle(url) {
     if (url?.startsWith('/campaigns')) {
-        return 'Campaigns';
+        return 'Campaign Marketplace';
     }
 
     if (url?.startsWith('/payouts')) {
@@ -120,8 +120,8 @@ function getInitials(name = '') {
 
 function SidebarContent({ url, collapsed, onToggle, onNavigate = () => {}, showBrand = true }) {
     const items = [
+        { href: '/campaigns', label: 'Campaign Marketplace', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
         { href: '/dashboard', label: 'Dashboard', active: url?.startsWith('/dashboard'), icon: DashboardIconGrid },
-        { href: '/campaigns', label: 'Campaigns', active: url?.startsWith('/campaigns'), icon: DashboardIconCampaigns },
         { href: '/payouts', label: 'Payouts', active: url?.startsWith('/payouts'), icon: DashboardIconWallet },
     ];
 

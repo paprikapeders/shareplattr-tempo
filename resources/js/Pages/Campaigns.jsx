@@ -170,7 +170,7 @@ export default function Campaigns({ campaigns, searchResults = [], categories, f
             <div className="pb-8">
                 <section className="mx-auto max-w-5xl px-2 pt-8 text-center sm:pt-10">
                     <h1 className="text-4xl font-extrabold tracking-normal text-slate-950 sm:text-5xl">
-                        Browse Campaigns
+                        Explore Campaign Marketplace
                     </h1>
                     <p className="mx-auto mt-3 max-w-3xl text-sm leading-6 text-slate-600">
                         Find and share top campaigns across events, fintech, ecommerce, and more &mdash; earn for every conversion.
@@ -191,7 +191,7 @@ export default function Campaigns({ campaigns, searchResults = [], categories, f
                 <section className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <h2 className="text-xl font-bold leading-none text-slate-950">
-                            {hasActiveSearch ? `Search results for: ${activeSearch}` : 'Campaigns'}
+                            {hasActiveSearch ? `Search results for: ${activeSearch}` : 'Campaign Marketplace'}
                         </h2>
                         <p className="mt-2 text-sm text-slate-400">
                             {hasActiveFilters ? 'Matching available campaigns' : 'Sorted to help you find strong earning opportunities first'}

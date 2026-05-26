@@ -30,7 +30,7 @@ class SeededAuthTest extends TestCase
         $this->post(route('login'), [
             'email' => 'user@shareplattr.test',
             'password' => 'user12345',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect('/campaigns');
 
         $this->assertAuthenticated();
     }

@@ -829,7 +829,7 @@ class BusinessOwnerModuleTest extends TestCase
         $this->post(route('login'), [
             'email' => $participant->email,
             'password' => 'password123',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect('/campaigns');
     }
 
     public function test_admin_login_ignores_stale_client_intended_url(): void

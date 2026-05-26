@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Campaign;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery;
-use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class GoogleAuthTest extends TestCase
@@ -36,7 +36,7 @@ class GoogleAuthTest extends TestCase
         $this->mockGoogleUser('google-123', 'Taylor Smith', 'taylor-google@example.com');
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect('/campaigns');
 
         $user = User::where('email', 'taylor-google@example.com')->firstOrFail();
 
@@ -60,7 +60,7 @@ class GoogleAuthTest extends TestCase
         $this->mockGoogleUser('google-existing', 'Existing User', 'existing@example.com');
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect('/campaigns');
 
         $user->refresh();
 
@@ -114,7 +114,7 @@ class GoogleAuthTest extends TestCase
         $this->mockGoogleUser('google-visible', 'Visible Participant', 'visible-google@example.com');
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect('/campaigns');
 
         $user = User::where('email', 'visible-google@example.com')->firstOrFail();
 
@@ -133,7 +133,7 @@ class GoogleAuthTest extends TestCase
 
     private function mockGoogleUser(string $id, ?string $name, ?string $email): void
     {
-        $googleUser = (new SocialiteUser())->map([
+        $googleUser = (new SocialiteUser)->map([
             'id' => $id,
             'name' => $name,
             'email' => $email,
