@@ -19,6 +19,16 @@
     <link rel="preload" as="image" href="/images/people.png" fetchpriority="high" />
     <link rel="preload" as="image" href="/images/logos/full_logo_trans.png?v=20260522" fetchpriority="high" />
 
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JZDZKRT95V"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-JZDZKRT95V');
+    </script>
+
     <!-- Scripts -->
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
