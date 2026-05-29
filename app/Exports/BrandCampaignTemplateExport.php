@@ -27,6 +27,7 @@ class BrandCampaignTemplateExport implements WithMultipleSheets
                     'Direct / Impact',
                     'affiliates@example.com',
                     'Add approval notes, payout details, requirements, or participant instructions here.',
+                    'images/sample-campaign-banner.jpg',
                 ],
             ]),
             new ArraySheet('Validation Notes', [
@@ -35,6 +36,7 @@ class BrandCampaignTemplateExport implements WithMultipleSheets
                 ['Affiliate / Promo Page URL', 'Required URL. Used as the campaign destination URL.'],
                 ['Domain', 'Optional brand domain.'],
                 ['Logo / Favicon URL', 'Optional external logo URL. Stored safely as a URL.'],
+                ['campaign_banner_filename', 'Optional ZIP-only path to a campaign banner image, for example images/sample-campaign-banner.jpg.'],
                 ['Commission', 'Optional text. First currency amount is used as MVP reward amount when available; otherwise $1.00 is used.'],
                 ['Duplicate handling', 'Brand name updates a brand. Campaign title plus brand updates a campaign.'],
             ]),

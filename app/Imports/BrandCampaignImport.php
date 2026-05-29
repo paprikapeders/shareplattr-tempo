@@ -9,6 +9,7 @@ use App\Models\ImportBatchRow;
 use App\Support\ImportKey;
 use App\Support\Taxonomy;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -30,6 +31,7 @@ class BrandCampaignImport implements ToCollection
         'Network / Platform',
         'Contact Email / Phone',
         'Notes',
+        'campaign_banner_filename',
     ];
 
     public array $summary = [
@@ -42,11 +44,18 @@ class BrandCampaignImport implements ToCollection
         'skipped' => 0,
         'failed' => 0,
         'failed_rows' => [],
+        'banners_matched' => 0,
+        'banners_stored' => 0,
+        'missing_banner_images' => 0,
+        'invalid_banner_images' => 0,
+        'skipped_banner_replacements' => 0,
+        'banner_warnings' => [],
     ];
 
     public function __construct(
         private readonly ImportBatch $batch,
         private readonly ?int $adminId = null,
+        private readonly mixed $bannerResolver = null,
     ) {
     }
 
@@ -91,6 +100,7 @@ class BrandCampaignImport implements ToCollection
                 'Network / Platform' => ['nullable', 'string', 'max:255'],
                 'Contact Email / Phone' => ['nullable', 'string', 'max:255'],
                 'Notes' => ['nullable', 'string', 'max:4000'],
+                'campaign_banner_filename' => ['nullable', 'string', 'max:255'],
             ]);
 
             if ($validator->fails()) {
@@ -110,9 +120,10 @@ class BrandCampaignImport implements ToCollection
         $normalizedTitle = ImportKey::normalize($title);
         $rewardAmount = $this->rewardAmount($data['Commission'] ?? null);
         $rowHash = $this->rowHash($normalizedBrandName, $normalizedTitle, $data['Affiliate / Promo Page URL'], $rewardAmount);
+        $storedBannerPath = null;
 
         try {
-            DB::transaction(function () use ($rowNumber, $data, $brandName, $normalizedBrandName, $title, $normalizedTitle, $rewardAmount, $rowHash) {
+            DB::transaction(function () use ($rowNumber, $data, $brandName, $normalizedBrandName, $title, $normalizedTitle, $rewardAmount, $rowHash, &$storedBannerPath) {
                 $brand = Brand::query()->where('normalized_name', $normalizedBrandName)->first();
                 $campaign = $brand
                     ? Campaign::query()
@@ -141,6 +152,13 @@ class BrandCampaignImport implements ToCollection
                     'normalized_title' => $normalizedTitle,
                 ]);
                 $campaign->fill($campaignPayload);
+                $bannerResult = $this->resolveBanner($rowNumber, $data, $campaign);
+
+                if ($bannerResult['path']) {
+                    $storedBannerPath = $bannerResult['path'];
+                    $campaign->campaign_banner = $bannerResult['path'];
+                }
+
                 $campaign = $this->saveWithUniqueRetry(
                     $campaign,
                     fn () => Campaign::query()
@@ -148,6 +166,14 @@ class BrandCampaignImport implements ToCollection
                         ->where('normalized_title', $normalizedTitle)
                         ->first(),
                 );
+
+                if ($bannerResult['path']) {
+                    $this->summary['banners_stored']++;
+
+                    if ($bannerResult['old_path'] && $bannerResult['old_path'] !== $bannerResult['path']) {
+                        Storage::disk('public')->delete($bannerResult['old_path']);
+                    }
+                }
 
                 if ($brandWasExisting) {
                     $this->summary['brands_updated']++;
@@ -166,6 +192,10 @@ class BrandCampaignImport implements ToCollection
                 $this->logRow($rowNumber, $rowHash, $status, ucfirst($status).' brand and campaign records.');
             });
         } catch (\Throwable $exception) {
+            if ($storedBannerPath) {
+                Storage::disk('public')->delete($storedBannerPath);
+            }
+
             $this->failRow($rowNumber, $rowHash, [$exception->getMessage()]);
         }
     }
@@ -220,6 +250,54 @@ class BrandCampaignImport implements ToCollection
             'notes' => $data['Notes'] ?? null,
             'status' => 'active',
             'import_metadata' => $data,
+        ];
+    }
+
+    private function resolveBanner(int $rowNumber, array $data, Campaign $campaign): array
+    {
+        $filename = $data['campaign_banner_filename'] ?? null;
+
+        if (blank($filename)) {
+            return ['path' => null, 'old_path' => null];
+        }
+
+        if (! is_callable($this->bannerResolver)) {
+            $this->summary['skipped_banner_replacements']++;
+            $this->warnBanner($rowNumber, $filename, 'Banner filename provided without a ZIP image source.');
+
+            return ['path' => null, 'old_path' => null];
+        }
+
+        $result = ($this->bannerResolver)($filename);
+
+        if (($result['status'] ?? null) === 'stored') {
+            $this->summary['banners_matched']++;
+
+            return [
+                'path' => $result['path'],
+                'old_path' => $campaign->campaign_banner,
+            ];
+        }
+
+        if (($result['status'] ?? null) === 'missing') {
+            $this->summary['missing_banner_images']++;
+        } elseif (($result['status'] ?? null) === 'invalid') {
+            $this->summary['invalid_banner_images']++;
+        } else {
+            $this->summary['skipped_banner_replacements']++;
+        }
+
+        $this->warnBanner($rowNumber, $filename, $result['message'] ?? 'Banner image was skipped.');
+
+        return ['path' => null, 'old_path' => null];
+    }
+
+    private function warnBanner(int $rowNumber, string $filename, string $message): void
+    {
+        $this->summary['banner_warnings'][] = [
+            'row' => $rowNumber,
+            'filename' => $filename,
+            'message' => $message,
         ];
     }
 

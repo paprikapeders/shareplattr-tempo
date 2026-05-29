@@ -41,10 +41,10 @@ export default function Index({ summary, duplicateImport }) {
                 <Card className="p-6">
                     <form onSubmit={submit} className="space-y-5">
                         <div>
-                            <label className="block text-sm font-semibold text-slate-800">Excel or CSV file</label>
+                            <label className="block text-sm font-semibold text-slate-800">Excel, CSV, or ZIP file</label>
                             <input
                                 type="file"
-                                accept=".xlsx,.csv"
+                                accept=".xlsx,.xls,.csv,.zip"
                                 onChange={(event) => setData('file', event.target.files?.[0] ?? null)}
                                 className="mt-2 block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 shadow-sm shadow-slate-950/5 file:mr-4 file:rounded-md file:border-0 file:bg-slate-950 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
                             />
@@ -53,7 +53,8 @@ export default function Index({ summary, duplicateImport }) {
 
                         <div className="rounded-lg bg-slate-50 p-4 text-sm leading-6 text-slate-600">
                             <p className="font-semibold text-slate-900">Import instructions</p>
-                            <p className="mt-2">Use the exact template columns from the source spreadsheet. Brand name and affiliate URL are required. Brands and campaigns are matched by normalized names, so rerunning the same file updates or skips rows instead of creating duplicates.</p>
+                            <p className="mt-2">Upload a .xlsx, .xls, or .csv spreadsheet using the template columns. Brand name and affiliate URL are required. Brands and campaigns are matched by normalized names, so rerunning the same file updates or skips rows instead of creating duplicates.</p>
+                            <p className="mt-2">To import campaign banners, upload a .zip file with the spreadsheet in the ZIP root and images inside /images. Use the campaign_banner_filename column with values like images/nike-summer.jpg. Empty banner filenames import without changing the campaign banner.</p>
                         </div>
 
                         {duplicateImport && (
@@ -104,6 +105,36 @@ export default function Index({ summary, duplicateImport }) {
                         <SummaryItem label="Campaigns created" value={summary.campaigns_created} />
                         <SummaryItem label="Campaigns updated" value={summary.campaigns_updated} />
                     </div>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                        <SummaryItem label="Banners matched" value={summary.banners_matched} />
+                        <SummaryItem label="Banners stored" value={summary.banners_stored} />
+                        <SummaryItem label="Missing banners" value={summary.missing_banner_images} />
+                        <SummaryItem label="Invalid banners" value={summary.invalid_banner_images} />
+                        <SummaryItem label="Skipped banners" value={summary.skipped_banner_replacements} />
+                    </div>
+
+                    {summary.banner_warnings?.length > 0 && (
+                        <div className="mt-5 overflow-x-auto rounded-lg border border-amber-100">
+                            <table className="min-w-full divide-y divide-amber-100">
+                                <thead className="bg-amber-50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-amber-700">Row</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-amber-700">Banner</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-amber-700">Warning</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-amber-100 bg-white">
+                                    {summary.banner_warnings.map((warning) => (
+                                        <tr key={`${warning.row}-${warning.filename}`}>
+                                            <td className="px-4 py-3 text-sm font-semibold text-slate-900">{warning.row}</td>
+                                            <td className="px-4 py-3 text-sm text-slate-700">{warning.filename}</td>
+                                            <td className="px-4 py-3 text-sm text-amber-700">{warning.message}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
 
                     {summary.failed_rows?.length > 0 && (
                         <div className="mt-5 overflow-x-auto rounded-lg border border-rose-100">

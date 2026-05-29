@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AuthLayout from '../../Layouts/AuthLayout';
 import RegistrationStepIndicator from '../../Components/Auth/RegistrationStepIndicator';
@@ -90,6 +90,7 @@ function PasswordStrengthFeedback({ password }) {
 }
 
 export default function Register({ prefill = {} }) {
+    const { flash = {} } = usePage().props;
     const { data, setData, post, processing, errors: serverErrors, clearErrors } = useForm({
         first_name: prefill.first_name ?? '',
         last_name: prefill.last_name ?? '',
@@ -99,6 +100,7 @@ export default function Register({ prefill = {} }) {
     });
     const [currentStep, setCurrentStep] = useState(1);
     const [clientErrors, setClientErrors] = useState({});
+    const [googleError, setGoogleError] = useState('');
     const errors = { ...serverErrors, ...clientErrors };
 
     useEffect(() => {
@@ -158,6 +160,9 @@ export default function Register({ prefill = {} }) {
 
         setData(field, value);
         clearErrors(field);
+        if (field === 'account_type') {
+            setGoogleError('');
+        }
         setClientErrors((current) => {
             if (!current[field]) {
                 return current;
@@ -240,19 +245,41 @@ export default function Register({ prefill = {} }) {
         post('/register');
     };
 
+    const continueWithGoogle = () => {
+        if (!['participant', 'business'].includes(data.account_type)) {
+            setGoogleError('Please choose Participant or Business before continuing with Google.');
+            setCurrentStep(1);
+            return;
+        }
+
+        window.location.href = `/auth/google/redirect?user_type=${encodeURIComponent(data.account_type)}`;
+    };
+
     return (
         <AuthLayout title="Shareplattr" backHref="/login" showMobileHero={false} contentClassName="pt-24 lg:py-10">
             <RegistrationStepIndicator currentStep={currentStep} steps={registrationSteps} />
 
             <form onSubmit={submit} className="mx-auto mt-7 flex w-full max-w-[320px] flex-col gap-3.5 lg:mt-9">
+                {flash.error && (
+                    <p className="text-center text-sm text-red-600">
+                        {flash.error}
+                    </p>
+                )}
+
                 <div className="grid gap-2">
-                    <a
-                        href="/auth/google/redirect"
-                        className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-5 text-[15px] font-semibold text-[#101010] shadow-sm transition hover:scale-[1.01] hover:opacity-95"
+                    <button
+                        type="button"
+                        onClick={continueWithGoogle}
+                        aria-disabled={!data.account_type}
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-5 text-[15px] font-semibold text-[#101010] shadow-sm transition hover:scale-[1.01] hover:opacity-95 aria-disabled:opacity-60"
                     >
                         <span className="text-base font-black text-[#4285F4]">G</span>
                         <span>Continue with Google</span>
-                    </a>
+                    </button>
+                    <p className="px-1 text-center text-xs leading-5 text-slate-700">
+                        Choose Participant or Business first to continue with Google.
+                    </p>
+                    {googleError && <p className="px-1 text-center text-sm text-red-600">{googleError}</p>}
                 </div>
 
                 <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-[#101010]/55">

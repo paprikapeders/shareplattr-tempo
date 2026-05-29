@@ -31,11 +31,40 @@ class GoogleAuthTest extends TestCase
             ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
     }
 
-    public function test_google_callback_creates_new_user(): void
+    public function test_google_redirect_stores_valid_signup_user_type(): void
+    {
+        $provider = Mockery::mock();
+        $provider->shouldReceive('redirect')
+            ->once()
+            ->andReturn(redirect('https://accounts.google.com/o/oauth2/auth'));
+
+        Socialite::shouldReceive('driver')
+            ->once()
+            ->with('google')
+            ->andReturn($provider);
+
+        $this->get(route('auth.google.redirect', ['user_type' => 'business']))
+            ->assertRedirect('https://accounts.google.com/o/oauth2/auth')
+            ->assertSessionHas('google_signup_user_type', 'business_owner');
+    }
+
+    public function test_google_redirect_rejects_invalid_user_type(): void
+    {
+        Socialite::shouldReceive('driver')->never();
+
+        $this->from(route('register'))
+            ->get(route('auth.google.redirect', ['user_type' => 'admin']))
+            ->assertRedirect(route('register'))
+            ->assertSessionHasErrors('user_type');
+    }
+
+    public function test_google_signup_creates_participant_from_selected_user_type(): void
     {
         $this->mockGoogleUser('google-123', 'Taylor Smith', 'taylor-google@example.com');
 
-        $this->get(route('auth.google.callback'))
+        $this
+            ->withSession(['google_signup_user_type' => 'participant'])
+            ->get(route('auth.google.callback'))
             ->assertRedirect('/campaigns');
 
         $user = User::where('email', 'taylor-google@example.com')->firstOrFail();
@@ -46,26 +75,50 @@ class GoogleAuthTest extends TestCase
         $this->assertSame('participant', $user->user_type);
         $this->assertNotNull($user->email_verified_at);
         $this->assertNotNull($user->password);
+        $this->assertFalse(session()->has('pending_verification_user_id'));
+        $this->assertFalse(session()->has('pending_verification_email'));
     }
 
-    public function test_google_callback_logs_in_existing_user_with_matching_email(): void
+    public function test_google_signup_creates_business_from_selected_user_type(): void
+    {
+        $this->mockGoogleUser('google-business', 'Business User', 'business-google@example.com');
+
+        $this
+            ->withSession(['google_signup_user_type' => 'business_owner'])
+            ->get(route('auth.google.callback'))
+            ->assertRedirect(route('business.profile.edit'));
+
+        $user = User::where('email', 'business-google@example.com')->firstOrFail();
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertSame('business_owner', $user->user_type);
+        $this->assertSame('google-business', $user->google_id);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertNotNull($user->password);
+        $this->assertFalse(session()->has('pending_verification_user_id'));
+        $this->assertFalse(session()->has('pending_verification_email'));
+    }
+
+    public function test_google_callback_logs_in_existing_user_with_matching_email_without_changing_user_type(): void
     {
         $user = User::factory()->create([
             'email' => 'existing@example.com',
             'email_verified_at' => null,
             'google_id' => null,
             'password' => 'password123',
+            'user_type' => 'business_owner',
         ]);
 
         $this->mockGoogleUser('google-existing', 'Existing User', 'existing@example.com');
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect('/campaigns');
+            ->assertRedirect(route('business.profile.edit'));
 
         $user->refresh();
 
         $this->assertAuthenticatedAs($user);
         $this->assertSame('google-existing', $user->google_id);
+        $this->assertSame('business_owner', $user->user_type);
         $this->assertNotNull($user->email_verified_at);
         $this->assertTrue(auth()->validate([
             'email' => 'existing@example.com',
@@ -83,6 +136,20 @@ class GoogleAuthTest extends TestCase
 
         $this->assertGuest();
         $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_google_login_does_not_create_new_participant_without_selected_account_type(): void
+    {
+        $this->mockGoogleUser('google-new-login', 'New Login User', 'new-login@example.com');
+
+        $this->get(route('auth.google.callback'))
+            ->assertRedirect(route('register'))
+            ->assertSessionHas('error', 'Choose an account type before signing up with Google.');
+
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', [
+            'email' => 'new-login@example.com',
+        ]);
     }
 
     public function test_google_created_participant_can_see_active_campaigns(): void
@@ -113,7 +180,9 @@ class GoogleAuthTest extends TestCase
 
         $this->mockGoogleUser('google-visible', 'Visible Participant', 'visible-google@example.com');
 
-        $this->get(route('auth.google.callback'))
+        $this
+            ->withSession(['google_signup_user_type' => 'participant'])
+            ->get(route('auth.google.callback'))
             ->assertRedirect('/campaigns');
 
         $user = User::where('email', 'visible-google@example.com')->firstOrFail();
