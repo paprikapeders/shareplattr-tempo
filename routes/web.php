@@ -113,7 +113,7 @@ Route::middleware(['auth', 'admin'])
         Route::post('/brands', [AdminBrandController::class, 'store'])->name('brands.store');
         Route::get('/brands/{brand}', [AdminBrandController::class, 'show'])->name('brands.show');
         Route::get('/brands/{brand}/edit', [AdminBrandController::class, 'edit'])->name('brands.edit');
-        Route::post('/brands/{brand}', [AdminBrandController::class, 'update'])->name('brands.update');
+        Route::match(['post', 'put', 'patch'], '/brands/{brand}', [AdminBrandController::class, 'update'])->name('brands.update');
         Route::delete('/brands/{brand}', [AdminBrandController::class, 'destroy'])->name('brands.destroy');
         Route::get('/imports', [AdminImportController::class, 'index'])->name('imports.index');
         Route::post('/imports', [AdminImportController::class, 'store'])->name('imports.store');

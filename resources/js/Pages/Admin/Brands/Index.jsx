@@ -1,9 +1,11 @@
 import { Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import Button from '../../../Components/Button';
 import Card from '../../../Components/Card';
 import EmptyState from '../../../Components/EmptyState';
 import ImageWithFallback from '../../../Components/ImageWithFallback';
+import Input from '../../../Components/Input';
 import PageHeader from '../../../Components/PageHeader';
 
 function statusClasses(status) {
@@ -15,7 +17,31 @@ function statusClasses(status) {
     return classes[status] ?? classes.inactive;
 }
 
-export default function Index({ brands }) {
+export default function Index({ brands, filters = {} }) {
+    const [search, setSearch] = useState(filters.search ?? '');
+    const hasSearch = Boolean(filters.search);
+
+    const submitSearch = (event) => {
+        event.preventDefault();
+
+        const searchTerm = search.trim();
+        setSearch(searchTerm);
+
+        router.get('/admin/brands', searchTerm ? { search: searchTerm } : {}, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const clearSearch = () => {
+        setSearch('');
+
+        router.get('/admin/brands', {}, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
     const removeBrand = (brand) => {
         if (!window.confirm(`Delete or archive "${brand.name}"?`)) {
             return;
@@ -38,8 +64,30 @@ export default function Index({ brands }) {
                 </Button>
             </PageHeader>
 
+            <Card className="mb-4 p-4">
+                <form onSubmit={submitSearch} className="flex flex-col gap-3 sm:flex-row">
+                    <Input
+                        type="search"
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Search brands"
+                        className="sm:max-w-sm"
+                    />
+                    <div className="flex gap-2">
+                        <Button type="submit">Search</Button>
+                        {hasSearch && (
+                            <Button type="button" variant="secondary" onClick={clearSearch}>
+                                Clear
+                            </Button>
+                        )}
+                    </div>
+                </form>
+            </Card>
+
             {brands.length === 0 ? (
-                <EmptyState title="No brands yet.">Create a brand before attaching it to campaigns.</EmptyState>
+                <EmptyState title={hasSearch ? 'No brands match your search.' : 'No brands yet.'}>
+                    {hasSearch ? 'Try a different brand name, business type, website, or status.' : 'Create a brand before attaching it to campaigns.'}
+                </EmptyState>
             ) : (
                 <Card className="overflow-hidden p-0">
                     <div className="overflow-x-auto">

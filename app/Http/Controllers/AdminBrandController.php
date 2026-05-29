@@ -14,16 +14,30 @@ class AdminBrandController extends Controller
     /**
      * Show all brands for admin management.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $search = trim((string) $request->query('search', ''));
+
         $brands = Brand::query()
             ->withCount('campaigns')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('business_type', 'like', "%{$search}%")
+                        ->orWhere('website_url', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%");
+                });
+            })
             ->latest()
             ->get()
             ->map(fn (Brand $brand) => $this->brandPayload($brand));
 
         return Inertia::render('Admin/Brands/Index', [
             'brands' => $brands,
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 
