@@ -8,6 +8,7 @@ use App\Models\PayoutMethod;
 use App\Models\ReferralToken;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -51,6 +52,36 @@ class CampaignAvailabilityTest extends TestCase
             ->actingAs($user)
             ->get(route('campaigns.show', $expiredCampaign))
             ->assertNotFound();
+    }
+
+    public function test_campaign_list_includes_cache_busted_uploaded_brand_logo_url(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $brand = Brand::create([
+            'name' => 'Northstar Coffee',
+            'logo' => 'brands/logos/northstar.png',
+            'status' => 'active',
+        ]);
+
+        $this->createCampaign([
+            'brand_id' => $brand->id,
+            'brand_name' => 'Legacy Brand Name',
+        ]);
+
+        $expectedLogoUrl = Storage::disk('public')->url($brand->logo).'?v='.$brand->updated_at->timestamp;
+
+        $this
+            ->actingAs($user)
+            ->get(route('campaigns.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Campaigns')
+                ->has('campaigns', 1)
+                ->where('campaigns.0.brand_name', 'Northstar Coffee')
+                ->where('campaigns.0.brand_logo_url', $expectedLogoUrl)
+            );
     }
 
     public function test_referral_generation_is_blocked_for_expired_campaign(): void
@@ -276,6 +307,8 @@ class CampaignAvailabilityTest extends TestCase
         $this->assertStringContainsString('onError={() => setFailed(true)}', $component);
         $this->assertStringContainsString("fallbackText = 'No image yet'", $component);
         $this->assertStringContainsString('src={campaign.campaign_banner_url}', $campaignCard);
+        $this->assertStringContainsString('const logoUrl = campaign.brand_logo_url;', $campaignCard);
+        $this->assertStringContainsString('src={logoUrl}', $campaignCard);
         $this->assertStringContainsString('fallbackLabel={brandName(campaign)}', $campaignCard);
         $this->assertStringContainsString('src={campaign.campaign_banner_url}', $campaignDetail);
         $this->assertStringContainsString('src={campaign.brand_logo_url}', $campaignDetail);

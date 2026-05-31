@@ -30,7 +30,7 @@ class CampaignController extends Controller
             ->count();
 
         $campaignQuery = Campaign::query()
-            ->with('brand:id,name,logo,logo_url,description,business_type,website_url,country_region,affiliate_url,contact_info,notes')
+            ->with('brand:id,name,logo,logo_url,description,business_type,website_url,country_region,affiliate_url,contact_info,notes,updated_at')
             ->with(['referralTokens' => fn ($query) => $query->where('user_id', $user->id)])
             ->withCount(['referralTokens', 'clicks', 'conversions'])
             ->available();
@@ -119,7 +119,7 @@ class CampaignController extends Controller
         }
 
         $campaign->load([
-            'brand:id,name,logo,logo_url,description,business_type,website_url,country_region,affiliate_url,contact_info,notes',
+            'brand:id,name,logo,logo_url,description,business_type,website_url,country_region,affiliate_url,contact_info,notes,updated_at',
             'referralTokens' => fn ($query) => $query->where('user_id', $request->user()->id),
         ]);
         $campaign->loadCount(['referralTokens', 'clicks', 'conversions']);
@@ -181,7 +181,7 @@ class CampaignController extends Controller
             'id' => $campaign->id,
             'slug' => $campaign->slug,
             'brand_name' => $campaign->brand?->name ?? $campaign->brand_name,
-            'brand_logo_url' => $campaign->brand?->logo ? Storage::disk('public')->url($campaign->brand->logo) : $campaign->brand?->logo_url,
+            'brand_logo_url' => $this->brandLogoUrl($campaign),
             'brand_industry' => $campaign->brand?->business_type,
             'brand_description' => $campaign->brand?->description,
             'brand_website_url' => $campaign->brand?->website_url,
@@ -396,6 +396,19 @@ class CampaignController extends Controller
         }
 
         return $url.(str_contains($url, '?') ? '&' : '?').'v='.$version;
+    }
+
+    private function brandLogoUrl(Campaign $campaign): ?string
+    {
+        if (! $campaign->brand) {
+            return null;
+        }
+
+        if ($campaign->brand->logo) {
+            return $this->publicStorageUrl($campaign->brand->logo, $campaign->brand->updated_at?->timestamp);
+        }
+
+        return $campaign->brand->logo_url;
     }
 
     private function resolveCampaign(string $value): array

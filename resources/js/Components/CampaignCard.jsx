@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import ImageWithFallback from './ImageWithFallback';
 import { formatExpiryDate } from '../Support/dates';
 import { formatReward } from '../Support/rewards';
@@ -17,6 +18,34 @@ function rewardCallout(campaign) {
     }
 
     return `${formatReward(campaign)} / referral`;
+}
+
+function BrandLogoBadge({ campaign, letter }) {
+    const [failed, setFailed] = useState(false);
+    const logoUrl = campaign.brand_logo_url;
+    const hasLogo = typeof logoUrl === 'string' && logoUrl.trim() !== '';
+
+    useEffect(() => {
+        setFailed(false);
+    }, [logoUrl]);
+
+    if (hasLogo && !failed) {
+        return (
+            <img
+                src={logoUrl}
+                alt=""
+                className="h-6 w-6 shrink-0 rounded-full bg-white object-cover shadow-sm ring-1 ring-white/60"
+                loading="lazy"
+                onError={() => setFailed(true)}
+            />
+        );
+    }
+
+    return (
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-sm ring-1 ring-white/60">
+            {letter}
+        </div>
+    );
 }
 
 export default function CampaignCard({ campaign }) {
@@ -43,9 +72,7 @@ export default function CampaignCard({ campaign }) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/34 to-transparent" />
 
             <div className="absolute left-3 top-3 flex max-w-[calc(100%-7rem)] items-center gap-2">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-sm ring-1 ring-white/60">
-                    {letter}
-                </div>
+                <BrandLogoBadge campaign={campaign} letter={letter} />
                 {expiryLabel && (
                     <span className="truncate rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm ring-1 ring-white/15 backdrop-blur">
                         {expiryLabel}
