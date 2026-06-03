@@ -35,7 +35,7 @@ export default function Login() {
         <AuthLayout
             title="Shareplattr"
             heroClassName="auth-login-hero !absolute inset-x-0 top-0 z-0 !h-[36dvh] !min-h-[220px] opacity-95 after:absolute after:inset-x-0 after:bottom-0 after:h-24 after:bg-gradient-to-b after:from-transparent after:to-[#B8E7EA] lg:!relative lg:!h-auto lg:!min-h-dvh lg:opacity-100 lg:after:hidden"
-            contentClassName="auth-login-content !mt-0 justify-start px-9 pb-2 pt-[29dvh] lg:justify-center lg:px-10 lg:py-10"
+            contentClassName="auth-login-content !mt-0 justify-start px-9 pb-2 pt-[29dvh] lg:items-start lg:justify-center lg:pl-20 lg:pr-10 lg:py-10 xl:pl-24 2xl:pl-28"
         >
             <div className="auth-login-intro relative z-10 mx-auto mt-0 w-full max-w-[320px] text-center lg:mt-7">
                 <p className="auth-login-headline text-[20px] font-black leading-tight text-[#111111] lg:text-[26px]">

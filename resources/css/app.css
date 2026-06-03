@@ -27,6 +27,48 @@ body {
     }
 }
 
+@media (min-width: 1024px) {
+    .auth-login-content {
+        align-items: flex-start;
+        padding-left: 5rem;
+        padding-right: 2.5rem;
+    }
+
+    .auth-login-content > div {
+        margin-left: 40px;
+        margin-right: 0;
+        transform: none;
+    }
+
+    .auth-login-content > div > div:first-of-type,
+    .auth-login-content nav {
+        justify-content: flex-start;
+    }
+
+    .auth-login-intro,
+    .auth-login-form {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .auth-login-intro,
+    .auth-login-content nav {
+        text-align: left;
+    }
+}
+
+@media (min-width: 1280px) {
+    .auth-login-content {
+        padding-left: 6rem;
+    }
+}
+
+@media (min-width: 1536px) {
+    .auth-login-content {
+        padding-left: 7rem;
+    }
+}
+
 @media (min-width: 1024px) and (max-height: 850px) {
     .auth-login-hero .auth-hero-image {
         height: min(92dvh, 760px);
