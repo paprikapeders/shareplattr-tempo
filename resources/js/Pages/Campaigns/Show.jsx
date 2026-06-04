@@ -77,21 +77,23 @@ function Hero({ campaign, reward }) {
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/38 to-black/12" />
 
-            <div className="relative flex min-h-[255px] flex-col justify-start gap-5 p-5 pt-6 text-white sm:p-8 lg:flex-row lg:items-end lg:justify-between">
-                <div className="flex min-w-0 items-end gap-4">
-                    <BrandAvatar campaign={campaign} className="h-14 w-14 shrink-0 rounded-2xl bg-white text-lg shadow-xl ring-1 ring-white/70 sm:h-16 sm:w-16" />
-                    <div className="min-w-0 pb-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                            {campaign.category && (
-                                <span className="rounded-full bg-[#08bcbc]/90 px-3 py-1 text-xs font-bold text-white">
-                                    {campaign.category}
-                                </span>
-                            )}
-                            <span className="text-xs font-semibold text-white/85">by {campaign.brand_name ?? 'SharePlattr brand'}</span>
+            <div className="relative flex min-h-[255px] flex-col justify-between gap-5 p-5 pt-6 text-white sm:p-8 lg:flex-row lg:items-end lg:justify-between">
+                <div className="min-w-0">
+                    <div className="mb-3 flex flex-wrap items-center gap-2 lg:mb-2">
+                        {campaign.category && (
+                            <span className="rounded-full bg-[#08bcbc]/90 px-3 py-1 text-xs font-bold text-white">
+                                {campaign.category}
+                            </span>
+                        )}
+                        <span className="text-xs font-semibold text-white/85">by {campaign.brand_name ?? 'SharePlattr brand'}</span>
+                    </div>
+                    <div className="flex min-w-0 items-center gap-4 lg:items-end">
+                        <BrandAvatar campaign={campaign} className="h-14 w-14 shrink-0 rounded-2xl bg-white text-lg shadow-xl ring-1 ring-white/70 sm:h-16 sm:w-16" />
+                        <div className="min-w-0 lg:pb-1">
+                            <h1 className="line-clamp-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                                {campaign.title}
+                            </h1>
                         </div>
-                        <h1 className="mt-2 line-clamp-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-                            {campaign.title}
-                        </h1>
                     </div>
                 </div>
 
@@ -166,9 +168,26 @@ function rewardAmountLabel(campaign, reward) {
 }
 
 function RewardSummaryCard({ campaign, reward, className = 'mt-5' }) {
+    const mobileRewardQualifier = (campaign.reward_type ?? 'flat') === 'percentage'
+        ? 'of verified conversion value'
+        : 'per verified referral';
+
     return (
-        <div className={`${className} rounded-xl border border-cyan-200 bg-cyan-50/80 p-4 text-left shadow-sm shadow-cyan-900/5`}>
-            <div className="flex items-start justify-between gap-3">
+        <div className={`${className} rounded-xl border border-cyan-200 bg-cyan-50/80 p-3 text-left shadow-sm shadow-cyan-900/5 xl:p-4`}>
+            <div className="xl:hidden">
+                <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-extrabold uppercase tracking-wide text-cyan-700">Reward</p>
+                    <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-bold text-slate-700 shadow-sm">
+                        {rewardTypeLabel(campaign)}
+                    </span>
+                </div>
+                <div className="mt-1.5">
+                    <p className="text-2xl font-extrabold leading-none tracking-tight text-slate-950">{reward}</p>
+                    <p className="mt-1 text-sm font-bold leading-5 text-slate-700">{mobileRewardQualifier}</p>
+                </div>
+            </div>
+
+            <div className="hidden items-start justify-between gap-3 xl:flex">
                 <div>
                     <p className="text-xs font-extrabold uppercase tracking-wide text-cyan-700">Reward</p>
                     <p className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">{rewardAmountLabel(campaign, reward)}</p>
@@ -178,13 +197,13 @@ function RewardSummaryCard({ campaign, reward, className = 'mt-5' }) {
                 </span>
             </div>
 
-            <p className="mt-3 text-sm leading-5 text-slate-700">
+            <p className="mt-2 text-xs leading-5 text-slate-700 xl:mt-3 xl:text-sm">
                 Paid after the referral completes the required action and the conversion is verified.
             </p>
 
-            <details className="mt-3 rounded-lg bg-white/70 px-3 py-2 text-sm text-slate-600">
+            <details className="mt-2 rounded-lg bg-white/70 px-2.5 py-2 text-xs text-slate-600 xl:mt-3 xl:px-3 xl:text-sm">
                 <summary className="cursor-pointer select-none font-bold text-slate-950">How rewards work</summary>
-                <p className="mt-2 leading-5">
+                <p className="mt-1.5 leading-5 xl:mt-2">
                     Rewards are reviewed and paid after the referral action is verified. Final approval depends on campaign terms.
                 </p>
             </details>
@@ -617,6 +636,7 @@ export default function Show({ campaign, businessPreview = false }) {
         && Boolean(campaign.referral_url)
         && !campaign.has_payout_method
         && !payoutPromptDismissed;
+    const mobileContentGutters = 'px-4 sm:px-6 lg:px-8';
 
     const statsGrid = (
         <>
@@ -1002,7 +1022,7 @@ export default function Show({ campaign, businessPreview = false }) {
                     </div>
                 </div>
 
-                <div className={`px-4 py-6 sm:px-6 lg:px-8 ${!businessPreview && campaign.referral_url ? 'pb-28 xl:pb-6' : ''}`}>
+                <div className={`${mobileContentGutters} py-6 ${!businessPreview && campaign.referral_url ? 'pb-28 xl:pb-6' : ''}`}>
                     <Hero campaign={campaign} reward={reward} />
 
                     <div className="mt-4 space-y-4 xl:hidden">
@@ -1086,8 +1106,8 @@ export default function Show({ campaign, businessPreview = false }) {
             </div>
 
             {!businessPreview && campaign.referral_url && (
-                <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-10px_30px_rgba(15,23,42,0.12)] backdrop-blur xl:hidden" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
-                    <div className="mx-auto flex max-w-2xl items-center gap-3">
+                <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 py-3 shadow-[0_-10px_30px_rgba(15,23,42,0.12)] backdrop-blur xl:hidden" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+                    <div className={`${mobileContentGutters} flex items-center gap-3`}>
                         <p className="min-w-0 flex-1 text-sm font-extrabold leading-5 text-slate-950">
                             Earn {reward} per referral
                         </p>
