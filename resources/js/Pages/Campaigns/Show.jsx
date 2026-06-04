@@ -77,7 +77,7 @@ function Hero({ campaign, reward }) {
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/38 to-black/12" />
 
-            <div className="relative flex min-h-[255px] flex-col justify-end gap-5 p-5 text-white sm:p-8 lg:flex-row lg:items-end lg:justify-between">
+            <div className="relative flex min-h-[255px] flex-col justify-start gap-5 p-5 pt-6 text-white sm:p-8 lg:flex-row lg:items-end lg:justify-between">
                 <div className="flex min-w-0 items-end gap-4">
                     <BrandAvatar campaign={campaign} className="h-14 w-14 shrink-0 rounded-2xl bg-white text-lg shadow-xl ring-1 ring-white/70 sm:h-16 sm:w-16" />
                     <div className="min-w-0 pb-1">
@@ -116,25 +116,25 @@ function Hero({ campaign, reward }) {
 
 function StatCard({ label, value, helper }) {
     return (
-        <Card className="p-5">
+        <Card className="p-4 xl:p-5">
             <p className="text-xs font-medium text-slate-400">
                 {label === 'Conversions' ? <ConversionLabel>{label}</ConversionLabel> : label}
             </p>
-            <p className="mt-2 text-2xl font-extrabold leading-none text-slate-950">{value}</p>
-            <p className="mt-2 text-sm text-slate-400">{helper}</p>
+            <p className="mt-2 text-xl font-extrabold leading-none text-slate-950 xl:text-2xl">{value}</p>
+            <p className="mt-1 text-xs text-slate-400 xl:mt-2 xl:text-sm">{helper}</p>
         </Card>
     );
 }
 
 function Step({ number, title, children }) {
     return (
-        <div className="flex gap-4">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-50 text-sm font-bold text-[#08bcbc]">
+        <div className="flex gap-3 xl:gap-4">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-50 text-xs font-bold text-[#08bcbc] xl:h-8 xl:w-8 xl:text-sm">
                 {number}
             </div>
             <div className="min-w-0">
                 <h3 className="text-sm font-bold text-slate-950">{title}</h3>
-                <p className="mt-1 text-sm leading-6 text-slate-600">{children}</p>
+                <p className="mt-1 text-sm leading-5 text-slate-600 xl:leading-6">{children}</p>
             </div>
         </div>
     );
@@ -165,9 +165,9 @@ function rewardAmountLabel(campaign, reward) {
     return `${reward} per verified referral`;
 }
 
-function RewardSummaryCard({ campaign, reward }) {
+function RewardSummaryCard({ campaign, reward, className = 'mt-5' }) {
     return (
-        <div className="mt-5 rounded-xl border border-cyan-200 bg-cyan-50/80 p-4 text-left shadow-sm shadow-cyan-900/5">
+        <div className={`${className} rounded-xl border border-cyan-200 bg-cyan-50/80 p-4 text-left shadow-sm shadow-cyan-900/5`}>
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <p className="text-xs font-extrabold uppercase tracking-wide text-cyan-700">Reward</p>
@@ -618,6 +618,367 @@ export default function Show({ campaign, businessPreview = false }) {
         && !campaign.has_payout_method
         && !payoutPromptDismissed;
 
+    const statsGrid = (
+        <>
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4 xl:gap-4">
+                <StatCard label="Reward" value={reward} helper="per conversion" />
+                <StatCard label="Participants" value={metrics.participants} helper="sharing now" />
+                <StatCard label="Total Clicks" value={compactNumber(metrics.clicks)} helper="this campaign" />
+                <StatCard label="Conversions" value={metrics.conversions} helper="verified" />
+            </div>
+            {lastUpdatedAt && (
+                <p className="-mt-1 text-xs font-medium text-slate-400 xl:-mt-3">
+                    Last updated {lastUpdatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                </p>
+            )}
+        </>
+    );
+
+    const payoutPromptCard = showPayoutPrompt && (
+        <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-left">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <p className="text-sm font-extrabold text-slate-950">Set up payouts</p>
+                    <p className="mt-1 text-sm leading-5 text-slate-600">
+                        Set up your payout method so you can receive your rewards.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onClick={dismissPayoutPrompt}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white hover:text-slate-700"
+                    aria-label="Dismiss payout setup prompt"
+                >
+                    x
+                </button>
+            </div>
+            <Link
+                href={campaign.payout_settings_url ?? '/payouts'}
+                className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
+            >
+                Set up payout method
+            </Link>
+        </div>
+    );
+
+    const sharePanel = (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-4 text-left">
+            <p className="text-sm font-extrabold text-slate-950">Share this campaign</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
+                {[
+                    ['link', 'Share Link'],
+                    ['qr', 'QR Code'],
+                ].map(([tab, label]) => (
+                    <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setShareTab(tab)}
+                        className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${shareTab === tab ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                    >
+                        {label}
+                    </button>
+                ))}
+            </div>
+
+            <div className="mt-4">
+                {shareTab === 'link' ? (
+                    <div className="space-y-4">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Your referral link</p>
+                            <div className="mt-2 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                                <p className="min-w-0 flex-1 truncate font-mono text-xs text-slate-600">{shortReferralUrl}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => copyLink(fullReferralUrl)}
+                                    className="shrink-0 rounded-md bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800"
+                                >
+                                    {copied ? 'Copied!' : 'Copy Link'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Message</p>
+                            <textarea
+                                value={shareMessageText}
+                                onChange={(event) => setShareMessageText(event.target.value)}
+                                rows="6"
+                                className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700 outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100"
+                            />
+                            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                                <button
+                                    type="button"
+                                    onClick={() => copyMessage('copy')}
+                                    className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
+                                >
+                                    Copy message
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={nativeShare}
+                                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700"
+                                >
+                                    Share
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Social</p>
+                            <div className="mt-2 grid grid-cols-2 gap-2">
+                                {socialShares.map((action) => (
+                                    <ShareButton key={action.source} {...action} />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Messaging</p>
+                            <div className="mt-2 grid grid-cols-2 gap-2">
+                                {messageShares.map((action) => (
+                                    <ShareButton key={action.source} {...action} />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-3 text-center">
+                        <p className="text-sm leading-5 text-slate-600">
+                            Let someone scan this code to open your referral link.
+                        </p>
+                        <div className="mx-auto flex h-40 w-40 max-w-full items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:h-48 sm:w-48">
+                            <QRCodeCanvas
+                                ref={qrCodeRef}
+                                value={qrReferralUrl}
+                                size={180}
+                                marginSize={4}
+                                level="H"
+                                className="h-full max-h-[160px] w-full max-w-[160px] sm:max-h-[180px] sm:max-w-[180px]"
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={downloadQrCode}
+                            className="w-full rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
+                        >
+                            {qrDownloadLabel}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
+    const mobileReferralCard = !businessPreview && (
+        <Card className="p-4">
+            {campaign.referral_url ? (
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-extrabold text-slate-950">Your referral link</p>
+                        <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                            Joined campaign
+                        </span>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 px-3 py-2">
+                        <p className="truncate font-mono text-xs text-slate-600">{shortReferralUrl}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => copyLink(fullReferralUrl)}
+                            className="h-11 rounded-xl bg-slate-950 px-3 text-xs font-extrabold text-white transition hover:bg-slate-800"
+                        >
+                            {copied ? 'Copied!' : 'Copy Link'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={nativeShare}
+                            className="h-11 rounded-xl border border-cyan-200 bg-cyan-50 px-3 text-xs font-extrabold text-cyan-700 transition hover:bg-cyan-100"
+                        >
+                            Share
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <div>
+                    <p className="text-sm font-extrabold text-slate-950">Your referral link</p>
+                    <p className="mt-1 text-sm leading-5 text-slate-600">Join this campaign to generate your unique share link.</p>
+                    <button
+                        type="button"
+                        onClick={generateLink}
+                        disabled={generating}
+                        className="mt-4 h-11 w-full rounded-xl bg-gradient-to-r from-violet-500 to-purple-700 px-4 text-sm font-extrabold text-white shadow-sm transition hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        {generating ? 'Generating...' : 'Join & Get My Link'}
+                    </button>
+                </div>
+            )}
+        </Card>
+    );
+
+    const mobileSharePanel = !businessPreview && campaign.referral_url && (
+        <Card className="p-4">
+            <div className="flex items-center justify-between gap-3">
+                <h2 className="text-base font-bold text-slate-950">Share</h2>
+                <button
+                    type="button"
+                    onClick={nativeShare}
+                    className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
+                >
+                    Share
+                </button>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                    type="button"
+                    onClick={() => copyLink(fullReferralUrl)}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700"
+                >
+                    {copied ? 'Copied!' : 'Copy Link'}
+                </button>
+                <button
+                    type="button"
+                    onClick={() => copyMessage('copy')}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700"
+                >
+                    Copy Message
+                </button>
+            </div>
+            <details className="mt-3 rounded-xl bg-slate-50 p-3">
+                <summary className="cursor-pointer select-none text-sm font-bold text-slate-950">More sharing options</summary>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                    {[...socialShares, ...messageShares].map((action) => (
+                        <ShareButton key={action.source} {...action} />
+                    ))}
+                </div>
+            </details>
+        </Card>
+    );
+
+    const howItWorksCard = (
+        <Card className="p-4 xl:p-6">
+            <h2 className="text-base font-bold text-slate-950 xl:text-lg">How it works</h2>
+            <div className="mt-4 space-y-4 xl:mt-6 xl:space-y-5">
+                <Step number="1" title="Join the campaign">
+                    Click &ldquo;Join & Get Link&rdquo; to generate your unique referral URL.
+                </Step>
+                <Step number="2" title="Share your link">
+                    Post it on social media, send to friends, or embed in your content.
+                </Step>
+                <Step number="3" title={`Earn ${reward} per business sign-up`}>
+                    Every verified business activation earns you {reward}, tracked automatically.
+                </Step>
+                <Step number="4" title="Get paid">
+                    Payouts are processed through your participant payout method once eligible.
+                </Step>
+            </div>
+        </Card>
+    );
+
+    const campaignDetails = campaign.requirements || campaign.deliverables || campaign.participant_instructions || campaign.payout_details;
+    const campaignInformation = (
+        <>
+            <Card className="p-6">
+                <h2 className="text-lg font-bold text-slate-950">About this campaign</h2>
+                <p className="mt-4 text-sm leading-7 text-slate-700">
+                    {campaign.description ?? 'This campaign is ready for participants to share and earn rewards on verified conversions.'}
+                </p>
+            </Card>
+
+            {campaignDetails && (
+                <Card className="p-6">
+                    <h2 className="text-lg font-bold text-slate-950">Campaign details</h2>
+                    <div className="mt-5 grid gap-5 md:grid-cols-2">
+                        <MetadataBlock title="Requirements">{campaign.requirements}</MetadataBlock>
+                        <MetadataBlock title="Deliverables">{campaign.deliverables}</MetadataBlock>
+                        <MetadataBlock title="Instructions">{campaign.participant_instructions}</MetadataBlock>
+                        <MetadataBlock title="Payout notes">{campaign.payout_details}</MetadataBlock>
+                    </div>
+                </Card>
+            )}
+        </>
+    );
+
+    const mobileCampaignInformation = (
+        <Card className="p-4">
+            <h2 className="text-base font-bold text-slate-950">Campaign information</h2>
+            <details className="mt-3 rounded-xl bg-slate-50 p-3" open>
+                <summary className="cursor-pointer select-none text-sm font-bold text-slate-950">About this campaign</summary>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                    {campaign.description ?? 'This campaign is ready for participants to share and earn rewards on verified conversions.'}
+                </p>
+            </details>
+            {campaignDetails && (
+                <details className="mt-3 rounded-xl bg-slate-50 p-3">
+                    <summary className="cursor-pointer select-none text-sm font-bold text-slate-950">Campaign details</summary>
+                    <div className="mt-3 grid gap-4">
+                        <MetadataBlock title="Requirements">{campaign.requirements}</MetadataBlock>
+                        <MetadataBlock title="Deliverables">{campaign.deliverables}</MetadataBlock>
+                        <MetadataBlock title="Instructions">{campaign.participant_instructions}</MetadataBlock>
+                        <MetadataBlock title="Payout notes">{campaign.payout_details}</MetadataBlock>
+                    </div>
+                </details>
+            )}
+        </Card>
+    );
+
+    const brandCard = (
+        <Card className="p-5">
+            <h2 className="text-xs font-extrabold uppercase tracking-wide text-slate-400">About the brand</h2>
+            <div className="mt-4 flex items-center gap-4">
+                <BrandAvatar campaign={campaign} className="h-12 w-12 shrink-0 rounded-xl text-sm" />
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-extrabold text-slate-950">{campaign.brand_name ?? 'Brand'}</p>
+                    <p className="mt-1 text-xs font-medium text-slate-400">{campaign.category ?? campaign.brand_industry ?? 'Campaign'}</p>
+                </div>
+            </div>
+
+            <p className="mt-4 border-b border-slate-100 pb-4 text-sm leading-6 text-slate-600">
+                {campaign.brand_description ?? `${campaign.brand_name ?? 'This brand'} is a trusted SharePlattr campaign partner.`}
+            </p>
+
+            {(campaign.commission_details || campaign.cookie_duration || campaign.network_platform || campaign.brand_country_region) && (
+                <dl className="mt-4 space-y-3 border-b border-slate-100 pb-4 text-sm">
+                    {campaign.commission_details && (
+                        <div>
+                            <dt className="font-semibold text-slate-950">Commission</dt>
+                            <dd className="mt-1 text-slate-600">{campaign.commission_details}</dd>
+                        </div>
+                    )}
+                    {campaign.cookie_duration && (
+                        <div>
+                            <dt className="font-semibold text-slate-950">Cookie duration</dt>
+                            <dd className="mt-1 text-slate-600">{campaign.cookie_duration}</dd>
+                        </div>
+                    )}
+                    {campaign.network_platform && (
+                        <div>
+                            <dt className="font-semibold text-slate-950">Network</dt>
+                            <dd className="mt-1 text-slate-600">{campaign.network_platform}</dd>
+                        </div>
+                    )}
+                    {campaign.brand_country_region && (
+                        <div>
+                            <dt className="font-semibold text-slate-950">Region</dt>
+                            <dd className="mt-1 text-slate-600">{campaign.brand_country_region}</dd>
+                        </div>
+                    )}
+                </dl>
+            )}
+
+            {brandCampaignsLaunched > 1 ? (
+                <div className="mt-4 border-t border-slate-100 pt-4 text-center">
+                    <p className="text-base font-extrabold text-slate-950">{brandCampaignsLaunched}</p>
+                    <p className="text-xs text-slate-400">campaigns launched</p>
+                </div>
+            ) : (
+                <p className="mt-4 border-t border-slate-100 pt-4 text-center text-xs font-semibold text-slate-400">
+                    New to SharePlattr
+                </p>
+            )}
+        </Card>
+    );
+
     return (
         <Layout>
             <Toast message={toast} />
@@ -641,59 +1002,34 @@ export default function Show({ campaign, businessPreview = false }) {
                     </div>
                 </div>
 
-                <div className="px-4 py-6 sm:px-6 lg:px-8">
+                <div className={`px-4 py-6 sm:px-6 lg:px-8 ${!businessPreview && campaign.referral_url ? 'pb-28 xl:pb-6' : ''}`}>
                     <Hero campaign={campaign} reward={reward} />
 
-                    <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] xl:items-start">
+                    <div className="mt-4 space-y-4 xl:hidden">
+                        {mobileReferralCard}
+                        <Card className="p-4">
+                            <RewardSummaryCard campaign={campaign} reward={reward} className="mt-0" />
+                        </Card>
+                        {statsGrid}
+                        {mobileSharePanel}
+                        {howItWorksCard}
+                        {mobileCampaignInformation}
+                        <CampaignTermsBlock terms={campaign.campaign_terms} />
+                        {!businessPreview && payoutPromptCard}
+                        {brandCard}
+                        {!businessPreview && (
+                            <button type="button" className="mx-auto flex items-center gap-2 text-xs font-medium text-slate-400 transition hover:text-slate-600">
+                                <span aria-hidden="true">!</span>
+                                Report this campaign
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="mt-6 hidden gap-6 xl:grid xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)] xl:items-start">
                         <div className="space-y-6">
-                            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                                <StatCard label="Reward" value={reward} helper="per conversion" />
-                                <StatCard label="Participants" value={metrics.participants} helper="sharing now" />
-                                <StatCard label="Total Clicks" value={compactNumber(metrics.clicks)} helper="this campaign" />
-                                <StatCard label="Conversions" value={metrics.conversions} helper="verified" />
-                            </div>
-                            {lastUpdatedAt && (
-                                <p className="-mt-3 text-xs font-medium text-slate-400">
-                                    Last updated {lastUpdatedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
-                                </p>
-                            )}
-
-                            <Card className="p-6">
-                                <h2 className="text-lg font-bold text-slate-950">About this campaign</h2>
-                                <p className="mt-4 text-sm leading-7 text-slate-700">
-                                    {campaign.description ?? 'This campaign is ready for participants to share and earn rewards on verified conversions.'}
-                                </p>
-                            </Card>
-
-                            {(campaign.requirements || campaign.deliverables || campaign.participant_instructions || campaign.payout_details) && (
-                                <Card className="p-6">
-                                    <h2 className="text-lg font-bold text-slate-950">Campaign details</h2>
-                                    <div className="mt-5 grid gap-5 md:grid-cols-2">
-                                        <MetadataBlock title="Requirements">{campaign.requirements}</MetadataBlock>
-                                        <MetadataBlock title="Deliverables">{campaign.deliverables}</MetadataBlock>
-                                        <MetadataBlock title="Instructions">{campaign.participant_instructions}</MetadataBlock>
-                                        <MetadataBlock title="Payout notes">{campaign.payout_details}</MetadataBlock>
-                                    </div>
-                                </Card>
-                            )}
-
-                            <Card className="p-6">
-                                <h2 className="text-lg font-bold text-slate-950">How it works</h2>
-                                <div className="mt-6 space-y-5">
-                                    <Step number="1" title="Join the campaign">
-                                        Click &ldquo;Join & Get Link&rdquo; to generate your unique referral URL.
-                                    </Step>
-                                    <Step number="2" title="Share your link">
-                                        Post it on social media, send to friends, or embed in your content.
-                                    </Step>
-                                    <Step number="3" title={`Earn ${reward} per business sign-up`}>
-                                        Every verified business activation earns you {reward}, tracked automatically.
-                                    </Step>
-                                    <Step number="4" title="Get paid">
-                                        Payouts are processed through your participant payout method once eligible.
-                                    </Step>
-                                </div>
-                            </Card>
+                            {statsGrid}
+                            {campaignInformation}
+                            {howItWorksCard}
                         </div>
 
                         <aside className="space-y-4 overflow-hidden">
@@ -726,140 +1062,8 @@ export default function Show({ campaign, businessPreview = false }) {
                                 {!businessPreview && campaign.referral_url && (
                                     <div className="mt-4 space-y-4">
                                         <CelebrationPanel campaignTitle={campaign.title} justJoined={justJoined} />
-
-                                        {showPayoutPrompt && (
-                                            <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-left">
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div>
-                                                        <p className="text-sm font-extrabold text-slate-950">Set up payouts</p>
-                                                        <p className="mt-1 text-sm leading-5 text-slate-600">
-                                                            Set up your payout method so you can receive your rewards.
-                                                        </p>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={dismissPayoutPrompt}
-                                                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white hover:text-slate-700"
-                                                        aria-label="Dismiss payout setup prompt"
-                                                    >
-                                                        x
-                                                    </button>
-                                                </div>
-                                                <Link
-                                                    href={campaign.payout_settings_url ?? '/payouts'}
-                                                    className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
-                                                >
-                                                    Set up payout method
-                                                </Link>
-                                            </div>
-                                        )}
-
-                                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-4 text-left">
-                                            <p className="text-sm font-extrabold text-slate-950">Share this campaign</p>
-                                            <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
-                                                {[
-                                                    ['link', 'Share Link'],
-                                                    ['qr', 'QR Code'],
-                                                ].map(([tab, label]) => (
-                                                    <button
-                                                        key={tab}
-                                                        type="button"
-                                                        onClick={() => setShareTab(tab)}
-                                                        className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${shareTab === tab ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-                                                    >
-                                                        {label}
-                                                    </button>
-                                                ))}
-                                            </div>
-
-                                            <div className="mt-4">
-                                                {shareTab === 'link' ? (
-                                                    <div className="space-y-4">
-                                                        <div>
-                                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Your referral link</p>
-                                                            <div className="mt-2 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
-                                                                <p className="min-w-0 flex-1 truncate font-mono text-xs text-slate-600">{shortReferralUrl}</p>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => copyLink(fullReferralUrl)}
-                                                                    className="shrink-0 rounded-md bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800"
-                                                                >
-                                                                    {copied ? 'Copied!' : 'Copy Link'}
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Message</p>
-                                                            <textarea
-                                                                value={shareMessageText}
-                                                                onChange={(event) => setShareMessageText(event.target.value)}
-                                                                rows="6"
-                                                                className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700 outline-none transition focus:border-cyan-300 focus:bg-white focus:ring-4 focus:ring-cyan-100"
-                                                            />
-                                                            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => copyMessage('copy')}
-                                                                    className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
-                                                                >
-                                                                    Copy message
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={nativeShare}
-                                                                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700"
-                                                                >
-                                                                    Share
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Social</p>
-                                                            <div className="mt-2 grid grid-cols-2 gap-2">
-                                                                {socialShares.map((action) => (
-                                                                    <ShareButton key={action.source} {...action} />
-                                                                ))}
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Messaging</p>
-                                                            <div className="mt-2 grid grid-cols-2 gap-2">
-                                                                {messageShares.map((action) => (
-                                                                    <ShareButton key={action.source} {...action} />
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-3 text-center">
-                                                        <p className="text-sm leading-5 text-slate-600">
-                                                            Let someone scan this code to open your referral link.
-                                                        </p>
-                                                        <div className="mx-auto flex h-40 w-40 max-w-full items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:h-48 sm:w-48">
-                                                            <QRCodeCanvas
-                                                                ref={qrCodeRef}
-                                                                value={qrReferralUrl}
-                                                                size={180}
-                                                                marginSize={4}
-                                                                level="H"
-                                                                className="h-full max-h-[160px] w-full max-w-[160px] sm:max-h-[180px] sm:max-w-[180px]"
-                                                            />
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={downloadQrCode}
-                                                            className="w-full rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
-                                                        >
-                                                            {qrDownloadLabel}
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
+                                        {payoutPromptCard}
+                                        {sharePanel}
                                     </div>
                                 )}
 
@@ -868,60 +1072,7 @@ export default function Show({ campaign, businessPreview = false }) {
                                 </p>
                             </Card>
 
-                            <Card className="p-5">
-                                <h2 className="text-xs font-extrabold uppercase tracking-wide text-slate-400">About the brand</h2>
-                                <div className="mt-4 flex items-center gap-4">
-                                    <BrandAvatar campaign={campaign} className="h-12 w-12 shrink-0 rounded-xl text-sm" />
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-extrabold text-slate-950">{campaign.brand_name ?? 'Brand'}</p>
-                                        <p className="mt-1 text-xs font-medium text-slate-400">{campaign.category ?? campaign.brand_industry ?? 'Campaign'}</p>
-                                    </div>
-                                </div>
-
-                                <p className="mt-4 border-b border-slate-100 pb-4 text-sm leading-6 text-slate-600">
-                                    {campaign.brand_description ?? `${campaign.brand_name ?? 'This brand'} is a trusted SharePlattr campaign partner.`}
-                                </p>
-
-                                {(campaign.commission_details || campaign.cookie_duration || campaign.network_platform || campaign.brand_country_region) && (
-                                    <dl className="mt-4 space-y-3 border-b border-slate-100 pb-4 text-sm">
-                                        {campaign.commission_details && (
-                                            <div>
-                                                <dt className="font-semibold text-slate-950">Commission</dt>
-                                                <dd className="mt-1 text-slate-600">{campaign.commission_details}</dd>
-                                            </div>
-                                        )}
-                                        {campaign.cookie_duration && (
-                                            <div>
-                                                <dt className="font-semibold text-slate-950">Cookie duration</dt>
-                                                <dd className="mt-1 text-slate-600">{campaign.cookie_duration}</dd>
-                                            </div>
-                                        )}
-                                        {campaign.network_platform && (
-                                            <div>
-                                                <dt className="font-semibold text-slate-950">Network</dt>
-                                                <dd className="mt-1 text-slate-600">{campaign.network_platform}</dd>
-                                            </div>
-                                        )}
-                                        {campaign.brand_country_region && (
-                                            <div>
-                                                <dt className="font-semibold text-slate-950">Region</dt>
-                                                <dd className="mt-1 text-slate-600">{campaign.brand_country_region}</dd>
-                                            </div>
-                                        )}
-                                    </dl>
-                                )}
-
-                                {brandCampaignsLaunched > 1 ? (
-                                    <div className="mt-4 border-t border-slate-100 pt-4 text-center">
-                                        <p className="text-base font-extrabold text-slate-950">{brandCampaignsLaunched}</p>
-                                        <p className="text-xs text-slate-400">campaigns launched</p>
-                                    </div>
-                                ) : (
-                                    <p className="mt-4 border-t border-slate-100 pt-4 text-center text-xs font-semibold text-slate-400">
-                                        New to SharePlattr
-                                    </p>
-                                )}
-                            </Card>
+                            {brandCard}
 
                             {!businessPreview && (
                                 <button type="button" className="mx-auto flex items-center gap-2 text-xs font-medium text-slate-400 transition hover:text-slate-600">
@@ -933,6 +1084,30 @@ export default function Show({ campaign, businessPreview = false }) {
                     </div>
                 </div>
             </div>
+
+            {!businessPreview && campaign.referral_url && (
+                <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-10px_30px_rgba(15,23,42,0.12)] backdrop-blur xl:hidden" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+                    <div className="mx-auto flex max-w-2xl items-center gap-3">
+                        <p className="min-w-0 flex-1 text-sm font-extrabold leading-5 text-slate-950">
+                            Earn {reward} per referral
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => copyLink(fullReferralUrl)}
+                            className="h-10 shrink-0 rounded-xl bg-slate-950 px-3 text-xs font-extrabold text-white transition hover:bg-slate-800"
+                        >
+                            {copied ? 'Copied!' : 'Copy'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={nativeShare}
+                            className="h-10 shrink-0 rounded-xl border border-cyan-200 bg-cyan-50 px-3 text-xs font-extrabold text-cyan-700 transition hover:bg-cyan-100"
+                        >
+                            Share
+                        </button>
+                    </div>
+                </div>
+            )}
         </Layout>
     );
 }
