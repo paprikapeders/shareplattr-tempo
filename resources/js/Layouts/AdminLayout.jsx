@@ -39,6 +39,7 @@ const adminIcons = {
     conversions: () => <NavIcon><path d="m13 2-8 12h6l-1 8 8-12h-6l1-8Z" /></NavIcon>,
     waitlist: () => <NavIcon><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M17 8h4M19 6v4" /></NavIcon>,
     payouts: () => <NavIcon><rect x="3" y="6" width="18" height="13" rx="3" /><path d="M16 12h5" /><circle cx="16" cy="12" r="1" fill="currentColor" /></NavIcon>,
+    tickets: () => <NavIcon><path d="M5 5h14v10H8l-3 3V5Z" /><path d="M9 9h6M9 12h4" /></NavIcon>,
     activity: () => <NavIcon><path d="M4 12h4l2-6 4 12 2-6h4" /></NavIcon>,
     logout: () => <NavIcon><path d="M10 17v1a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1" /><path d="M15 16l5-4-5-4M20 12H9" /></NavIcon>,
 };
@@ -77,6 +78,10 @@ function getAdminPageTitle(url) {
         return 'Payout Requests';
     }
 
+    if (url?.startsWith('/admin/support-tickets')) {
+        return 'Support Tickets';
+    }
+
     if (url?.startsWith('/admin/activity')) {
         return 'Activity';
     }
@@ -110,6 +115,7 @@ function AdminSidebar({ url, onNavigate = () => {}, showBrand = true, dark = fal
         {
             title: 'Monitoring',
             items: [
+                { href: '/admin/support-tickets', label: 'Support Tickets', active: url?.startsWith('/admin/support-tickets'), icon: adminIcons.tickets },
                 { href: '/admin/activity', label: 'Activity', active: url?.startsWith('/admin/activity'), icon: adminIcons.activity },
             ],
         },

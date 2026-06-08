@@ -88,6 +88,15 @@ function IconCard() {
     );
 }
 
+function IconSupport() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+            <path d="M5 5h14v10H8l-3 3V5Z" />
+            <path d="M9 9h6M9 12h4" />
+        </svg>
+    );
+}
+
 function IconLogout() {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
@@ -162,6 +171,7 @@ function SidebarContent({ url, expanded, onToggle, onNavigate = () => {}, showBr
         { href: '/business/campaigns', label: 'My Campaigns', icon: IconList },
         { href: '/business/campaigns/create', label: 'Create Campaign', icon: IconBolt, primary: true },
         { href: '/business/payout-requests', label: 'Payout Requests', icon: IconWallet, matchPrefix: '/business/payout-requests' },
+        { href: '/business/support-tickets', label: 'Support Tickets', icon: IconSupport, matchPrefix: '/business/support-tickets' },
         { href: '/business/billing', label: 'Billing', icon: IconCard, matchPrefix: '/business/billing' },
         { href: '/business/profile', label: 'Profile', icon: IconProfile, matchPrefix: '/business/profile' },
     ];
