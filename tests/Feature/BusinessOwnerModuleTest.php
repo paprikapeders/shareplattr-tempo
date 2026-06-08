@@ -8,6 +8,7 @@ use App\Models\BusinessProfile;
 use App\Models\Campaign;
 use App\Models\Click;
 use App\Models\Conversion;
+use App\Models\PayoutMethod;
 use App\Models\PayoutRequest;
 use App\Models\ReferralToken;
 use App\Models\Reward;
@@ -400,6 +401,79 @@ class BusinessOwnerModuleTest extends TestCase
                 ->where('campaign.participants.0.conversions', 1)
                 ->where('campaign.participants.0.rewards_generated', 1200)
             );
+    }
+
+    public function test_business_campaign_detail_returns_only_campaign_specific_payout_requests(): void
+    {
+        [$owner, $profile] = $this->businessOwnerWithProfile('Owner One', 'One Co');
+        [$otherOwner, $otherProfile] = $this->businessOwnerWithProfile('Owner Two', 'Two Co');
+        $participant = User::factory()->create([
+            'name' => 'Payout Participant',
+            'email' => 'payout-participant@example.com',
+        ]);
+        $campaign = $this->campaignForOwner($owner, $profile, title: 'Primary Campaign');
+        $sameBusinessCampaign = $this->campaignForOwner($owner, $profile, title: 'Other Owner Campaign');
+        $otherBusinessCampaign = $this->campaignForOwner($otherOwner, $otherProfile, title: 'Other Business Campaign');
+        $campaignReward = $this->rewardForCampaign($participant, $campaign, 1500, 'processing');
+        $sameBusinessRewardInMixedRequest = $this->rewardForCampaign($participant, $sameBusinessCampaign, 2500, 'processing');
+        $sameBusinessRewardOnly = $this->rewardForCampaign($participant, $sameBusinessCampaign, 2600, 'processing');
+        $otherBusinessReward = $this->rewardForCampaign($participant, $otherBusinessCampaign, 9900, 'processing');
+        $payoutMethod = PayoutMethod::create([
+            'user_id' => $participant->id,
+            'type' => 'paypal',
+            'paypal_email' => 'payout-participant@example.com',
+        ]);
+        $campaignRequest = PayoutRequest::create([
+            'user_id' => $participant->id,
+            'payout_method_id' => $payoutMethod->id,
+            'amount' => 4000,
+            'status' => 'pending',
+            'requested_at' => now(),
+        ]);
+        $sameBusinessRequest = PayoutRequest::create([
+            'user_id' => $participant->id,
+            'amount' => 2500,
+            'status' => 'pending',
+            'requested_at' => now(),
+        ]);
+        $otherBusinessRequest = PayoutRequest::create([
+            'user_id' => $participant->id,
+            'amount' => 9900,
+            'status' => 'pending',
+            'requested_at' => now(),
+        ]);
+
+        $campaignRequest->rewards()->attach([$campaignReward->id, $sameBusinessRewardInMixedRequest->id]);
+        $sameBusinessRequest->rewards()->attach($sameBusinessRewardOnly->id);
+        $otherBusinessRequest->rewards()->attach($otherBusinessReward->id);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('business.campaigns.show', $campaign))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Business/Campaigns/Show')
+                ->has('campaign.payout_requests', 1)
+                ->where('campaign.payout_requests.0.id', $campaignRequest->id)
+                ->where('campaign.payout_requests.0.participant.name', 'Payout Participant')
+                ->where('campaign.payout_requests.0.participant.email', 'payout-participant@example.com')
+                ->where('campaign.payout_requests.0.rewards_count', 1)
+                ->where('campaign.payout_requests.0.campaign_amount', 1500)
+                ->where('campaign.payout_requests.0.status', 'pending')
+                ->where('campaign.payout_requests.0.payout_method', 'PayPal payout-participant@example.com')
+                ->missing('campaign.payout_requests.1')
+            );
+    }
+
+    public function test_business_campaign_detail_page_keeps_participants_modal_and_adds_payout_requests_modal(): void
+    {
+        $page = file_get_contents(resource_path('js/Pages/Business/Campaigns/Show.jsx'));
+
+        $this->assertStringContainsString('View Participants', $page);
+        $this->assertStringContainsString('Joined Users', $page);
+        $this->assertStringContainsString('View Payout Requests', $page);
+        $this->assertStringContainsString('Valid payout requests for this campaign.', $page);
+        $this->assertStringContainsString('No payout requests for this campaign yet.', $page);
     }
 
     public function test_business_cannot_view_another_business_campaign_participants(): void
@@ -1136,14 +1210,14 @@ class BusinessOwnerModuleTest extends TestCase
         return [$owner, $profile];
     }
 
-    private function campaignForOwner(User $owner, BusinessProfile $profile, string $status = 'active'): Campaign
+    private function campaignForOwner(User $owner, BusinessProfile $profile, string $status = 'active', ?string $title = null): Campaign
     {
         return Campaign::create([
             'created_by' => $owner->id,
             'business_owner_id' => $owner->id,
             'brand_id' => $profile->brand_id,
             'brand_name' => $profile->company_name,
-            'title' => $profile->company_name.' Campaign',
+            'title' => $title ?? $profile->company_name.' Campaign',
             'description' => 'A business campaign.',
             'category' => 'Affiliate Push',
             'category_key' => 'affiliate_push',

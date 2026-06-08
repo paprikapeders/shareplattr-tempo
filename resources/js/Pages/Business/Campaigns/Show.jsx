@@ -26,7 +26,10 @@ function statusLabel(status) {
         return 'Inactive';
     }
 
-    return status.charAt(0).toUpperCase() + status.slice(1);
+    return status
+        .split('_')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
 }
 
 function StatusBadge({ status }) {
@@ -246,6 +249,99 @@ function ParticipantsModal({ open, participants = [], onClose }) {
     );
 }
 
+function PayoutRequestsModal({ open, payoutRequests = [], onClose }) {
+    const [query, setQuery] = useState('');
+    const filteredPayoutRequests = useMemo(() => {
+        const normalizedQuery = query.trim().toLowerCase();
+
+        if (!normalizedQuery) {
+            return payoutRequests;
+        }
+
+        return payoutRequests.filter((payoutRequest) => [
+            payoutRequest.participant?.name,
+            payoutRequest.participant?.email,
+        ].some((value) => String(value ?? '').toLowerCase().includes(normalizedQuery)));
+    }, [payoutRequests, query]);
+    const emptyMessage = payoutRequests.length === 0
+        ? 'No payout requests for this campaign yet.'
+        : 'No payout requests match your search.';
+
+    if (!open) {
+        return null;
+    }
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 py-6">
+            <div className="flex max-h-full w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-950">Payout Requests</h2>
+                        <p className="mt-1 text-sm text-slate-500">Valid payout requests for this campaign.</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button as={Link} href="/business/payout-requests" variant="secondary">Manage payout requests</Button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+
+                <div className="border-b border-slate-100 px-5 py-4">
+                    <input
+                        type="search"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder="Search name or email"
+                        className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 sm:max-w-sm"
+                    />
+                </div>
+
+                <div className="overflow-auto">
+                    <table className="w-full min-w-[1080px] divide-y divide-slate-100 text-sm">
+                        <thead className="bg-slate-50 text-left text-xs font-bold uppercase text-slate-500">
+                            <tr>
+                                <th className="px-5 py-3">Participant</th>
+                                <th className="px-5 py-3">Requested</th>
+                                <th className="px-5 py-3 text-right">Rewards</th>
+                                <th className="px-5 py-3 text-right">Amount</th>
+                                <th className="px-5 py-3">Status</th>
+                                <th className="px-5 py-3">Payout Method</th>
+                                <th className="px-5 py-3 text-right">Latest Update</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {filteredPayoutRequests.map((payoutRequest) => (
+                                <tr key={payoutRequest.id}>
+                                    <td className="px-5 py-4">
+                                        <div className="font-semibold text-slate-950">{payoutRequest.participant?.name ?? 'Participant'}</div>
+                                        <div className="mt-0.5 text-xs text-slate-500">{payoutRequest.participant?.email ?? 'No email'}</div>
+                                    </td>
+                                    <td className="px-5 py-4 text-slate-600">{formatDisplayDate(payoutRequest.requested_at, 'Unknown')}</td>
+                                    <td className="px-5 py-4 text-right font-semibold text-slate-950">{payoutRequest.rewards_count}</td>
+                                    <td className="px-5 py-4 text-right font-semibold text-slate-950">{dollars(payoutRequest.campaign_amount)}</td>
+                                    <td className="px-5 py-4"><StatusBadge status={payoutRequest.status} /></td>
+                                    <td className="px-5 py-4 text-slate-600">{payoutRequest.payout_method ?? 'Not provided'}</td>
+                                    <td className="px-5 py-4 text-right text-slate-500">{formatDisplayDate(payoutRequest.latest_update_at, 'None')}</td>
+                                </tr>
+                            ))}
+                            {filteredPayoutRequests.length === 0 && (
+                                <tr>
+                                    <td className="px-5 py-8 text-sm text-slate-500" colSpan="7">{emptyMessage}</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function ConversionApprovalQueue({ conversions = [] }) {
     return (
         <Card className="p-0">
@@ -317,6 +413,7 @@ function ConversionApprovalQueue({ conversions = [] }) {
 
 export default function Show({ campaign }) {
     const [participantsOpen, setParticipantsOpen] = useState(false);
+    const [payoutRequestsOpen, setPayoutRequestsOpen] = useState(false);
     const { stats: liveSummary, lastUpdatedAt } = usePollingStats(`/business/campaigns/${campaign.id}/stats-summary`, {
         stats: campaign.stats,
         recentClicks: campaign.recentClicks,
@@ -358,6 +455,7 @@ export default function Show({ campaign }) {
     const locationBreakdown = liveSummary?.location_breakdown ?? liveCampaign.location_breakdown ?? campaign.location_breakdown ?? [];
     const pendingConversions = liveCampaign.pending_conversions ?? campaign.pending_conversions ?? [];
     const participants = campaign.participants ?? [];
+    const payoutRequests = campaign.payout_requests ?? [];
 
     return (
         <BusinessLayout>
@@ -378,6 +476,7 @@ export default function Show({ campaign }) {
                         <Button as={Link} href={`/business/campaigns/${campaign.id}/edit`} variant="secondary">Edit</Button>
                         <Button as={Link} href={campaign.business_preview_url ?? `/business/campaigns/${campaign.id}/preview`} variant="secondary">View Campaign</Button>
                         <Button type="button" onClick={() => setParticipantsOpen(true)} variant="secondary">View Participants</Button>
+                        <Button type="button" onClick={() => setPayoutRequestsOpen(true)} variant="secondary">View Payout Requests</Button>
                         {canToggleStatus && (
                             <Button type="button" onClick={updateStatus} variant="secondary">
                                 {campaign.status === 'active' ? 'Pause' : 'Resume'}
@@ -512,6 +611,11 @@ export default function Show({ campaign }) {
                     open={participantsOpen}
                     participants={participants}
                     onClose={() => setParticipantsOpen(false)}
+                />
+                <PayoutRequestsModal
+                    open={payoutRequestsOpen}
+                    payoutRequests={payoutRequests}
+                    onClose={() => setPayoutRequestsOpen(false)}
                 />
             </div>
         </BusinessLayout>

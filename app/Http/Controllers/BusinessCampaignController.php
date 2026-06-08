@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Campaign;
 use App\Models\Click;
 use App\Models\Conversion;
+use App\Models\PayoutRequest;
 use App\Models\ReferralToken;
 use App\Models\Reward;
 use App\Support\ImportKey;
@@ -109,6 +110,7 @@ class BusinessCampaignController extends Controller
                 'source_breakdown' => $summary['source_breakdown'],
                 'location_breakdown' => $summary['location_breakdown'],
                 'participants' => $this->participantsPayload($campaign),
+                'payout_requests' => $this->campaignPayoutRequestsPayload($campaign),
                 'recentClicks' => $summary['recentClicks'],
                 'recentConversions' => $summary['recentConversions'],
                 'pending_conversions' => $this->pendingConversionQueue($campaign),
@@ -650,6 +652,72 @@ class BusinessCampaignController extends Controller
                 ];
             })
             ->all();
+    }
+
+    private function campaignPayoutRequestsPayload(Campaign $campaign): array
+    {
+        return PayoutRequest::query()
+            ->whereHas('rewards', fn ($query) => $query
+                ->where('campaign_id', $campaign->id)
+                ->whereHas('conversion', fn ($conversionQuery) => $conversionQuery
+                    ->where('campaign_id', $campaign->id)
+                )
+                ->whereHas('campaign', fn ($campaignQuery) => $campaignQuery
+                    ->where('business_owner_id', $campaign->business_owner_id)
+                )
+            )
+            ->with([
+                'user:id,name,email',
+                'payoutMethod:id,type,paypal_email,stripe_card_brand,stripe_card_last4',
+                'rewards' => fn ($query) => $query
+                    ->where('campaign_id', $campaign->id)
+                    ->whereHas('conversion', fn ($conversionQuery) => $conversionQuery
+                        ->where('campaign_id', $campaign->id)
+                    ),
+            ])
+            ->latest('requested_at')
+            ->latest()
+            ->get()
+            ->map(function (PayoutRequest $payoutRequest) {
+                $campaignRewards = $payoutRequest->rewards;
+                $payoutMethod = $payoutRequest->payoutMethod;
+
+                return [
+                    'id' => $payoutRequest->id,
+                    'participant' => [
+                        'name' => $payoutRequest->user?->name ?? 'Participant',
+                        'email' => $payoutRequest->user?->email,
+                    ],
+                    'requested_at' => $payoutRequest->requested_at?->toDateTimeString(),
+                    'rewards_count' => $campaignRewards->count(),
+                    'campaign_amount' => (int) $campaignRewards->sum('amount'),
+                    'status' => $payoutRequest->status,
+                    'payout_method' => $this->payoutMethodLabel($payoutMethod),
+                    'latest_update_at' => $payoutRequest->updated_at?->toDateTimeString(),
+                ];
+            })
+            ->all();
+    }
+
+    private function payoutMethodLabel($payoutMethod): ?string
+    {
+        if (! $payoutMethod) {
+            return null;
+        }
+
+        if ($payoutMethod->type === 'stripe' && $payoutMethod->stripe_card_last4) {
+            $brand = $payoutMethod->stripe_card_brand
+                ? Str::headline($payoutMethod->stripe_card_brand)
+                : 'Card';
+
+            return $brand.' ending '.$payoutMethod->stripe_card_last4;
+        }
+
+        if ($payoutMethod->type === 'paypal' && $payoutMethod->paypal_email) {
+            return 'PayPal '.$payoutMethod->paypal_email;
+        }
+
+        return Str::headline($payoutMethod->type ?? 'Payout method');
     }
 
     private function locationLabel(?string $country, ?string $region): string
